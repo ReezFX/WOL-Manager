@@ -13,6 +13,7 @@ from app.forms import LoginForm, RegistrationForm
 auth = Blueprint('auth', __name__)
 
 # Custom decorator for admin access
+# Custom decorator for admin access
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -21,7 +22,6 @@ def admin_required(f):
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
-
 # Password hashing and verification functions
 def hash_password(password):
     """Hash a password using bcrypt"""
@@ -159,39 +159,5 @@ def change_password():
     
     return render_template('auth/change_password.html')
 
-@auth.route('/users')
-@login_required
-@admin_required
-def list_users():
-    """Admin page to list all users"""
-    users = db_session.query(User).all()
-    return render_template('auth/users.html', users=users)
-
-@auth.route('/users/<int:user_id>/promote', methods=['POST'])
-@login_required
-@admin_required
-def promote_user(user_id):
-    """Promote a user to admin"""
-    user = db_session.query(User).get_or_404(user_id)
-    if user.id == current_user.id:
-        flash('You cannot change your own role.', 'danger')
-    else:
-        user.role = 'admin'
-        db_session.commit()
-        flash(f'User {user.username} promoted to admin.', 'success')
-    return redirect(url_for('auth.list_users'))
-
-@auth.route('/users/<int:user_id>/demote', methods=['POST'])
-@login_required
-@admin_required
-def demote_user(user_id):
-    """Demote an admin to regular user"""
-    user = db_session.query(User).get_or_404(user_id)
-    if user.id == current_user.id:
-        flash('You cannot change your own role.', 'danger')
-    else:
-        user.role = 'user'
-        db_session.commit()
-        flash(f'User {user.username} demoted to regular user.', 'success')
-    return redirect(url_for('auth.list_users'))
+# User management functionality moved to admin.py
 

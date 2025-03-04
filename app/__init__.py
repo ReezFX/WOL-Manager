@@ -59,6 +59,11 @@ def create_app(config_name=None):
     from app.wol import wol as wol_blueprint
     app.register_blueprint(wol_blueprint, url_prefix='/wol')
     
+    # Admin blueprint for user management
+    from app.admin import admin as admin_blueprint, init_csrf
+    app.register_blueprint(admin_blueprint, url_prefix='/admin')
+    init_csrf(app)
+    
     # Main route blueprint (can contain dashboard, etc.)
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint)
