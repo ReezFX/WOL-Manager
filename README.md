@@ -121,8 +121,8 @@ To change database settings, modify `app/config.py`.
 
 ### Initial Login
 After installation, you can log in with the default admin account:
-- Username: `admin@example.com`
-- Password: `password`
+- Username: `WOLadmin`
+- Password: `Manager`
 
 **Important:** Change the default admin password immediately after first login.
 
