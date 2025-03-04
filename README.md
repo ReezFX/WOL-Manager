@@ -40,7 +40,7 @@ The easiest way to run WOL-Manager is using Docker:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/WOL-Manager.git
+   git clone https://github.com/ReezFX/WOL-Manager.git
    cd WOL-Manager
    ```
 
