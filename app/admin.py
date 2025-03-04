@@ -84,8 +84,10 @@ def promote_user(user_id):
     # Validate CSRF token
     form = CSRFForm()
     if form.validate_on_submit():
-        user = db_session.query(User).get_or_404(user_id)
-        if user.id == current_user.id:
+        user = db_session.query(User).get(user_id)
+        if user is None:
+            flash(f'User with ID {user_id} not found.', 'danger')
+        elif user.id == current_user.id:
             flash('You cannot change your own role.', 'danger')
         else:
             user.role = 'admin'
@@ -103,8 +105,10 @@ def demote_user(user_id):
     # Validate CSRF token
     form = CSRFForm()
     if form.validate_on_submit():
-        user = db_session.query(User).get_or_404(user_id)
-        if user.id == current_user.id:
+        user = db_session.query(User).get(user_id)
+        if user is None:
+            flash(f'User with ID {user_id} not found.', 'danger')
+        elif user.id == current_user.id:
             flash('You cannot change your own role.', 'danger')
         else:
             user.role = 'user'
