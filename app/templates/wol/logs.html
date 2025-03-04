@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Wake-on-LAN Logs{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Wake-on-LAN Logs</h1>
+    
+    {% if logs %}
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Host</th>
+                            <th>User</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ hosts[log.host_id] }}</td>
+                            <td>{{ log.user.username }}</td>
+                            <td>
+                                {% if log.success %}
+                                <span class="badge bg-success">Success</span>
+                                {% else %}
+                                <span class="badge bg-danger">Failed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i> No Wake-on-LAN logs found.
+    </div>
+    {% endif %}
+    
+    <div class="mt-3">
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}
+

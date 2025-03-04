@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Hosts Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Hosts Management</h1>
+        <a href="{{ url_for('host.add_host') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Host
+        </a>
+    </div>
+    
+    {% if hosts %}
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="hostsTable">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>MAC Address</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for host in hosts %}
+                        <tr>
+                            <td>{{ host.name }}</td>
+                            <td><code>{{ host.mac_address }}</code></td>
+                            <td>{{ host.ip }}</td>
+                            <td>
+                                <span class="badge {% if host.status == 'online' %}badge-success{% else %}badge-secondary{% endif %}">
+                                    {{ host.status|default('unknown') }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('host.view_host', host_id=host.id) }}" class="btn btn-sm btn-info" title="View">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    
+                                    <a href="{{ url_for('wol.wol_send', host_id=host.id) }}" class="btn btn-sm btn-success" title="Wake">
+                                        <i class="fas fa-power-off"></i> Wake
+                                    </a>
+                                    
+                                    <a href="{{ url_for('host.edit_host', host_id=host.id) }}" class="btn btn-sm btn-primary" title="Edit">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    
+                                    <form action="{{ url_for('host.delete_host', host_id=host.id) }}" method="post" class="d-inline delete-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this host?')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if pagination %}
+            <nav aria-label="Host pagination">
+                <ul class="pagination justify-content-center">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('host.list_hosts', page=pagination.prev_num) }}">Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page in pagination.iter_pages() %}
+                        {% if page %}
+                            {% if page != pagination.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('host.list_hosts', page=page) }}">{{ page }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('host.list_hosts', page=pagination.next_num) }}">Next</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p class="mb-0">No hosts found. <a href="{{ url_for('host.add_host') }}">Add your first host</a> to get started!</p>
+    </div>
+    {% endif %}
+</div>
+
+{% block scripts %}
+<script>
+    // Add JavaScript for any interactive behavior (e.g., status updates, confirmation on delete)
+    document.addEventListener('DOMContentLoaded', function() {
+        // Optional enhancement: Implement AJAX status check for hosts
+        // This example assumes you'll implement an endpoint for checking status later
+        
+        /* Example:
+        function checkHostStatus() {
+            const hosts = document.querySelectorAll('[data-host-id]');
+            hosts.forEach(host => {
+                const hostId = host.dataset.hostId;
+                fetch(`/host/${hostId}/status`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const statusBadge = host.querySelector('.status-badge');
+                        statusBadge.textContent = data.status;
+                        statusBadge.className = `badge ${data.status === 'online' ? 'badge-success' : 'badge-secondary'}`;
+                    });
+            });
+        }
+        
+        // Refresh status every 30 seconds
+        setInterval(checkHostStatus, 30000);
+        */
+    });
+</script>
+{% endblock %}
+
+{% endblock %}
+

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Wake-on-LAN - Home{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold">Wake up your devices remotely</h1>
+                <p class="fs-5 text-muted">Control your network devices from anywhere with our Wake-on-LAN solution</p>
+                
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Log In
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row g-4 py-3">
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-power-off fa-3x text-primary"></i>
+                            </div>
+                            <h3 class="card-title text-center">What is Wake-on-LAN?</h3>
+                            <p class="card-text">
+                                Wake-on-LAN (WoL) is a network standard that allows a computer to be turned on remotely by a network message. 
+                                The message is usually sent by a program executed on another device on the same local area network.
+                            </p>
+                            <p class="card-text">
+                                It works by sending a specially formatted network packet called a "magic packet" to the target device's 
+                                MAC address, which signals the network interface to power on the system.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-laptop-house fa-3x text-primary"></i>
+                            </div>
+                            <h3 class="card-title text-center">How Our App Helps</h3>
+                            <p class="card-text">
+                                Our Wake-on-LAN application makes it easy to:
+                            </p>
+                            <ul class="card-text">
+                                <li>Store and manage multiple devices with custom names</li>
+                                <li>Wake up devices with a single click from anywhere</li>
+                                <li>Track wake-up history and success rates</li>
+                                <li>Organize devices by purpose or location</li>
+                                <li>Schedule automatic wake-ups at specified times</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title"><i class="fas fa-lightbulb text-warning me-2"></i>Getting Started</h3>
+                    <p class="card-text">
+                        To use Wake-on-LAN, your devices must have WoL enabled in their BIOS/UEFI settings and 
+                        network adapters must be configured properly. Our application streamlines the process 
+                        of sending the magic packets, but your network and devices need to be WoL-compatible.
+                    </p>
+                    
+                    <div class="d-flex justify-content-center mt-4">
+                        {% if not current_user.is_authenticated %}
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-success btn-lg">
+                                <i class="fas fa-rocket me-2"></i>Start Now - It's Free!
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8008:8080"
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_APP=wsgi.py
+      - FLASK_CONFIG=development
+      - FLASK_DEBUG=1
+      - SECRET_KEY=dev-key-change-in-production
+    command: gunicorn --bind 0.0.0.0:8080 wsgi:app
+    restart: unless-stopped
+

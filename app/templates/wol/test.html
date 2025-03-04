@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Test Wake-on-LAN{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">Test Wake-on-LAN</h4>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('wol.test_wol') }}">
+                        <div class="mb-3">
+                            <label for="mac_address" class="form-label">MAC Address</label>
+                            <input type="text" class="form-control {% if mac_error %}is-invalid{% endif %}" 
+                                   id="mac_address" name="mac_address" value="{{ request.form.get('mac_address', '') }}"
+                                   placeholder="Format: 00:11:22:33:44:55" required>
+                            {% if mac_error %}
+                                <div class="invalid-feedback">
+                                    {{ mac_error }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Enter the MAC address of the device you want to wake up.</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="broadcast_ip" class="form-label">Broadcast IP (Optional)</label>
+                            <input type="text" class="form-control {% if ip_error %}is-invalid{% endif %}" 
+                                   id="broadcast_ip" name="broadcast_ip" value="{{ request.form.get('broadcast_ip', '') }}"
+                                   placeholder="e.g., 192.168.1.255">
+                            {% if ip_error %}
+                                <div class="invalid-feedback">
+                                    {{ ip_error }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Leave blank to use the default broadcast address.</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-power"></i> Send WOL Packet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">
+                        This tool sends a Wake-on-LAN magic packet to the specified MAC address.
+                        Make sure the target device has WOL enabled in its BIOS/UEFI settings.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

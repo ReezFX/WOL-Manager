@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    {% if form.id is defined %}
+                    <h2>Edit Host</h2>
+                    {% else %}
+                    <h2>Add New Host</h2>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="" novalidate>
+                        {{ form.hidden_tag() }}
+                        <div class="form-group mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                            {% for error in form.name.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="form-group mb-3">
+                            {{ form.mac_address.label(class="form-label") }}
+                            {{ form.mac_address(class="form-control" + (" is-invalid" if form.mac_address.errors else "")) }}
+                            {% for error in form.mac_address.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                            <small class="form-text text-muted">Format: 01:23:45:67:89:AB</small>
+                        </div>
+                        <div class="form-group mb-3">
+                            {{ form.ip_address.label(class="form-label") }}
+                            {{ form.ip_address(class="form-control" + (" is-invalid" if form.ip_address.errors else "")) }}
+                            {% for error in form.ip_address.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                            <small class="form-text text-muted">Example: 192.168.1.100</small>
+                        </div>
+                        <div class="form-group mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3) }}
+                            {% for error in form.description.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="form-group mt-4">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('host.list_hosts') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
