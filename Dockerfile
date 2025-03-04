@@ -11,7 +11,7 @@ RUN pip install gunicorn
 COPY . .
 
 # Set environment variables
-ENV FLASK_APP=app
+ENV FLASK_APP=wsgi.py
 ENV FLASK_DEBUG=0
 ENV PYTHONUNBUFFERED=1
 
@@ -19,4 +19,8 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
 # Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "wsgi:app"]
+# Make entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
+
+# Use entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]

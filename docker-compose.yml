@@ -6,7 +6,7 @@ services:
     ports:
       - "8008:8080"
     volumes:
-      - .:/app
+      - db_data:/app/instance
     environment:
       - FLASK_APP=wsgi.py
       - FLASK_CONFIG=development
@@ -14,4 +14,7 @@ services:
       - SECRET_KEY=dev-key-change-in-production
     command: gunicorn --bind 0.0.0.0:8080 wsgi:app
     restart: unless-stopped
+
+volumes:
+  db_data:
 

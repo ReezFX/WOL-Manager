@@ -16,7 +16,7 @@ auth = Blueprint('auth', __name__)
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'admin':
+        if not current_user.is_authenticated or not current_user.is_admin:
             flash('You need admin privileges to access this page.', 'danger')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)

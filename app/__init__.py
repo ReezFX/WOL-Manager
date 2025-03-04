@@ -3,6 +3,7 @@ from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask_login import LoginManager
+from flask_migrate import Migrate
 
 from app.config import config
 from app.models import Base, User
@@ -46,6 +47,8 @@ def create_app(config_name=None):
     # Initialize extensions
     login_manager.init_app(app)
     
+    # Initialize Flask-Migrate
+    migrate = Migrate(app, Base.metadata)
     # Import and register blueprints
     from app.auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
@@ -71,8 +74,9 @@ def create_app(config_name=None):
         config[config_name].init_app(app)
     
     # Ensure the database is created
-    # Create database tables at application startup
+    # Note: When using Flask-Migrate, you should use migrations
+    # instead of creating tables directly.
+    # However, keeping this for backward compatibility
     Base.metadata.create_all(bind=engine)
-    
     return app
 

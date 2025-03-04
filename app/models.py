@@ -1,11 +1,72 @@
 from datetime import datetime
 import re
-from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, validates
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.types import TypeDecorator
+import json
+
+# Custom JSON type implementation for compatibility with different database backends
+class JSONType(TypeDecorator):
+    impl = Text
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            value = json.dumps(value)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = json.loads(value)
+        return value
 from flask_login import UserMixin
 
 Base = declarative_base()
+
+# Association table for Role-Permission relationship
+role_permissions = Table(
+    'role_permissions',
+    Base.metadata,
+    Column('role_id', Integer, ForeignKey('roles.id'), primary_key=True),
+    Column('permission_id', Integer, ForeignKey('permissions.id'), primary_key=True)
+)
+
+# Association table for User-Role relationship
+user_roles = Table(
+    'user_roles',
+    Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('role_id', Integer, ForeignKey('roles.id'), primary_key=True)
+)
+
+class Permission(Base):
+    __tablename__ = 'permissions'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(64), unique=True, nullable=False)
+    description = Column(Text, nullable=True)
+    category = Column(String(64), nullable=False, index=True)
+    
+    # Relationships
+    roles = relationship('Role', secondary=role_permissions, back_populates='permissions')
+    
+    def __repr__(self):
+        return f'<Permission {self.name}>'
+
+class Role(Base):
+    __tablename__ = 'roles'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(64), unique=True, nullable=False)
+    description = Column(Text, nullable=True)
+    
+    # Relationships
+    permissions = relationship('Permission', secondary=role_permissions, back_populates='roles')
+    users = relationship('User', secondary=user_roles, back_populates='roles')
+    
+    def __repr__(self):
+        return f'<Role {self.name}>'
 
 class User(Base, UserMixin):
     __tablename__ = 'users'
@@ -13,12 +74,14 @@ class User(Base, UserMixin):
     id = Column(Integer, primary_key=True)
     username = Column(String(64), unique=True, nullable=False, index=True)
     password_hash = Column(String(128), nullable=False)
-    role = Column(String(20), default='user')  # Options: 'admin', 'user'
+    role = Column(String(20), default='user')  # Options: 'admin', 'user' - keeping for backward compatibility
+    permissions = Column(JSONType, default=lambda: {})
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     hosts = relationship('Host', back_populates='created_by_user', cascade="all, delete-orphan")
     logs = relationship('Log', back_populates='user', cascade="all, delete-orphan")
+    roles = relationship('Role', secondary=user_roles, back_populates='users')
     
     def __repr__(self):
         return f'<User {self.username}>'
@@ -26,7 +89,7 @@ class User(Base, UserMixin):
     @property
     def is_admin(self):
         """Check if the user has admin role."""
-        return self.role == 'admin'
+        return self.role == 'admin' or any(role.name == 'admin' for role in self.roles)
     
     @validates('username')
     def validate_username(self, key, username):
@@ -35,6 +98,23 @@ class User(Base, UserMixin):
         if len(username) < 3:
             raise ValueError("Username must be at least 3 characters long")
         return username
+        
+    def has_permission(self, permission_name):
+        """Check if user has a specific permission either directly or through roles."""
+        # Check direct permissions in the JSON field
+        if self.permissions and permission_name in self.permissions:
+            return self.permissions[permission_name]
+            
+        # Check permissions via roles
+        for role in self.roles:
+            if any(perm.name == permission_name for perm in role.permissions):
+                return True
+                
+        # Admins have all permissions by default
+        if self.is_admin:
+            return True
+            
+        return False
 
 class Host(Base):
     __tablename__ = 'hosts'
