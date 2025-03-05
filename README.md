@@ -48,7 +48,7 @@ The easiest way to run WOL-Manager is using Docker. You have two options:
 
 2. Run the container:
    ```bash
-   docker run -d -p 8008:8008 -v wol-manager-data:/app/instance --name wol-manager officialreez/wol-manager-web
+   docker run -d -p 8008:8080 -v wol-manager-data:/app/instance --name wol-manager officialreez/wol-manager-web
    ```
 
 3. Access the application at `http://localhost:8008`
