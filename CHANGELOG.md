@@ -5,6 +5,26 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2025-03-5
+
+### Fixed
+- Fixed SQLite compatibility issue with JSON operator in host list view
+  - Replaced PostgreSQL-specific JSON operator with SQLite-compatible code
+  - Implemented fallback mechanism for role-based visibility filtering
+  - Enhanced query construction for cross-database compatibility
+
+### Added
+- Added comprehensive logging configuration
+  - Configured both file and console logging with rotation
+  - Added environment-based log levels (DEBUG in development, INFO in production)
+  - Improved troubleshooting capabilities with detailed contextual logs
+
+### Improved
+- Improved error handling in host listing functionality
+  - Added robust exception handling with appropriate user feedback
+  - Enhanced error logging for easier debugging
+  - Implemented graceful fallbacks for edge cases
+
 ## [1.0.2] - 2025-03-05
 
 ### Security
