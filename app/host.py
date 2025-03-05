@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from app import db_session
 from app.models import Host, Role, Permission
 from app.forms import HostForm
 import re
+import logging
 
 host = Blueprint('host', __name__, url_prefix='/hosts')
 
@@ -15,33 +16,68 @@ MAC_PATTERN = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
 @login_required
 def list_hosts():
     """List all hosts with pagination"""
-    page = request.args.get('page', 1, type=int)
-    per_page = current_app.config.get('HOSTS_PER_PAGE', 10)
-    
-    # Get hosts query with pagination
-    query = db_session.query(Host)
-    
-    # Filter by current user unless admin or has specific roles visibility
-    if not current_user.is_admin:
-        # Get all the role IDs of the current user
-        user_role_ids = [role.id for role in current_user.roles]
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = current_app.config.get('HOSTS_PER_PAGE', 10)
         
-        # Filter to hosts created by the user OR where user's role is in visible_to_roles
-        if not current_user.has_permission('view_all_hosts'):
-            query = query.filter(
-                # Either the host was created by the current user
-                (Host.created_by == current_user.id) | 
-                # Or one of the user's roles is in the host's visible_to_roles
-                (Host.visible_to_roles.cast(db_session.JSON()).op('?|')(user_role_ids))
-            )
+        # Get hosts query with pagination
+        query = db_session.query(Host)
+        
+        # Filter by current user unless admin or has specific roles visibility
+        if not current_user.is_admin:
+            # Get all the role IDs of the current user
+            user_role_ids = [role.id for role in current_user.roles]
+            logging.debug(f"User {current_user.id} has roles: {user_role_ids}")
+            
+            # Filter to hosts created by the user OR where user's role is in visible_to_roles
+            if not current_user.has_permission('view_all_hosts'):
+                # Start with hosts created by the current user
+                created_by_filter = (Host.created_by == current_user.id)
+                
+                # We need a SQLite-compatible approach instead of PostgreSQL's ?| operator
+                visible_to_user_hosts = []
+                
+                try:
+                    # Get all hosts to check visible_to_roles
+                    all_hosts = db_session.query(Host).all()
+                    
+                    # Find hosts where user's role exists in visible_to_roles
+                    for host in all_hosts:
+                        if host.visible_to_roles and any(str(role_id) in host.visible_to_roles or role_id in host.visible_to_roles for role_id in user_role_ids):
+                            visible_to_user_hosts.append(host.id)
+                    
+                    logging.debug(f"Hosts visible to user based on roles: {visible_to_user_hosts}")
+                    
+                    # Build query with OR condition
+                    if visible_to_user_hosts:
+                        query = query.filter(or_(
+                            created_by_filter,
+                            Host.id.in_(visible_to_user_hosts)
+                        ))
+                    else:
+                        # If no visible hosts found, just filter by created_by
+                        query = query.filter(created_by_filter)
+                        
+                except Exception as e:
+                    logging.error(f"Error filtering hosts by visible_to_roles: {str(e)}")
+                    # Fallback to just showing hosts created by the user
+                    query = query.filter(created_by_filter)
+                    flash(f"Limited visibility due to an error: {str(e)}", "warning")
     
     # Order by recently created first
     query = query.order_by(desc(Host.created_at))
     
     # Apply pagination
-    total = query.count()
-    query = query.limit(per_page).offset((page - 1) * per_page)
-    hosts = query.all()
+    try:
+        total = query.count()
+        query = query.limit(per_page).offset((page - 1) * per_page)
+        hosts = query.all()
+        logging.debug(f"Found {total} hosts for user {current_user.id}, showing page {page}")
+    except Exception as e:
+        logging.error(f"Error applying pagination: {str(e)}")
+        total = 0
+        hosts = []
+        flash(f"An error occurred while retrieving hosts: {str(e)}", "danger")
     
     # Create a pagination object with the necessary attributes
     class Pagination:
@@ -108,6 +144,10 @@ def list_hosts():
     pagination = Pagination(page, per_page, total)
     
     return render_template('host/host_list.html', hosts=hosts, pagination=pagination)
+    except Exception as e:
+        logging.error(f"Unexpected error in list_hosts: {str(e)}")
+        flash(f"An unexpected error occurred: {str(e)}", "danger")
+        return render_template('host/host_list.html', hosts=[], pagination=Pagination(1, per_page, 0))
 
 @host.route('/add', methods=['GET', 'POST'])
 @login_required

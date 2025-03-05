@@ -1,4 +1,7 @@
 import os
+import logging
+from logging.handlers import RotatingFileHandler
+import pathlib
 from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -46,6 +49,38 @@ def create_app(config_name=None):
     
     # Initialize extensions
     login_manager.init_app(app)
+    
+    # Set up logging
+    log_level = logging.DEBUG if app.debug else logging.INFO
+    app.logger.setLevel(log_level)
+    
+    # Create logs directory if it doesn't exist
+    log_dir = pathlib.Path(app.root_path).parent / 'logs'
+    log_dir.mkdir(exist_ok=True)
+    
+    # Configure file handler
+    log_file = log_dir / 'wol_manager.log'
+    file_handler = RotatingFileHandler(log_file, maxBytes=10485760, backupCount=10)
+    file_handler.setLevel(log_level)
+    
+    # Configure log format
+    log_format = logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    )
+    file_handler.setFormatter(log_format)
+    
+    # Add handlers
+    app.logger.addHandler(file_handler)
+    
+    # Configure console handler for development
+    if app.debug:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        console_handler.setFormatter(log_format)
+        app.logger.addHandler(console_handler)
+    
+    # Log application startup
+    app.logger.info(f'WOL Manager starting in {config_name} mode')
     
     # Initialize Flask-Migrate
     migrate = Migrate(app, Base.metadata)
