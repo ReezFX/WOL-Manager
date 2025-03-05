@@ -3,120 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{% block title %}WoL Manager{% endblock %}</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- Custom CSS -->
+    
+    <!-- CSS Files in correct order -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    {% block head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/apple-components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/apple-forms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dialogs.css') }}">
+    
+    <!-- Apple-inspired icon font -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    {% block styles %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- Header with Apple-inspired navigation -->
+    <header class="apple-header">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="fas fa-power-off me-2"></i>WoL Manager
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('host.list_hosts') }}">
-                            <i class="fas fa-laptop me-1"></i>Hosts
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('wol.view_logs') }}">
-                            <i class="fas fa-clipboard-list me-1"></i>WOL Logs
-                        </a>
-                    </li>
-                    {% if current_user.is_admin %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.list_users') }}">
-                            <i class="fas fa-users me-1"></i>Users
-                        </a>
-                    </li>
-                    {% endif %}
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1"></i>{{ current_user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
-                                <i class="fas fa-key me-1"></i>Change Password
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                <i class="fas fa-sign-out-alt me-1"></i>Logout
-                            </a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">
-                            <i class="fas fa-sign-in-alt me-1"></i>Login
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.register') }}">
-                            <i class="fas fa-user-plus me-1"></i>Register
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
+            <nav class="apple-nav">
+                <a href="{{ url_for('index') }}" class="brand">
+                    <i class="fas fa-power-off"></i>
+                    <span>WoL Manager</span>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="{{ url_for('host.index') }}" class="nav-link {% if request.endpoint == 'host.index' %}active{% endif %}">
+                        <i class="fas fa-laptop"></i> Hosts
+                    </a>
+                    <a href="{{ url_for('host.create') }}" class="nav-link {% if request.endpoint == 'host.create' %}active{% endif %}">
+                        <i class="fas fa-plus-circle"></i> Add Host
+                    </a>
+                </div>
+                
+                <div class="nav-actions">
+                    <!-- Theme Toggle Button -->
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                        <i class="fas fa-moon dark-icon"></i>
+                        <i class="fas fa-sun light-icon"></i>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Toast Container for Messages -->
+    <div id="toast-container" class="toast-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast-message {{ category }}" role="alert">
+                        <div class="toast-icon">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif category == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fas fa-exclamation-triangle"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="toast-content">{{ message }}</div>
+                        <button class="toast-close" aria-label="Close message">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="content-container">
+        <div class="container">
+            <div class="content-header">
+                {% block header %}
+                <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                {% endblock %}
+            </div>
+            
+            <div class="content-body">
+                {% block content %}{% endblock %}
             </div>
         </div>
-    </nav>
-
-    <!-- Header Block -->
-    {% block header %}{% endblock %}
-
-    <!-- Main Content -->
-    <main class="container py-4">
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
-
-        <!-- Content Block -->
-        {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">&copy; {{ now.year }} Wake-on-LAN Manager. All rights reserved.</span>
+    <footer class="apple-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>WoL Manager &copy; {% now year %} | Designed with <i class="fas fa-heart"></i></p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">About</a>
+                    <a href="#" class="footer-link">Help</a>
+                    <a href="#" class="footer-link">Privacy</a>
+                </div>
+            </div>
         </div>
     </footer>
 
-    <!-- Bootstrap 5 JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-    
-    <!-- Custom JavaScript -->
+    <!-- Confirmation Dialog -->
+    <div id="confirmation-dialog" class="dialog-container hidden">
+        <div class="dialog apple-dialog">
+            <div class="dialog-header">
+                <h3 id="dialog-title">Confirm Action</h3>
+            </div>
+            <div class="dialog-body">
+                <p id="dialog-message">Are you sure you want to proceed?</p>
+            </div>
+            <div class="dialog-footer">
+                <button id="dialog-cancel" class="apple-button secondary">Cancel</button>
+                <button id="dialog-confirm" class="apple-button primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/themeToggle.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
-    <!-- Scripts Block -->
     {% block scripts %}{% endblock %}
+    
+    <script>
+        // Initialize toast messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('.toast-message');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 100);
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }, 5000);
+                
+                const closeBtn = toast.querySelector('.toast-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
+                        toast.classList.remove('show');
+                        setTimeout(() => {
+                            toast.remove();
+                        }, 300);
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
+
