@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, HiddenField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, HiddenField, SelectMultipleField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Regexp, Optional
 
 class LoginForm(FlaskForm):
@@ -41,6 +41,7 @@ class HostForm(FlaskForm):
         Optional(),
         Length(max=255, message='Description must be less than 255 characters')
     ])
+    visible_to_roles = SelectMultipleField('Visible to Roles', choices=[], coerce=int)
     submit = SubmitField('Save Host')
     
     def validate_ip_address(self, field):

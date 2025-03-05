@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block title %}
+{% if form.id is defined %}Edit Host{% else %}Add New Host{% endif %}
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="row">
@@ -52,6 +56,24 @@
                                 {{ error }}
                             </div>
                             {% endfor %}
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="visible_to_roles">Visible to Roles</label>
+                            <select multiple class="form-control{% if form.visible_to_roles.errors %} is-invalid{% endif %}" 
+                                    id="visible_to_roles" name="visible_to_roles" size="5">
+                                {% for role_id, role_name in form.visible_to_roles.choices %}
+                                <option value="{{ role_id }}" 
+                                    {% if role_id in form.visible_to_roles.data %}selected{% endif %}>
+                                    {{ role_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% for error in form.visible_to_roles.errors %}
+                            <div class="invalid-feedback">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                            <small class="form-text text-muted">Hold Ctrl (or Cmd on Mac) to select multiple roles. Users with these roles will be able to see this host.</small>
                         </div>
                         <div class="form-group mt-4">
                             {{ form.submit(class="btn btn-primary") }}

@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import HiddenField
 
-from app.models import User
+from app.models import User, Permission
 from app import db_session
 from app.forms import RegistrationForm
 from app.auth import hash_password, admin_required
@@ -117,4 +117,102 @@ def demote_user(user_id):
     else:
         flash('CSRF token validation failed. Please try again.', 'danger')
     return redirect(url_for('admin.list_users'))
+
+@admin.route('/users/<int:user_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    """Delete a user from the system"""
+    # Validate CSRF token
+    form = CSRFForm()
+    if form.validate_on_submit():
+        # Prevent self-deletion
+        if user_id == current_user.id:
+            flash('You cannot delete your own account.', 'danger')
+            return redirect(url_for('admin.list_users'))
+        
+        user = db_session.query(User).get(user_id)
+        if user is None:
+            flash(f'User with ID {user_id} not found.', 'danger')
+        else:
+            try:
+                # Check if the user has hosts that might be in use
+                host_count = db_session.query(User).join(User.hosts).filter(User.id == user_id).count()
+                if host_count > 0:
+                    host_message = f"This user has {host_count} host(s) that will also be deleted."
+                    flash(f"Warning: {host_message}", 'warning')
+                
+                # Store username for the success message
+                username = user.username
+                
+                # Perform the deletion - cascade will handle related records
+                db_session.delete(user)
+                db_session.commit()
+                flash(f'User {username} has been deleted successfully.', 'success')
+            except SQLAlchemyError as e:
+                db_session.rollback()
+                flash(f'Error deleting user: {str(e)}', 'danger')
+    else:
+        flash('CSRF token validation failed. Please try again.', 'danger')
+    
+    return redirect(url_for('admin.list_users'))
+
+@admin.route('/users/<int:user_id>/permissions', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_permissions(user_id):
+    """Edit granular permissions for a user"""
+    user = db_session.query(User).get(user_id)
+    if user is None:
+        flash(f'User with ID {user_id} not found.', 'danger')
+        return redirect(url_for('admin.list_users'))
+    
+    # Get all available permissions from the database
+    all_permissions = db_session.query(Permission).order_by(Permission.category, Permission.name).all()
+    
+    # Group permissions by category for better UX
+    categorized_permissions = {}
+    for perm in all_permissions:
+        if perm.category not in categorized_permissions:
+            categorized_permissions[perm.category] = []
+        categorized_permissions[perm.category].append(perm)
+    
+    if request.method == 'POST':
+        try:
+            # Create a permissions dictionary based on the form data
+            updated_permissions = {}
+            
+            # Process the form data
+            for perm in all_permissions:
+                perm_key = f'perm_{perm.id}'
+                if perm_key in request.form:
+                    updated_permissions[perm.name] = True
+                else:
+                    # Explicitly set to False to override role-based permissions
+                    updated_permissions[perm.name] = False
+            
+            # Update the user's permissions
+            user.permissions = updated_permissions
+            db_session.commit()
+            
+            flash(f'Permissions for {user.username} have been updated successfully.', 'success')
+            return redirect(url_for('admin.list_users'))
+            
+        except SQLAlchemyError as e:
+            db_session.rollback()
+            flash(f'Error updating permissions: {str(e)}', 'danger')
+    
+    # For GET requests, prepare user's current permissions
+    user_permissions = user.permissions or {}
+    
+    # Create a CSRF form for the permission update
+    csrf_form = CSRFForm()
+    
+    return render_template(
+        'admin/edit_permissions.html', 
+        user=user, 
+        categorized_permissions=categorized_permissions,
+        user_permissions=user_permissions,
+        csrf_form=csrf_form
+    )
 

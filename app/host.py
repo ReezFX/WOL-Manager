@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from sqlalchemy import desc
 from app import db_session
-from app.models import Host
+from app.models import Host, Role, Permission
 from app.forms import HostForm
 import re
 
@@ -21,9 +21,19 @@ def list_hosts():
     # Get hosts query with pagination
     query = db_session.query(Host)
     
-    # Filter by current user unless admin
+    # Filter by current user unless admin or has specific roles visibility
     if not current_user.is_admin:
-        query = query.filter_by(created_by=current_user.id)
+        # Get all the role IDs of the current user
+        user_role_ids = [role.id for role in current_user.roles]
+        
+        # Filter to hosts created by the user OR where user's role is in visible_to_roles
+        if not current_user.has_permission('view_all_hosts'):
+            query = query.filter(
+                # Either the host was created by the current user
+                (Host.created_by == current_user.id) | 
+                # Or one of the user's roles is in the host's visible_to_roles
+                (Host.visible_to_roles.cast(db_session.JSON()).op('?|')(user_role_ids))
+            )
     
     # Order by recently created first
     query = query.order_by(desc(Host.created_at))
@@ -59,11 +69,42 @@ def list_hosts():
         @property
         def next_num(self):
             return self.page + 1 if self.has_next else None
+        def iter_pages(self, left_edge=2, left_current=2, right_current=5, right_edge=2):
+            """
+            Generates page numbers for pagination controls.
+            
+            Args:
+                left_edge: Number of pages to show at the beginning
+                left_current: Number of pages to show before current page
+                right_current: Number of pages to show after current page
+                right_edge: Number of pages to show at the end
+            
+            Returns:
+                A list of page numbers with None to indicate gaps
+            """
+            last = 0
+            for num in range(1, self.pages + 1):
+                # Add left edge pages
+                if num <= left_edge:
+                    yield num
+                    last = num
+                # Add pages around current page
+                elif (num > self.page - left_current - 1 and 
+                      num < self.page + right_current):
+                    if last + 1 != num:
+                        yield None
+                    yield num
+                    last = num
+                # Add right edge pages
+                elif num > self.pages - right_edge:
+                    if last + 1 != num:
+                        yield None
+                    yield num
+                    last = num
             
         @property
         def items(self):
             return hosts
-
     pagination = Pagination(page, per_page, total)
     
     return render_template('host/host_list.html', hosts=hosts, pagination=pagination)
@@ -72,24 +113,41 @@ def list_hosts():
 @login_required
 def add_host():
     """Add a new host"""
+    # Check if user has permission to add hosts
+    if not current_user.has_permission('add_hosts'):
+        flash('You do not have permission to add hosts', 'danger')
+        return redirect(url_for('host.list_hosts'))
+        
     form = HostForm()
     
+    # Get all roles to populate the multi-select dropdown
+    roles = db_session.query(Role).all()
+    
+    # Populate the visible_to_roles field choices
+    form.visible_to_roles.choices = [(role.id, role.name) for role in roles]
+    
+    # Initialize visible_to_roles data to empty list for GET requests
+    if request.method == 'GET':
+        form.visible_to_roles.data = []
+    
     if form.validate_on_submit():
-        # Check if host with same MAC already exists
+        # Check if a host with the same MAC address already exists
         existing_host = db_session.query(Host).filter_by(mac_address=form.mac_address.data).first()
         if existing_host:
             flash(f'A host with MAC address {form.mac_address.data} already exists', 'danger')
-            return render_template('host/host_form.html', form=form, title='Add Host')
+            return render_template('host/host_form.html', form=form, title='Add Host', roles=roles)
         
         # Create new host
+        visible_roles = form.visible_to_roles.data
+        
         new_host = Host(
             name=form.name.data,
             mac_address=form.mac_address.data,
             ip=form.ip_address.data if form.ip_address.data else '',
             description=form.description.data if form.description.data else '',
-            created_by=current_user.id
+            created_by=current_user.id,
+            visible_to_roles=visible_roles
         )
-        
         try:
             db_session.add(new_host)
             db_session.commit()
@@ -99,7 +157,7 @@ def add_host():
             db_session.rollback()
             flash(f'Error adding host: {str(e)}', 'danger')
     
-    return render_template('host/host_form.html', form=form, title='Add Host')
+    return render_template('host/host_form.html', form=form, title='Add Host', roles=roles)
 
 @host.route('/edit/<int:host_id>', methods=['GET', 'POST'])
 @login_required
@@ -112,7 +170,12 @@ def edit_host(host_id):
         return redirect(url_for('host.list_hosts'))
     
     # Check if user is allowed to edit this host
-    if not current_user.is_admin and host.created_by != current_user.id:
+    is_owner = host.created_by == current_user.id
+    has_edit_perm = current_user.has_permission('edit_hosts')
+    user_role_ids = [role.id for role in current_user.roles]
+    visible_to_user = any(role_id in host.visible_to_roles for role_id in user_role_ids)
+    
+    if not (has_edit_perm or (is_owner and visible_to_user) or current_user.is_admin):
         flash('You do not have permission to edit this host', 'danger')
         return redirect(url_for('host.list_hosts'))
     
@@ -121,12 +184,19 @@ def edit_host(host_id):
     # Add an ID field dynamically for the template to differentiate edit/add
     form.id = host_id
     
+    # Get all roles to populate the multi-select dropdown
+    roles = db_session.query(Role).all()
+    
+    # Populate the visible_to_roles field choices
+    form.visible_to_roles.choices = [(role.id, role.name) for role in roles]
+    
     if request.method == 'GET':
         # Pre-populate form with existing host data
         form.name.data = host.name
         form.mac_address.data = host.mac_address
         form.ip_address.data = host.ip
         form.description.data = host.description
+        form.visible_to_roles.data = host.visible_to_roles
     
     if form.validate_on_submit():
         # Check if MAC address already exists for a different host
@@ -134,13 +204,16 @@ def edit_host(host_id):
             existing_host = db_session.query(Host).filter_by(mac_address=form.mac_address.data).first()
             if existing_host and existing_host.id != host_id:
                 flash(f'Another host with MAC address {form.mac_address.data} already exists', 'danger')
-                return render_template('host/host_form.html', form=form, title='Edit Host')
+                return render_template('host/host_form.html', form=form, title='Edit Host', roles=roles)
         
         # Update host
         host.name = form.name.data
         host.mac_address = form.mac_address.data
         host.ip = form.ip_address.data if form.ip_address.data else ''
         host.description = form.description.data if form.description.data else ''
+        
+        # Update visible_to_roles
+        host.visible_to_roles = form.visible_to_roles.data
         
         try:
             db_session.commit()
@@ -150,7 +223,7 @@ def edit_host(host_id):
             db_session.rollback()
             flash(f'Error updating host: {str(e)}', 'danger')
     
-    return render_template('host/host_form.html', form=form, title='Edit Host')
+    return render_template('host/host_form.html', form=form, title='Edit Host', roles=roles)
 
 @host.route('/delete/<int:host_id>', methods=['POST'])
 @login_required
@@ -163,7 +236,12 @@ def delete_host(host_id):
         return redirect(url_for('host.list_hosts'))
     
     # Check if user is allowed to delete this host
-    if not current_user.is_admin and host.created_by != current_user.id:
+    is_owner = host.created_by == current_user.id
+    has_delete_perm = current_user.has_permission('delete_hosts')
+    user_role_ids = [role.id for role in current_user.roles]
+    visible_to_user = any(role_id in host.visible_to_roles for role_id in user_role_ids)
+    
+    if not (has_delete_perm or (is_owner and visible_to_user) or current_user.is_admin):
         flash('You do not have permission to delete this host', 'danger')
         return redirect(url_for('host.list_hosts'))
     
@@ -188,7 +266,13 @@ def view_host(host_id):
         return redirect(url_for('host.list_hosts'))
     
     # Check if user is allowed to view this host
-    if not current_user.is_admin and host.created_by != current_user.id:
+    user_role_ids = [role.id for role in current_user.roles]
+    can_view = (current_user.has_permission('view_hosts') or 
+                host.created_by == current_user.id or 
+                current_user.is_admin or
+                any(role_id in host.visible_to_roles for role_id in user_role_ids))
+    
+    if not can_view:
         flash('You do not have permission to view this host', 'danger')
         return redirect(url_for('host.list_hosts'))
     

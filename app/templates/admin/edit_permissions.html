@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User Permissions{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Edit Permissions for {{ user.username }}</h1>
+    
+    <form method="POST" action="{{ url_for('admin.edit_permissions', user_id=user.id) }}">
+        {{ csrf_form.csrf_token }}
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <p><strong>Note:</strong> Changes to permissions will take effect immediately after saving.</p>
+                </div>
+                
+                {% for category, perms in categorized_permissions.items() %}
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">{{ category }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for perm in perms %}
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" 
+                                           class="form-check-input" 
+                                           id="perm_{{ perm.id }}" 
+                                           name="perm_{{ perm.id }}" 
+                                           value="{{ perm.id }}"
+                                           {% if perm.name in user_permissions and user_permissions[perm.name] == True %} checked="checked" {% endif %}>
+                                    <label class="form-check-label" for="perm_{{ perm.id }}">
+                                        <strong>{{ perm.name }}</strong>
+                                        {% if perm.description %}
+                                        <p class="text-muted small mb-0">{{ perm.description }}</p>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if not categorized_permissions %}
+                <div class="alert alert-warning">
+                    <p>No permissions found in the system.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group d-flex justify-content-between">
+            <a href="{{ url_for('admin.list_users') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

@@ -126,6 +126,7 @@ class Host(Base):
     description = Column(Text, nullable=True)
     created_by = Column(Integer, ForeignKey('users.id'), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    visible_to_roles = Column(JSONType, default=lambda: [])  # Array of role IDs that can view this host
     
     # Relationships
     created_by_user = relationship('User', back_populates='hosts')
