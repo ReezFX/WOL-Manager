@@ -5,7 +5,7 @@ from functools import wraps
 import bcrypt
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models import User
+from app.models import User, Role
 from app import db_session
 from app.forms import LoginForm, RegistrationForm
 
@@ -61,9 +61,18 @@ def register():
                 new_user = User(
                     username=username,
                     password_hash=hash_password(password),
-                    role='user'  # Default role for new registrations
+                    role='user'  # Default role for new registrations (kept for backward compatibility)
                 )
                 db_session.add(new_user)
+                
+                # Assign the 'user' role to the new user in the user_roles table
+                user_role = db_session.query(Role).filter_by(name='user').first()
+                if user_role:
+                    new_user.roles.append(user_role)
+                else:
+                    # If 'user' role doesn't exist, log an error
+                    current_app.logger.error("'user' role not found in database")
+                
                 db_session.commit()
                 
                 flash('Registration successful! You can now log in.', 'success')

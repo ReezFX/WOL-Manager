@@ -27,7 +27,9 @@ def list_hosts():
         if not current_user.is_admin:
             # Get all the role IDs of the current user
             user_role_ids = [role.id for role in current_user.roles]
-            logging.debug(f"User {current_user.id} has roles: {user_role_ids}")
+            user_role_ids_str = [str(role_id) for role_id in user_role_ids]
+            logging.info(f"User {current_user.id} roles (int): {user_role_ids}")
+            logging.info(f"User {current_user.id} roles (str): {user_role_ids_str}")
             
             # Filter to hosts created by the user OR where user's role is in visible_to_roles
             if not current_user.has_permission('view_all_hosts'):
@@ -44,13 +46,27 @@ def list_hosts():
                     # Find hosts where user's role exists in visible_to_roles
                     for host in all_hosts:
                         if host.visible_to_roles:
+                            logging.info(f"Host {host.id} ({host.name}) visible_to_roles (raw): {host.visible_to_roles}")
                             # Convert all role IDs to strings for consistent comparison
                             host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
+                            logging.info(f"Host {host.id} ({host.name}) visible_to_roles (processed): {host_role_ids}")
+                            
                             # Check if any of the user's role IDs (converted to string) are in the host's visible_to_roles
-                            if any(str(role_id) in host_role_ids for role_id in user_role_ids):
+                            visible_to_this_user = False
+                            for role_id in user_role_ids:
+                                role_id_str = str(role_id)
+                                is_visible = role_id_str in host_role_ids
+                                logging.info(f"Checking if role {role_id} (str: {role_id_str}) is in host {host.id} visible_to_roles: {is_visible}")
+                                if is_visible:
+                                    visible_to_this_user = True
+                            
+                            if visible_to_this_user:
                                 visible_to_user_hosts.append(host.id)
+                                logging.info(f"Host {host.id} ({host.name}) IS visible to user {current_user.id}")
+                            else:
+                                logging.info(f"Host {host.id} ({host.name}) is NOT visible to user {current_user.id}")
                     
-                    logging.debug(f"Hosts visible to user based on roles: {visible_to_user_hosts}")
+                    logging.info(f"Summary: Hosts visible to user {current_user.id} based on roles: {visible_to_user_hosts}")
                     
                     # Build query with OR condition
                     if visible_to_user_hosts:

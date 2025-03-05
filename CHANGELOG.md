@@ -5,6 +5,22 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-03-05
+
+### Fixed
+- Fixed critical issue with role-based host visibility
+  - Resolved inconsistent handling of role IDs (strings vs integers) in visibility checks
+  - Standardized role ID storage as strings in the database
+  - Corrected comparison logic in host visibility checks to ensure proper matching
+  - Fixed incorrect substring matching that caused false positives in role checks
+  - Ensured consistent type handling across all host management functions
+  - Users will now correctly see all hosts assigned to their roles in the dashboard
+
+### Security
+- Improved permission validation throughout host management system
+  - Enhanced role-based access checks in view_host, edit_host, and delete_host functions
+  - Standardized authorization logic across all host-related operations
+  - Eliminated potential for unauthorized access due to inconsistent type handling
 ## [1.0.3] - 2025-03-5
 
 ### Fixed

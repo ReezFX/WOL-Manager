@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import HiddenField
 
-from app.models import User, Permission
+from app.models import User, Permission, Role
 from app import db_session
 from app.forms import RegistrationForm
 from app.auth import hash_password, admin_required
@@ -57,10 +57,18 @@ def add_user():
                 new_user = User(
                     username=username,
                     password_hash=hash_password(password),
-                    role='user'  # Default role for new users
+                    role='user'  # Default role for new users (legacy column)
                 )
                 db_session.add(new_user)
                 db_session.commit()
+                
+                # Assign the user role in user_roles table
+                user_role = db_session.query(Role).filter_by(name='user').first()
+                if user_role:
+                    new_user.roles.append(user_role)
+                    db_session.commit()
+                else:
+                    flash(f'Warning: Could not assign role "user" - role not found.', 'warning')
                 
                 flash(f'User {username} has been created successfully.', 'success')
                 return redirect(url_for('admin.list_users'))
@@ -90,7 +98,14 @@ def promote_user(user_id):
         elif user.id == current_user.id:
             flash('You cannot change your own role.', 'danger')
         else:
+            # Update legacy role column
             user.role = 'admin'
+            
+            # Add admin role to user's roles if not already assigned
+            admin_role = db_session.query(Role).filter_by(name='admin').first()
+            if admin_role and admin_role not in user.roles:
+                user.roles.append(admin_role)
+            
             db_session.commit()
             flash(f'User {user.username} promoted to admin.', 'success')
     else:
@@ -111,7 +126,19 @@ def demote_user(user_id):
         elif user.id == current_user.id:
             flash('You cannot change your own role.', 'danger')
         else:
+            # Update legacy role column
             user.role = 'user'
+            
+            # Remove admin role from user's roles
+            admin_role = db_session.query(Role).filter_by(name='admin').first()
+            if admin_role and admin_role in user.roles:
+                user.roles.remove(admin_role)
+                
+            # Make sure user has the user role
+            user_role = db_session.query(Role).filter_by(name='user').first()
+            if user_role and user_role not in user.roles:
+                user.roles.append(user_role)
+                
             db_session.commit()
             flash(f'User {user.username} demoted to regular user.', 'success')
     else:
