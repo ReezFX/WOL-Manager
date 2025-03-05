@@ -286,8 +286,22 @@ If you encounter database errors:
 2. Check port mappings (8008 by default)
 3. Ensure there are no firewall rules blocking access
 
+### Form Submission Errors
+If you encounter 400 Bad Request errors when submitting forms:
+1. Check for CSRF token errors in the error message (e.g., "The CSRF token is missing")
+2. Ensure all forms include the CSRF token with `<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">`
+3. For forms using WTForms, include `{{ form.hidden_tag() }}` at the beginning of the form
+4. Verify that your session hasn't expired, as CSRF tokens are session-specific
+5. If using AJAX requests, ensure the CSRF token is included in the request headers
+6. Clear browser cache and cookies if persistent CSRF issues occur
+
 ## Contributing
 ## Release Notes
+
+### Version 1.0.6 (2025-03-05)
+- Fixed CSRF token missing in the change_password.html template
+- Improved security for password change functionality
+- Added protection against cross-site request forgery attacks
 
 ### Version 1.0.4 (2025-03-05)
 - Fixed role-based host visibility issues with user role assignment

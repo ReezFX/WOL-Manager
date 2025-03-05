@@ -5,6 +5,14 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2025-03-05
+
+### Security
+- Fixed missing CSRF token in the change_password.html template
+  - Added the required CSRF token input field to protect against Cross-Site Request Forgery attacks
+  - Ensured proper integration with Flask-WTF's CSRFProtect middleware
+  - Improved form security for password change functionality
+
 ## [1.0.5] - 2025-03-05
 
 ### Fixed
