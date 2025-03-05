@@ -5,6 +5,35 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-03-05
+
+### Security
+- Enhanced role-based access control for host management
+  - Implemented proper validation of user roles against allowed host visibility roles
+  - Fixed permission validation in host visibility controls to prevent unauthorized access
+  - Strengthened input validation for role assignment during host creation and updates
+
+### Changed
+- Refactored host management implementation
+  - Moved host visibility logic to dedicated functions for improved maintainability
+  - Standardized error handling patterns across host management endpoints
+  - Improved type validation for form submissions in host routes
+
+### Fixed
+- Resolved critical internal server error (500) in `/hosts/add` endpoint
+  - Fixed improper handling of the `visible_to_roles` field during host creation
+  - Addressed edge case where role validation failed during form submission
+  - Corrected JSON serialization issue when processing role assignments
+- Resolved host visibility inconsistencies
+  - Fixed logic flaw in the role-based filtering mechanism
+  - Corrected database query constraints for host visibility that caused incorrect results
+  - Standardized role verification across all host-related endpoints
+- Improved user management functionality
+  - Fixed user promotion and demotion operations with proper error handling when user not found
+  - Corrected user addition process to prevent internal server errors and data inconsistencies
+  - Enhanced error handling throughout user management operations for improved stability
+  - Refactored user management code from auth.py to admin.py for better separation of concerns
+
 ## [1.0.1] - 2025-03-05
 
 ### Added
