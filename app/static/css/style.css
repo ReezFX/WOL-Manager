@@ -456,6 +456,38 @@ body {
     border: 1px solid rgba(255, 204, 0, 0.3);
 }
 
+/* Theme Toggle Button */
+.theme-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle:hover {
+    background-color: rgba(var(--hover-bg-rgb), 0.1);
+}
+
+.theme-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.3);
+}
+
+.theme-toggle .icon {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 /* Buttons */
 .btn-apple {
     padding: 0.5rem 1.25rem;
@@ -572,6 +604,47 @@ body {
 
 .fade-in {
     animation: fade-in 0.3s ease-in-out;
+}
+
+/* Theme Toggle Animations */
+@keyframes rotate-in {
+    0% { transform: rotate(-45deg) scale(0); opacity: 0; }
+    100% { transform: rotate(0) scale(1); opacity: 1; }
+}
+
+@keyframes rotate-out {
+    0% { transform: rotate(0) scale(1); opacity: 1; }
+    100% { transform: rotate(45deg) scale(0); opacity: 0; }
+}
+
+.light-active {
+    display: flex;
+    opacity: 1;
+    transform: scale(1) rotate(0);
+    animation: rotate-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: var(--text-primary);
+}
+
+.dark-active {
+    display: flex;
+    opacity: 1;
+    transform: scale(1) rotate(0);
+    animation: rotate-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: var(--text-primary);
+}
+
+.light-inactive {
+    display: none;
+    opacity: 0;
+    transform: scale(0) rotate(45deg);
+    animation: rotate-out 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dark-inactive {
+    display: none;
+    opacity: 0;
+    transform: scale(0) rotate(45deg);
+    animation: rotate-out 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Responsive adjustments */

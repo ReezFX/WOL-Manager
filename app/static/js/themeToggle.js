@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const themeToggleBtn = document.getElementById('theme-toggle');
   const rootElement = document.documentElement;
+  const moonIcon = document.querySelector('.apple-moon-icon');
+  const sunIcon = document.querySelector('.apple-sun-icon');
   
   // Check for saved user preference, if any
   const savedTheme = localStorage.getItem('theme');
@@ -25,13 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Function to update toggle button appearance
   function updateToggleButton(isDarkMode) {
-    // Optional: update button text/icon based on current theme
+    // Update button aria-label based on current theme
     if (isDarkMode) {
       themeToggleBtn.setAttribute('aria-label', 'Switch to light mode');
-      themeToggleBtn.innerHTML = '☀️'; // Sun icon for light mode switch
+      // Update button classes for CSS-based animations
+      themeToggleBtn.classList.add('dark-active');
+      themeToggleBtn.classList.remove('light-active');
     } else {
       themeToggleBtn.setAttribute('aria-label', 'Switch to dark mode');
-      themeToggleBtn.innerHTML = '🌙'; // Moon icon for dark mode switch
+      // Update button classes for CSS-based animations
+      themeToggleBtn.classList.add('light-active');
+      themeToggleBtn.classList.remove('dark-active');
     }
   }
   
