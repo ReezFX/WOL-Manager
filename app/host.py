@@ -43,8 +43,12 @@ def list_hosts():
                     
                     # Find hosts where user's role exists in visible_to_roles
                     for host in all_hosts:
-                        if host.visible_to_roles and any(str(role_id) in host.visible_to_roles or role_id in host.visible_to_roles for role_id in user_role_ids):
-                            visible_to_user_hosts.append(host.id)
+                        if host.visible_to_roles:
+                            # Convert all role IDs to strings for consistent comparison
+                            host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
+                            # Check if any of the user's role IDs (converted to string) are in the host's visible_to_roles
+                            if any(str(role_id) in host_role_ids for role_id in user_role_ids):
+                                visible_to_user_hosts.append(host.id)
                     
                     logging.debug(f"Hosts visible to user based on roles: {visible_to_user_hosts}")
                     
@@ -179,7 +183,9 @@ def add_host():
             return render_template('host/host_form.html', form=form, title='Add Host', roles=roles)
         
         # Create new host
-        visible_roles = form.visible_to_roles.data
+        # Create new host
+        # Convert role IDs to strings for consistent storage
+        visible_roles = [str(role_id) for role_id in form.visible_to_roles.data]
         
         new_host = Host(
             name=form.name.data,
@@ -214,7 +220,12 @@ def edit_host(host_id):
     is_owner = host.created_by == current_user.id
     has_edit_perm = current_user.has_permission('edit_hosts')
     user_role_ids = [role.id for role in current_user.roles]
-    visible_to_user = any(role_id in host.visible_to_roles for role_id in user_role_ids)
+    # Convert role IDs to strings for consistent comparison
+    if host.visible_to_roles:
+        host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
+        visible_to_user = any(str(role_id) in host_role_ids for role_id in user_role_ids)
+    else:
+        visible_to_user = False
     
     if not (has_edit_perm or (is_owner and visible_to_user) or current_user.is_admin):
         flash('You do not have permission to edit this host', 'danger')
@@ -237,7 +248,11 @@ def edit_host(host_id):
         form.mac_address.data = host.mac_address
         form.ip_address.data = host.ip
         form.description.data = host.description
-        form.visible_to_roles.data = host.visible_to_roles
+        # Convert string role IDs back to integers for the form
+        if host.visible_to_roles:
+            form.visible_to_roles.data = [int(role_id) for role_id in host.visible_to_roles]
+        else:
+            form.visible_to_roles.data = []
     
     if form.validate_on_submit():
         # Check if MAC address already exists for a different host
@@ -254,7 +269,8 @@ def edit_host(host_id):
         host.description = form.description.data if form.description.data else ''
         
         # Update visible_to_roles
-        host.visible_to_roles = form.visible_to_roles.data
+        # Convert role IDs to strings for consistent storage
+        host.visible_to_roles = [str(role_id) for role_id in form.visible_to_roles.data]
         
         try:
             db_session.commit()
@@ -280,7 +296,12 @@ def delete_host(host_id):
     is_owner = host.created_by == current_user.id
     has_delete_perm = current_user.has_permission('delete_hosts')
     user_role_ids = [role.id for role in current_user.roles]
-    visible_to_user = any(role_id in host.visible_to_roles for role_id in user_role_ids)
+    # Convert role IDs to strings for consistent comparison
+    if host.visible_to_roles:
+        host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
+        visible_to_user = any(str(role_id) in host_role_ids for role_id in user_role_ids)
+    else:
+        visible_to_user = False
     
     if not (has_delete_perm or (is_owner and visible_to_user) or current_user.is_admin):
         flash('You do not have permission to delete this host', 'danger')
@@ -311,7 +332,7 @@ def view_host(host_id):
     can_view = (current_user.has_permission('view_hosts') or 
                 host.created_by == current_user.id or 
                 current_user.is_admin or
-                any(role_id in host.visible_to_roles for role_id in user_role_ids))
+                (host.visible_to_roles and any(str(role_id) in [str(r) for r in host.visible_to_roles] for role_id in user_role_ids)))
     
     if not can_view:
         flash('You do not have permission to view this host', 'danger')
