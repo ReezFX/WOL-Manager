@@ -5,61 +5,61 @@
 {% endblock %}
 
 {% block content %}
-<div class="apple-container">
-    <div class="apple-content-container">
-        <div class="apple-form-container">
-            <div class="apple-card host-form-card">
-                <div class="apple-card-header">
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
                     {% if form.id is defined %}
-                    <h2 class="apple-heading">Edit Host</h2>
+                    <h2>Edit Host</h2>
                     {% else %}
-                    <h2 class="apple-heading">Add New Host</h2>
+                    <h2>Add New Host</h2>
                     {% endif %}
                 </div>
-                <div class="apple-card-body">
-                    <form method="POST" action="" novalidate class="apple-form">
+                <div class="card-body">
+                    <form method="POST" action="" novalidate>
                         {{ form.hidden_tag() }}
-                        <div class="apple-form-group">
-                            {{ form.name.label(class="apple-form-label") }}
-                            {{ form.name(class="apple-form-input" + (" apple-input-invalid" if form.name.errors else "")) }}
+                        <div class="form-group mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
                             {% for error in form.name.errors %}
-                            <div class="apple-form-error">
+                            <div class="invalid-feedback">
                                 {{ error }}
                             </div>
                             {% endfor %}
                         </div>
-                        <div class="apple-form-group">
-                            {{ form.mac_address.label(class="apple-form-label") }}
-                            {{ form.mac_address(class="apple-form-input" + (" apple-input-invalid" if form.mac_address.errors else "")) }}
+                        <div class="form-group mb-3">
+                            {{ form.mac_address.label(class="form-label") }}
+                            {{ form.mac_address(class="form-control" + (" is-invalid" if form.mac_address.errors else "")) }}
                             {% for error in form.mac_address.errors %}
-                            <div class="apple-form-error">
+                            <div class="invalid-feedback">
                                 {{ error }}
                             </div>
                             {% endfor %}
-                            <small class="apple-form-help">Format: 01:23:45:67:89:AB</small>
+                            <small class="form-text text-muted">Format: 01:23:45:67:89:AB</small>
                         </div>
-                        <div class="apple-form-group">
-                            {{ form.ip_address.label(class="apple-form-label") }}
-                            {{ form.ip_address(class="apple-form-input" + (" apple-input-invalid" if form.ip_address.errors else "")) }}
+                        <div class="form-group mb-3">
+                            {{ form.ip_address.label(class="form-label") }}
+                            {{ form.ip_address(class="form-control" + (" is-invalid" if form.ip_address.errors else "")) }}
                             {% for error in form.ip_address.errors %}
-                            <div class="apple-form-error">
+                            <div class="invalid-feedback">
                                 {{ error }}
                             </div>
                             {% endfor %}
-                            <small class="apple-form-help">Example: 192.168.1.100</small>
+                            <small class="form-text text-muted">Example: 192.168.1.100</small>
                         </div>
-                        <div class="apple-form-group">
-                            {{ form.description.label(class="apple-form-label") }}
-                            {{ form.description(class="apple-form-textarea" + (" apple-input-invalid" if form.description.errors else ""), rows=3) }}
+                        <div class="form-group mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3) }}
                             {% for error in form.description.errors %}
-                            <div class="apple-form-error">
+                            <div class="invalid-feedback">
                                 {{ error }}
                             </div>
                             {% endfor %}
                         </div>
-                        <div class="apple-form-group">
-                            <label for="visible_to_roles" class="apple-form-label">Visible to Roles</label>
-                            <select multiple class="apple-form-select{% if form.visible_to_roles.errors %} apple-input-invalid{% endif %}" 
+                        <div class="form-group mb-3">
+                            <label for="visible_to_roles">Visible to Roles</label>
+                            <select multiple class="form-control{% if form.visible_to_roles.errors %} is-invalid{% endif %}" 
                                     id="visible_to_roles" name="visible_to_roles" size="5">
                                 {% for role_id, role_name in form.visible_to_roles.choices %}
                                 <option value="{{ role_id }}" 
@@ -69,15 +69,15 @@
                                 {% endfor %}
                             </select>
                             {% for error in form.visible_to_roles.errors %}
-                            <div class="apple-form-error">
+                            <div class="invalid-feedback">
                                 {{ error }}
                             </div>
                             {% endfor %}
-                            <small class="apple-form-help">Hold Ctrl (or Cmd on Mac) to select multiple roles. Users with these roles will be able to see this host.</small>
+                            <small class="form-text text-muted">Hold Ctrl (or Cmd on Mac) to select multiple roles. Users with these roles will be able to see this host.</small>
                         </div>
-                        <div class="apple-form-actions">
-                            {{ form.submit(class="apple-button apple-button-primary") }}
-                            <a href="{{ url_for('host.list_hosts') }}" class="apple-button apple-button-secondary">Cancel</a>
+                        <div class="form-group mt-4">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('host.list_hosts') }}" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>

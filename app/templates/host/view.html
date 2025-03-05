@@ -3,68 +3,57 @@
 {% block title %}View Host{% endblock %}
 
 {% block content %}
-<div class="apple-container">
-    <div class="page-header">
-        <h2 class="page-title">Host Details</h2>
-    </div>
-
-    <div class="host-detail-card">
-        <div class="host-detail-header">
-            <h3>{{ host.name }}</h3>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>Host Details</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Name:</div>
+                <div class="col-md-9">{{ host.name }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">MAC Address:</div>
+                <div class="col-md-9">{{ host.mac_address }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">IP Address:</div>
+                <div class="col-md-9">{{ host.ip or 'Not specified' }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Description:</div>
+                <div class="col-md-9">{{ host.description or 'No description available' }}</div>
+            </div>
             {% if host.status %}
-            <div class="host-status-badge {% if host.status == 'Online' %}status-online{% else %}status-offline{% endif %}">
-                <span class="status-indicator"></span>
-                <span class="status-text">{{ host.status }}</span>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Status:</div>
+                <div class="col-md-9">{{ host.status }}</div>
+            </div>
+            {% endif %}
+            {% if host.created_by %}
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Created by:</div>
+                <div class="col-md-9">{{ host.created_by }}</div>
+            </div>
+            {% endif %}
+            {% if host.created_at %}
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Created at:</div>
+                <div class="col-md-9">{{ host.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
             </div>
             {% endif %}
         </div>
-        
-        <div class="host-detail-content">
-            <div class="detail-section">
-                <div class="detail-grid">
-                    <div class="detail-row">
-                        <div class="detail-label">MAC Address</div>
-                        <div class="detail-value mac-address">{{ host.mac_address }}</div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">IP Address</div>
-                        <div class="detail-value {% if not host.ip %}text-muted{% endif %}">{{ host.ip or 'Not specified' }}</div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Description</div>
-                        <div class="detail-value {% if not host.description %}text-muted{% endif %}">{{ host.description or 'No description available' }}</div>
-                    </div>
-                    
-                    {% if host.created_by %}
-                    <div class="detail-row">
-                        <div class="detail-label">Created by</div>
-                        <div class="detail-value">{{ host.created_by }}</div>
-                    </div>
-                    {% endif %}
-                    
-                    {% if host.created_at %}
-                    <div class="detail-row">
-                        <div class="detail-label">Created at</div>
-                        <div class="detail-value">{{ host.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <div class="host-detail-footer">
-            <div class="action-buttons">
-                <a href="{{ url_for('host.list_hosts') }}" class="apple-button apple-button-secondary">
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('host.list_hosts') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>
-                
-                <div class="right-buttons">
-                    <a href="{{ url_for('wol.wol_send', host_id=host.id) }}" class="apple-button apple-button-success wake-button" data-host-id="{{ host.id }}">
+                <div>
+                    <a href="{{ url_for('wol.wol_send', host_id=host.id) }}" class="btn btn-success me-2">
                         <i class="fas fa-power-off"></i> Wake Host
                     </a>
-                    <a href="{{ url_for('host.edit_host', host_id=host.id) }}" class="apple-button apple-button-primary">
+                    <a href="{{ url_for('host.edit_host', host_id=host.id) }}" class="btn btn-primary">
                         <i class="fas fa-edit"></i> Edit
                     </a>
                 </div>
