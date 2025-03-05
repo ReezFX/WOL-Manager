@@ -16,13 +16,14 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 - [API Endpoints](#api-endpoints)
 - [Security](#security)
 - [Troubleshooting](#troubleshooting)
+- [Release Notes](#release-notes)
 - [Contributing](#contributing)
 
 ## Features
 - **Host Management**: Add, edit, view, and delete networked devices with MAC addresses
 - **Wake-on-LAN**: Send magic packets to wake devices remotely
 - **User Authentication**: Secure login system with session management
-- **Role-based Access Control**: Different permission levels for users and administrators
+- **Role-based Access Control**: Different permission levels for users and administrators, with host visibility controls based on user roles
 - **Logging**: Track wake attempts and results for auditing purposes
 - **Responsive UI**: Web interface that works on desktop and mobile devices
 - **Docker Support**: Easy deployment using containers
@@ -134,6 +135,7 @@ After installation, you can log in with the default admin account:
    - MAC Address: The physical address in any standard format (e.g., 00:11:22:33:44:55)
    - IP Address (optional): The device's IP address
    - Description (optional): Additional information about the device
+   - Visible to Roles: Select which user roles can view this host
 
 ### Waking Devices
 1. Go to the dashboard or hosts list
@@ -146,23 +148,31 @@ After installation, you can log in with the default admin account:
 1. Navigate to "Admin" > "Users"
 2. Manage user accounts:
    - Create new users
+   - Create new users
    - Edit existing users
    - Assign roles and permissions
    - Delete users
-
+   - Control host visibility by role (added in v1.0.4)
 ## Application Structure
 ```
 WOL-Manager/
 ├── app/                        # Main application directory
 │   ├── __init__.py             # Application factory and initialization
+│   ├── admin.py                # Admin panel routes and functions
 │   ├── auth.py                 # Authentication routes and functions
 │   ├── config.py               # Configuration settings
 │   ├── forms.py                # Form definitions and validations
 │   ├── host.py                 # Host management routes
 │   ├── main.py                 # Main application routes and dashboard
 │   ├── models.py               # Database models (SQLAlchemy)
+│   ├── routes.py               # General routing functions
 │   ├── wol.py                  # Wake-on-LAN functionality
 │   └── templates/              # HTML templates
+│       ├── admin/              # Admin panel templates
+│       ├── auth/               # Authentication templates
+│       ├── host/               # Host management templates
+│       ├── main/               # Main page templates
+│       └── wol/                # WOL-specific templates
 ├── instance/                   # Instance-specific data (database)
 ├── manage.py                   # Management script
 ├── Dockerfile                  # Docker configuration
@@ -207,6 +217,7 @@ Stores device information for Wake-on-LAN:
 - User ID: Foreign key to the owner
 - Description: Optional additional information
 - Created At: Timestamp
+- Visible to Roles: Array of role IDs that can view this host
 
 ### Log Model
 Records of wake attempts:
@@ -257,6 +268,13 @@ Records of wake attempts:
 3. Check if your network allows broadcast UDP packets
 4. Try using a specific IP address if broadcast packets are blocked
 
+### Host Visibility Issues
+If users cannot see hosts that should be visible to them:
+1. Verify the user has the correct role assignment in the user_roles table
+2. Check that the host's visible_to_roles field includes the user's role ID
+3. Ensure that newly registered users are properly assigned to the 'user' role (fixed in v1.0.4)
+4. For admin users, verify they have both 'admin' and 'user' roles if they need to see hosts visible to 'user' role
+
 ### Database Issues
 If you encounter database errors:
 1. For Docker: Ensure the volume is properly mounted
@@ -269,6 +287,29 @@ If you encounter database errors:
 3. Ensure there are no firewall rules blocking access
 
 ## Contributing
+## Release Notes
+
+### Version 1.0.4 (2025-03-05)
+- Fixed role-based host visibility issues with user role assignment
+- Improved role handling to ensure proper visibility of hosts to users with assigned roles
+- Added proper role assignment for newly registered users
+- Updated role assignment in admin user creation to maintain both legacy role column and new role system
+- Fixed permission validation to ensure consistent access control
+
+### Version 1.0.3 (2025-03-05)
+- Fixed SQLite compatibility issues with JSON operators in host list view
+- Improved database query performance for host filtering
+
+### Version 1.0.2 (2025-04-05)
+- Fixed host visibility issues related to admin users
+- Enhanced error handling for wake-on-lan operations
+
+### Version 1.0.1 (2025-03-04)
+- Added role-based host visibility feature
+- Database schema updated to include visible_to_roles field for hosts
+- UI improvements for mobile devices
+
+## Contributing
 Contributions to WOL-Manager are welcome!
 
 1. Fork the repository
@@ -277,4 +318,5 @@ Contributions to WOL-Manager are welcome!
 4. Submit a pull request
 
 Please adhere to the existing code style and add unit tests for any new functionality.
+
 

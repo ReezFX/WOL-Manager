@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed incorrect substring matching that caused false positives in role checks
   - Ensured consistent type handling across all host management functions
   - Users will now correctly see all hosts assigned to their roles in the dashboard
+- Fixed user role assignment during registration and user creation
+  - Resolved issue where new users were not properly assigned to the "user" role in the user_roles table
+  - Updated user registration process to properly create entries in the user_roles table
+  - Fixed admin user creation to consistently assign roles using the new role relationship system
+  - Improved compatibility between legacy role column and new role relationship system
 
 ### Security
 - Improved permission validation throughout host management system
