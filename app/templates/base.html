@@ -9,11 +9,8 @@
     <!-- CSS Files in correct order -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme-bridge.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/apple-layout.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/apple-components.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/host-cards.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/apple-forms.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dialogs.css') }}">
     
@@ -25,38 +22,27 @@
 <body>
     <!-- Header with Apple-inspired navigation -->
     <header class="apple-header">
-        <div class="apple-status-bar"></div>
-        <div class="apple-container">
+        <div class="container">
             <nav class="apple-nav">
-                <div class="apple-nav-brand">
-                    <!-- Hamburger menu button for mobile navigation -->
-                    <button id="apple-nav-toggle" class="apple-hamburger-button" aria-label="Toggle navigation">
-                        <span class="apple-hamburger-line"></span>
-                        <span class="apple-hamburger-line"></span>
-                        <span class="apple-hamburger-line"></span>
-                    </button>
-                    <a href="{{ url_for('main.index') }}" class="apple-brand-link">
-                        <i class="fas fa-power-off apple-logo-icon"></i>
-                        <span class="apple-brand-text">WoL Manager</span>
+                <a href="{{ url_for('index') }}" class="brand">
+                    <i class="fas fa-power-off"></i>
+                    <span>WoL Manager</span>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="{{ url_for('host.index') }}" class="nav-link {% if request.endpoint == 'host.index' %}active{% endif %}">
+                        <i class="fas fa-laptop"></i> Hosts
+                    </a>
+                    <a href="{{ url_for('host.create') }}" class="nav-link {% if request.endpoint == 'host.create' %}active{% endif %}">
+                        <i class="fas fa-plus-circle"></i> Add Host
                     </a>
                 </div>
                 
-                <div class="apple-nav-links" id="apple-nav-menu">
-                    <a href="{{ url_for('host.list_hosts') }}" class="apple-nav-link {% if request.endpoint == 'host.list_hosts' %}active{% endif %}">
-                        <i class="fas fa-laptop"></i> 
-                        <span class="apple-nav-text">Hosts</span>
-                    </a>
-                    <a href="{{ url_for('host.add_host') }}" class="apple-nav-link {% if request.endpoint == 'host.add_host' %}active{% endif %}">
-                        <i class="fas fa-plus-circle"></i> 
-                        <span class="apple-nav-text">Add Host</span>
-                    </a>
-                </div>
-                
-                <div class="apple-nav-actions">
+                <div class="nav-actions">
                     <!-- Theme Toggle Button -->
-                    <button id="theme-toggle" class="apple-theme-toggle" aria-label="Toggle dark mode">
-                        <i class="fas fa-moon apple-moon-icon"></i>
-                        <i class="fas fa-sun apple-sun-icon"></i>
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                        <i class="fas fa-moon dark-icon"></i>
+                        <i class="fas fa-sun light-icon"></i>
                     </button>
                 </div>
             </nav>
@@ -64,12 +50,12 @@
     </header>
 
     <!-- Toast Container for Messages -->
-    <div id="toast-container" class="apple-toast-container">
+    <div id="toast-container" class="toast-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="apple-toast-message {{ category }}" role="alert">
-                        <div class="apple-toast-icon">
+                    <div class="toast-message {{ category }}" role="alert">
+                        <div class="toast-icon">
                             {% if category == 'success' %}
                                 <i class="fas fa-check-circle"></i>
                             {% elif category == 'error' %}
@@ -80,8 +66,8 @@
                                 <i class="fas fa-info-circle"></i>
                             {% endif %}
                         </div>
-                        <div class="apple-toast-content">{{ message }}</div>
-                        <button class="apple-toast-close" aria-label="Close message">
+                        <div class="toast-content">{{ message }}</div>
+                        <button class="toast-close" aria-label="Close message">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -91,15 +77,15 @@
     </div>
 
     <!-- Main Content Area -->
-    <main class="apple-content">
-        <div class="apple-container">
-            <div class="apple-content-header">
+    <main class="content-container">
+        <div class="container">
+            <div class="content-header">
                 {% block header %}
-                <h1 class="apple-page-title">{% block page_title %}{% endblock %}</h1>
+                <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
                 {% endblock %}
             </div>
             
-            <div class="apple-content-body">
+            <div class="content-body">
                 {% block content %}{% endblock %}
             </div>
         </div>
@@ -107,47 +93,43 @@
 
     <!-- Footer -->
     <footer class="apple-footer">
-        <div class="apple-container">
-            <div class="apple-footer-content">
-                <p class="apple-copyright">WoL Manager &copy; <span id="current-year"></span> | Designed with <i class="fas fa-heart"></i></p>
-                <script>
-                    document.getElementById('current-year').textContent = new Date().getFullYear();
-                </script>
-                <div class="apple-footer-links">
-                    <a href="#" class="apple-footer-link">About</a>
-                    <a href="#" class="apple-footer-link">Help</a>
-                    <a href="#" class="apple-footer-link">Privacy</a>
+        <div class="container">
+            <div class="footer-content">
+                <p>WoL Manager &copy; {% now year %} | Designed with <i class="fas fa-heart"></i></p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">About</a>
+                    <a href="#" class="footer-link">Help</a>
+                    <a href="#" class="footer-link">Privacy</a>
                 </div>
             </div>
         </div>
     </footer>
 
     <!-- Confirmation Dialog -->
-    <div id="confirmation-dialog" class="apple-dialog-backdrop hidden">
-        <div class="apple-dialog-container">
-            <div class="apple-dialog-header">
-                <h3 id="dialog-title" class="apple-dialog-title">Confirm Action</h3>
+    <div id="confirmation-dialog" class="dialog-container hidden">
+        <div class="dialog apple-dialog">
+            <div class="dialog-header">
+                <h3 id="dialog-title">Confirm Action</h3>
             </div>
-            <div class="apple-dialog-body">
-                <p id="dialog-message" class="apple-dialog-message">Are you sure you want to proceed?</p>
+            <div class="dialog-body">
+                <p id="dialog-message">Are you sure you want to proceed?</p>
             </div>
-            <div class="apple-dialog-footer">
-                <button id="dialog-cancel" class="apple-button apple-button-secondary">Cancel</button>
-                <button id="dialog-confirm" class="apple-button apple-button-primary">Confirm</button>
+            <div class="dialog-footer">
+                <button id="dialog-cancel" class="apple-button secondary">Cancel</button>
+                <button id="dialog-confirm" class="apple-button primary">Confirm</button>
             </div>
         </div>
     </div>
 
     <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/themeToggle.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/navigationToggle.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
     
     <script>
         // Initialize toast messages
         document.addEventListener('DOMContentLoaded', function() {
-            const toasts = document.querySelectorAll('.apple-toast-message');
+            const toasts = document.querySelectorAll('.toast-message');
             toasts.forEach(toast => {
                 setTimeout(() => {
                     toast.classList.add('show');
@@ -160,7 +142,7 @@
                     }, 300);
                 }, 5000);
                 
-                const closeBtn = toast.querySelector('.apple-toast-close');
+                const closeBtn = toast.querySelector('.toast-close');
                 if (closeBtn) {
                     closeBtn.addEventListener('click', () => {
                         toast.classList.remove('show');

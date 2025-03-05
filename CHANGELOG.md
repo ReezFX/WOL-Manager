@@ -5,39 +5,6 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2025-03-06
-
-### Changed
-- Implemented comprehensive Apple-inspired UI redesign
-  - Created new theme.css with Apple-inspired color schemes and design variables
-  - Implemented light/dark mode toggle functionality with smooth transitions
-  - Removed Bootstrap dependency in favor of custom Apple-inspired components
-  - Added subtle animations, shadows, and rounded corners throughout the interface
-  - Improved spacing, typography, and visual hierarchy for better readability
-  - Enhanced interactive elements with more intuitive hover and focus states
-
-### Added
-- New CSS architecture with modular files for better organization:
-  - theme.css: Core design system with light/dark mode variables
-  - reset.css: Normalized styling across browsers
-  - style.css: Global layout and structure styles
-  - apple-components.css: Reusable UI components (cards, buttons, etc.)
-  - apple-forms.css: Form-specific styling with Apple-inspired inputs
-  - dialogs.css: Custom dialog and toast notification styling
-
-- Dynamic theme switching
-  - Added themeToggle.js to manage theme preferences
-  - Implemented persistent theme preference storage in browser
-  - Created an elegant theme toggle button in the navigation bar
-
-### Improved
-- Redesigned host management interfaces
-  - Converted host list view from table-based to card grid layout
-  - Redesigned status indicators with color and text for better accessibility
-  - Enhanced form elements with improved validation styling
-  - Updated action buttons with consistent Apple-inspired design
-  - Improved mobile responsiveness across all templates
-
 ## [1.0.6] - 2025-03-05
 
 ### Security
