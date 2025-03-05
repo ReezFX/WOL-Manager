@@ -37,7 +37,23 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 ## Installation
 
 ### Docker Installation (Recommended)
-The easiest way to run WOL-Manager is using Docker:
+The easiest way to run WOL-Manager is using Docker. You have two options:
+
+#### Option 1: Using Pre-built Docker Image (Quickest)
+
+1. Pull the image from Docker Hub:
+   ```bash
+   docker pull officialreez/wol-manager-web
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -d -p 8008:8008 -v wol-manager-data:/app/instance --name wol-manager officialreez/wol-manager-web
+   ```
+
+3. Access the application at `http://localhost:8008`
+
+#### Option 2: Building from Source
 
 1. Clone the repository:
    ```bash
@@ -53,11 +69,10 @@ The easiest way to run WOL-Manager is using Docker:
 
 3. Access the application at `http://localhost:8008`
 
-The Docker setup includes:
+Both Docker setups include:
 - Application container running on port 8008
 - Persistent database storage using Docker volumes
 - Automatic database initialization
-
 ### Manual Installation
 
 1. Clone the repository:
