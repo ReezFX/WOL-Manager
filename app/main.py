@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
+import logging
 
 from app.models import Host, Log
 from app import db_session
@@ -24,10 +25,56 @@ def dashboard():
     Admin users can see all hosts and logs.
     """
     # Get hosts based on user role
+    # Get hosts based on user role
     if current_user.is_admin:
         hosts = db_session.query(Host).all()
     else:
-        hosts = db_session.query(Host).filter_by(created_by=current_user.id).all()
+        # Get all the role IDs of the current user
+        user_role_ids = [role.id for role in current_user.roles]
+        user_role_ids_str = [str(role_id) for role_id in user_role_ids]
+        logging.info(f"Dashboard: User {current_user.id} roles (str): {user_role_ids_str}")
+        
+        # Start with hosts created by the current user
+        created_by_filter = (Host.created_by == current_user.id)
+        
+        # Find hosts where user's role exists in visible_to_roles
+        visible_to_user_hosts = []
+        
+        try:
+            # Get all hosts to check visible_to_roles
+            all_hosts = db_session.query(Host).all()
+            
+            # Find hosts where user's role exists in visible_to_roles
+            for host in all_hosts:
+                if host.visible_to_roles:
+                    # Convert all role IDs to strings for consistent comparison
+                    host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
+                    
+                    # Check if any of the user's role IDs are in the host's visible_to_roles
+                    for role_id in user_role_ids:
+                        role_id_str = str(role_id)
+                        if role_id_str in host_role_ids:
+                            visible_to_user_hosts.append(host.id)
+                            logging.info(f"Dashboard: Host {host.id} ({host.name}) IS visible to user {current_user.id}")
+                            break
+            
+            # Query hosts created by user OR visible to user based on roles
+            if visible_to_user_hosts:
+                hosts = db_session.query(Host).filter(
+                    or_(
+                        created_by_filter,
+                        Host.id.in_(visible_to_user_hosts)
+                    )
+                ).all()
+            else:
+                # If no visible hosts found, just filter by created_by
+                hosts = db_session.query(Host).filter(created_by_filter).all()
+                
+        except Exception as e:
+            logging.error(f"Error filtering dashboard hosts by visible_to_roles: {str(e)}")
+            # Fallback to just showing hosts created by the user
+            hosts = db_session.query(Host).filter(created_by_filter).all()
+            flash(f"Limited dashboard visibility due to an error: {str(e)}", "warning")
     
     # Get recent logs
     if current_user.is_admin:

@@ -6,7 +6,7 @@ from collections import defaultdict
 from flask import Blueprint, request, flash, redirect, url_for, render_template
 from flask_login import login_required, current_user
 
-from app.models import Host, Log
+from app.models import Host, Log, Role
 from app import db_session
 from sqlalchemy import desc
 
@@ -115,7 +115,31 @@ def wake_host(host_id):
         flash('Host not found.', 'danger')
         return redirect(url_for('host.list_hosts'))
     # Check if the user has permission to wake this host
-    if host.created_by != current_user.id and not current_user.is_admin:
+    # Check if the user has permission to wake this host
+    has_permission = False
+    
+    # 1. User is the creator of the host
+    if host.created_by == current_user.id:
+        has_permission = True
+    # 2. User has the 'send_wol' permission
+    elif current_user.has_permission('send_wol'):
+        has_permission = True
+    # 3. User is an admin
+    elif current_user.is_admin:
+        has_permission = True
+    # 4. Host is visible to the user's roles
+    elif host.visible_to_roles:
+        # Get the user's role IDs
+        user_role_ids = [str(role.id) for role in current_user.roles]
+        # Get the host's visible_to_roles (ensuring they're strings)
+        host_visible_roles = [str(role_id) for role_id in host.visible_to_roles]
+        # Check if any of the user's roles are in the host's visible_to_roles
+        for role_id in user_role_ids:
+            if role_id in host_visible_roles:
+                has_permission = True
+                break
+    
+    if not has_permission:
         flash('You do not have permission to wake this host.', 'danger')
         return redirect(url_for('host.list_hosts'))
     
@@ -160,7 +184,31 @@ def wol_send(host_id):
         return redirect(url_for('host.list_hosts'))
     
     # Check if the user has permission to wake this host
-    if host.created_by != current_user.id and not current_user.is_admin:
+    # Check if the user has permission to wake this host
+    has_permission = False
+    
+    # 1. User is the creator of the host
+    if host.created_by == current_user.id:
+        has_permission = True
+    # 2. User has the 'send_wol' permission
+    elif current_user.has_permission('send_wol'):
+        has_permission = True
+    # 3. User is an admin
+    elif current_user.is_admin:
+        has_permission = True
+    # 4. Host is visible to the user's roles
+    elif host.visible_to_roles:
+        # Get the user's role IDs
+        user_role_ids = [str(role.id) for role in current_user.roles]
+        # Get the host's visible_to_roles (ensuring they're strings)
+        host_visible_roles = [str(role_id) for role_id in host.visible_to_roles]
+        # Check if any of the user's roles are in the host's visible_to_roles
+        for role_id in user_role_ids:
+            if role_id in host_visible_roles:
+                has_permission = True
+                break
+    
+    if not has_permission:
         flash('You do not have permission to wake this host.', 'danger')
         return redirect(url_for('host.list_hosts'))
     

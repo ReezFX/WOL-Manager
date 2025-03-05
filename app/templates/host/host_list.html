@@ -42,15 +42,15 @@
                                         <i class="fas fa-eye"></i> View
                                     </a>
                                     
-                                    {% if current_user.has_permission('wake_hosts') or host.created_by == current_user.id %}
+                                    {% set user_role_ids = current_user.roles|map(attribute='id')|list %}
+                                    {% set visible_to_user = user_role_ids|select("in", host.visible_to_roles)|list|length > 0 %}
+                                    {% set is_owner = host.created_by == current_user.id %}
+                                    {% if current_user.has_permission('send_wol') or is_owner or current_user.is_admin or visible_to_user %}
                                     <a href="{{ url_for('wol.wol_send', host_id=host.id) }}" class="btn btn-sm btn-success" title="Wake">
                                         <i class="fas fa-power-off"></i> Wake
                                     </a>
                                     {% endif %}
                                     
-                                    {% set user_role_ids = current_user.roles|map(attribute='id')|list %}
-                                    {% set visible_to_user = user_role_ids|select("in", host.visible_to_roles)|list|length > 0 %}
-                                    {% set is_owner = host.created_by == current_user.id %}
                                     
                                     {% if current_user.has_permission('edit_hosts') or (is_owner and visible_to_user) %}
                                     <a href="{{ url_for('host.edit_host', host_id=host.id) }}" class="btn btn-sm btn-primary" title="Edit">
