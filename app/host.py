@@ -175,7 +175,7 @@ def list_hosts():
 def add_host():
     """Add a new host"""
     # Check if user has permission to add hosts
-    if not current_user.has_permission('add_hosts'):
+    if not current_user.has_permission('create_host'):
         flash('You do not have permission to add hosts', 'danger')
         return redirect(url_for('host.list_hosts'))
         

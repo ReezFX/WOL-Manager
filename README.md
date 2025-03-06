@@ -100,7 +100,7 @@ Both Docker setups include:
    flask db-init
    flask db-migrate
    flask db-upgrade
-   flask create-permissions
+   flask create-permissions  # Creates standard permissions: create_host, read_host, update_host, delete_host, admin
    ```
 
 6. Create an admin user:
@@ -147,7 +147,7 @@ After installation, you can log in with the default admin account:
 **Important:** Change the default admin password immediately after first login.
 
 ### Adding Hosts
-1. Log in to the application
+1. Log in to the application (user must have the 'create_host' permission)
 2. Navigate to "Hosts" > "Add Host"
 3. Enter the required information:
    - Name: A descriptive name for the device
@@ -223,10 +223,10 @@ Defines user roles with permissions:
 
 ### Permission Model
 Individual access rights used in the application:
-- HOST_READ: View hosts
-- HOST_WRITE: Create/modify hosts
-- HOST_ADMIN: Full control over all hosts
-- ADMIN: Administrative access to the application
+- HOST_READ: View hosts (permission name: `read_host`)
+- HOST_WRITE: Create/modify hosts (permission names: `create_host`, `update_host`)
+- HOST_ADMIN: Full control over all hosts (permission name: `delete_host`)
+- ADMIN: Administrative access to the application (permission name: `admin`)
 
 ### Host Model
 Stores device information for Wake-on-LAN:
@@ -315,6 +315,11 @@ If you encounter 400 Bad Request errors when submitting forms:
 
 ## Contributing
 ## Release Notes
+
+### Version 1.0.7.2 (2025-03-07)
+- Fixed permission issue with host creation functionality
+- Corrected permission check from 'add_hosts' to 'create_host' to match the actual permission in the system
+- Improved permission system documentation for clarity
 
 ### Version 1.0.7.1 (2025-03-06)
 - Fixed internal server error on the admin users page caused by field name mismatch

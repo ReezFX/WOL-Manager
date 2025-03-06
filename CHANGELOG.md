@@ -5,6 +5,13 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7.2] - 2025-03-06
+
+### Fixed
+- Fixed permission issue with host creation
+  - Corrected permission check in host.py to use 'create_host' instead of 'add_hosts'
+  - Resolved inconsistency between permission definition in manage.py and permission check in host.py
+  - Users with the 'create_host' permission can now properly create new hosts
 ## [1.0.7.1] - 2025-03-06
 
 ### Fixed
