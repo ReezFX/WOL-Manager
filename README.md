@@ -26,6 +26,7 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 - **Role-based Access Control**: Different permission levels for users and administrators, with host visibility controls based on user roles
 - **Logging**: Track wake attempts and results for auditing purposes
 - **Responsive UI**: Web interface that works on desktop and mobile devices
+- **Dark/Light Mode**: Toggle between dark and light themes with automatic system preference detection
 - **Docker Support**: Easy deployment using containers
 
 ## System Requirements
@@ -171,6 +172,13 @@ After installation, you can log in with the default admin account:
    - Assign roles and permissions
    - Delete users
    - Control host visibility by role (added in v1.0.4)
+
+### Theme Switching
+1. Click the theme toggle button in the top-right corner of the navigation bar
+2. The icon shows a sun when in dark mode (click to switch to light mode)
+3. The icon shows a moon when in light mode (click to switch to dark mode)
+4. Your preference is automatically saved in your browser and will persist across sessions
+5. By default, the application will use your system's theme preference
 ## Application Structure
 ```
 WOL-Manager/
@@ -313,10 +321,16 @@ If you encounter 400 Bad Request errors when submitting forms:
 5. If using AJAX requests, ensure the CSRF token is included in the request headers
 6. Clear browser cache and cookies if persistent CSRF issues occur
 
-## Contributing
 ## Release Notes
 
-### Version 1.0.7.2 (2025-03-07)
+### Version 1.0.8 (2025-03-6)
+- Added dark/light mode toggle feature
+- Implemented theme switching with user preference persistence
+- Added system theme preference detection
+- Enhanced UI accessibility for different lighting conditions
+- Improved visual consistency across all components in both themes
+
+### Version 1.0.7.2 (2025-03-06)
 - Fixed permission issue with host creation functionality
 - Corrected permission check from 'add_hosts' to 'create_host' to match the actual permission in the system
 - Improved permission system documentation for clarity

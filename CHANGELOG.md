@@ -5,6 +5,23 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2025-03-06
+
+### Added
+- Dark mode/light mode toggle feature
+  - Added ability to switch between light and dark themes via a toggle button in the navbar
+  - Implemented theme persistence using localStorage to remember user preferences
+  - Added system preference detection for automatic theme selection based on user's OS settings
+  - Created theme-specific styling for all UI components including navbar, footer, and content areas
+  - Enhanced accessibility with appropriate contrast in both themes
+
+### Fixed
+- Theme switching visual consistency issues
+  - Fixed header font color not changing properly (white in dark mode, black in light mode)
+  - Resolved footer background color not changing when switching themes
+  - Corrected footer text color contrast issues in both light and dark modes
+  - Improved theme application to ensure all UI elements properly reflect the selected theme
+
 ## [1.0.7.2] - 2025-03-06
 
 ### Fixed

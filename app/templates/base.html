@@ -12,9 +12,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
 </head>
-<body>
+<body class="light-theme" data-bs-theme="light">
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="main-navbar">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="fas fa-power-off me-2"></i>WoL Manager
@@ -50,6 +50,11 @@
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <button id="theme-toggle" class="btn nav-link" aria-label="Toggle dark/light mode">
+                            <i class="fas fa-moon" id="theme-icon"></i>
+                        </button>
+                    </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -99,9 +104,9 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-light">
+    <footer class="footer mt-auto py-3 theme-footer" id="main-footer">
         <div class="container text-center">
-            <span class="text-muted">&copy; {{ now.year }} Wake-on-LAN Manager. All rights reserved.</span>
+            <span class="footer-text">&copy; {{ now.year }} Wake-on-LAN Manager. All rights reserved.</span>
         </div>
     </footer>
 
