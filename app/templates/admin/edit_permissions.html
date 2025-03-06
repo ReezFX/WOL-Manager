@@ -17,7 +17,7 @@
                 
                 {% for category, perms in categorized_permissions.items() %}
                 <div class="card mb-3">
-                    <div class="card-header bg-light">
+                    <div class="card-header bg-tertiary-theme">
                         <h5 class="mb-0">{{ category }}</h5>
                     </div>
                     <div class="card-body">
@@ -34,7 +34,7 @@
                                     <label class="form-check-label" for="perm_{{ perm.id }}">
                                         <strong>{{ perm.name }}</strong>
                                         {% if perm.description %}
-                                        <p class="text-muted small mb-0">{{ perm.description }}</p>
+                                        <p class="permission-description small mb-0">{{ perm.description }}</p>
                                         {% endif %}
                                     </label>
                                 </div>

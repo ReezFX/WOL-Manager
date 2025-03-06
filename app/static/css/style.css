@@ -169,6 +169,13 @@ body:not(.dark-theme) .footer .footer-text {
 .card-header {
   background-color: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Card header for admin pages that adapts to light/dark themes */
+.bg-tertiary-theme {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Button styling */
@@ -214,6 +221,15 @@ body:not(.dark-theme) .footer .footer-text {
 /* Override Bootstrap's text-muted in dark mode */
 .dark-theme .text-muted {
   color: var(--text-muted) !important;
+}
+
+/* Permission description with better contrast in both themes */
+.permission-description {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme .permission-description {
+  color: #bdc6d0 !important; /* Brighter than default text-muted for better contrast */
 }
 
 /* Background colors */

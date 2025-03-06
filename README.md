@@ -323,6 +323,14 @@ If you encounter 400 Bad Request errors when submitting forms:
 
 ## Release Notes
 
+### Version 1.0.8.1 (2025-03-06)
+- Hotfixes for dark/light mode theme switching:
+  - Fixed color contrast issues in the admin/users/permissions page
+  - Improved styling of card headers and form elements to properly adapt to theme changes
+  - Enhanced text readability for permission descriptions in both light and dark modes
+  - Resolved background color adaptation issues in the permission management interface
+  - Improved overall visual consistency when switching between themes
+
 ### Version 1.0.8 (2025-03-6)
 - Added dark/light mode toggle feature
 - Implemented theme switching with user preference persistence

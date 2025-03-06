@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function applyTheme(theme) {
     const navbar = document.getElementById('main-navbar');
     const footer = document.getElementById('main-footer');
+    const cardHeaders = document.querySelectorAll('.card-header.bg-tertiary-theme');
     
     if (theme === DARK_THEME) {
       // Apply dark theme
@@ -47,6 +48,11 @@ document.addEventListener('DOMContentLoaded', function() {
         footer.classList.remove('bg-light');
         footer.classList.add('bg-dark');
       }
+      
+      // Update card headers with bg-tertiary-theme class
+      cardHeaders.forEach(header => {
+        header.style.color = 'var(--text-primary)';
+      });
     } else {
       // Apply light theme
       document.body.classList.remove('dark-theme');
@@ -64,6 +70,11 @@ document.addEventListener('DOMContentLoaded', function() {
         footer.classList.remove('bg-dark');
         footer.classList.add('bg-light');
       }
+      
+      // Update card headers with bg-tertiary-theme class
+      cardHeaders.forEach(header => {
+        header.style.color = 'var(--text-primary)';
+      });
     }
   }
 

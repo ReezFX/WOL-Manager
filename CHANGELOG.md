@@ -5,6 +5,15 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8.1] - 2025-03-06
+
+### Fixed
+- Dark/light mode theme switching hotfixes:
+  - Fixed color contrast issues in the admin/users/permissions page
+  - Improved card header styling to adapt properly to current theme
+  - Enhanced text readability for permission descriptions in both light and dark themes
+  - Added proper background color adaptation for permission management interface
+
 ## [1.0.8] - 2025-03-06
 
 ### Added
