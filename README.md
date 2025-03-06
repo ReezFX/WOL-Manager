@@ -70,14 +70,14 @@ The easiest way to run WOL-Manager is using Docker. You have two options:
 3. Access the application at `http://localhost:8008`
 
 Both Docker setups include:
-- Application container running on port 8008
+- Application container running internally on port 8080, mapped to external port 8008
 - Persistent database storage using Docker volumes
 - Automatic database initialization
 ### Manual Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/WOL-Manager.git
+   git clone https://github.com/ReezFX/WOL-Manager.git
    cd WOL-Manager
    ```
 
@@ -96,12 +96,16 @@ Both Docker setups include:
 
 5. Initialize the database:
    ```bash
-   python manage.py db_init
+   flask init-db
+   flask db-init
+   flask db-migrate
+   flask db-upgrade
+   flask create-permissions
    ```
 
 6. Create an admin user:
    ```bash
-   python manage.py create_admin
+   flask create-admin
    ```
 
 7. Run the application:
@@ -113,9 +117,9 @@ Both Docker setups include:
 
 ### Environment Variables
 The application can be configured using the following environment variables:
-
 - `FLASK_APP`: Set to `wsgi.py` (default)
-- `FLASK_CONFIG`: Configuration environment (`development`, `testing`, `production`)
+- `FLASK_ENV`: Used in application factory to determine environment (`development`, `testing`, `production`)
+- `FLASK_CONFIG`: Configuration environment used in config.py (`development`, `testing`, `production`)
 - `FLASK_DEBUG`: Enable debug mode (1 for enabled, 0 for disabled)
 - `SECRET_KEY`: Secret key for session management (change this in production!)
 
@@ -128,7 +132,7 @@ The application uses class-based configuration defined in `app/config.py`:
 
 ### Database Configuration
 By default, the application uses SQLite:
-- Development: `sqlite:///wol.db` (project root)
+- Development: `sqlite:///{os.path.join(BASE_DIR, "..", "wol.db")}` (relative to BASE_DIR)
 - Docker: `/app/instance/wol.db` (persisted in a Docker volume)
 
 To change database settings, modify `app/config.py`.
@@ -206,8 +210,9 @@ Stores user account information:
 - Email: Unique user identifier
 - Password Hash: Securely stored password
 - Name: User's display name
-- Role ID: Foreign key to Role model
+- Role ID: Foreign key to Role model (legacy)
 - Active: Account status flag
+- Roles: Many-to-many relationship with Role model through an association table
 
 ### Role Model
 Defines user roles with permissions:
@@ -215,6 +220,7 @@ Defines user roles with permissions:
 - Name: Role name (e.g., User, Admin)
 - Default: Boolean indicating if this is the default role
 - Permissions: Bitmask of assigned permissions
+- Users: Many-to-many relationship with User model through an association table
 
 ### Permission Model
 Individual access rights used in the application:
@@ -294,7 +300,7 @@ If users cannot see hosts that should be visible to them:
 If you encounter database errors:
 1. For Docker: Ensure the volume is properly mounted
 2. For manual installation: Check file permissions on the database file
-3. Run database initialization: `python manage.py db_init`
+3. Run database initialization: `flask init-db` or `flask db-init`
 
 ### Cannot Access Web Interface
 1. Verify the container/service is running
