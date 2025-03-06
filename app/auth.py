@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.models import User, Role
 from app import db_session
-from app.forms import LoginForm, RegistrationForm
+from app.forms import LoginForm
 
 # Create the auth blueprint
 auth = Blueprint('auth', __name__)
@@ -37,53 +37,6 @@ def check_password(hashed_password, password):
         hashed_password.encode('utf-8')
     )
 
-@auth.route('/register', methods=['GET', 'POST'])
-def register():
-    # If user is already logged in, redirect to dashboard
-    if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
-    
-    # Create registration form
-    form = RegistrationForm()
-    
-    # Handle form submission
-    if form.validate_on_submit():
-        username = form.username.data
-        password = form.password.data
-        
-        # Check if username already exists
-        existing_user = db_session.query(User).filter_by(username=username).first()
-        if existing_user:
-            flash(f'Username {username} is already taken.', 'danger')
-        else:
-            try:
-                # Create new user with hashed password
-                new_user = User(
-                    username=username,
-                    password_hash=hash_password(password),
-                    role='user'  # Default role for new registrations (kept for backward compatibility)
-                )
-                db_session.add(new_user)
-                
-                # Assign the 'user' role to the new user in the user_roles table
-                user_role = db_session.query(Role).filter_by(name='user').first()
-                if user_role:
-                    new_user.roles.append(user_role)
-                else:
-                    # If 'user' role doesn't exist, log an error
-                    current_app.logger.error("'user' role not found in database")
-                
-                db_session.commit()
-                
-                flash('Registration successful! You can now log in.', 'success')
-                return redirect(url_for('auth.login'))
-            except SQLAlchemyError as e:
-                db_session.rollback()
-                flash(f'Error creating user: {str(e)}', 'danger')
-            except ValueError as e:
-                flash(str(e), 'danger')
-    
-    return render_template('auth/register.html', form=form)
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():

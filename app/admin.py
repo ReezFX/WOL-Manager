@@ -8,7 +8,7 @@ from wtforms import HiddenField
 
 from app.models import User, Permission, Role
 from app import db_session
-from app.forms import RegistrationForm
+from app.forms import UserForm
 from app.auth import hash_password, admin_required
 
 # Create a CSRF protection instance
@@ -31,7 +31,7 @@ def init_csrf(app):
 def list_users():
     """Admin page to list all users"""
     users = db_session.query(User).all()
-    form = RegistrationForm()
+    form = UserForm()
     # Create a CSRF form for the promote/demote actions
     csrf_form = CSRFForm()
     return render_template('admin/users.html', users=users, form=form, csrf_form=csrf_form)
@@ -41,7 +41,7 @@ def list_users():
 @admin_required
 def add_user():
     """Add a new user from admin interface"""
-    form = RegistrationForm()
+    form = UserForm()
     
     if form.validate_on_submit():
         username = form.username.data

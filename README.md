@@ -22,7 +22,7 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 ## Features
 - **Host Management**: Add, edit, view, and delete networked devices with MAC addresses
 - **Wake-on-LAN**: Send magic packets to wake devices remotely
-- **User Authentication**: Secure login system with session management
+- **User Authentication**: Secure login system with session management (admin-managed user accounts)
 - **Role-based Access Control**: Different permission levels for users and administrators, with host visibility controls based on user roles
 - **Logging**: Track wake attempts and results for auditing purposes
 - **Responsive UI**: Web interface that works on desktop and mobile devices
@@ -166,8 +166,7 @@ After installation, you can log in with the default admin account:
 ### User Management (Admin Only)
 1. Navigate to "Admin" > "Users"
 2. Manage user accounts:
-   - Create new users
-   - Create new users
+   - Create new users (only administrators can create user accounts)
    - Edit existing users
    - Assign roles and permissions
    - Delete users
@@ -254,9 +253,7 @@ Records of wake attempts:
 ### Authentication Routes
 - `GET/POST /auth/login`: User login
 - `GET /auth/logout`: User logout
-- `GET/POST /auth/register`: New user registration
 - `GET/POST /auth/reset-password`: Password reset
-
 ### Host Management
 - `GET /hosts`: List hosts
 - `GET/POST /host/add`: Add a new host
@@ -293,7 +290,7 @@ Records of wake attempts:
 If users cannot see hosts that should be visible to them:
 1. Verify the user has the correct role assignment in the user_roles table
 2. Check that the host's visible_to_roles field includes the user's role ID
-3. Ensure that newly registered users are properly assigned to the 'user' role (fixed in v1.0.4)
+3. Ensure that newly created users are properly assigned to the 'user' role (fixed in v1.0.4)
 4. For admin users, verify they have both 'admin' and 'user' roles if they need to see hosts visible to 'user' role
 
 ### Database Issues
@@ -318,6 +315,16 @@ If you encounter 400 Bad Request errors when submitting forms:
 
 ## Contributing
 ## Release Notes
+
+### Version 1.0.7.1 (2025-03-06)
+- Fixed internal server error on the admin users page caused by field name mismatch
+- Corrected template field reference from password2 to password_confirm
+
+### Version 1.0.7 (2025-03-06)
+- Removed user self-registration functionality
+- User accounts are now exclusively managed by administrators
+- Updated UI to reflect the new user management workflow
+- Enhanced security by centralizing user account creation
 
 ### Version 1.0.6 (2025-03-05)
 - Fixed CSRF token missing in the change_password.html template

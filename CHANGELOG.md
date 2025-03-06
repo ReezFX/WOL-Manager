@@ -5,6 +5,23 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7.1] - 2025-03-06
+
+### Fixed
+- Fixed internal server error in the admin users page
+  - Resolved field name mismatch between the template and the form class
+  - Updated admin/users.html to use correct form field names (password_confirm)
+  - Ensured proper functioning of the admin user management interface
+
+## [1.0.7] - 2025-03-06
+
+### Removed
+- User registration functionality
+  - Removed the ability for users to self-register
+  - Users can now only be created by administrators
+  - Updated login page to inform users that accounts are managed by administrators
+  - Simplified authentication workflow to align with administrative user management
+
 ## [1.0.6.1] - 2025-03-06
 
 ### Documentation
