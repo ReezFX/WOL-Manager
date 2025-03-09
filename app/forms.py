@@ -15,9 +15,7 @@ class UserForm(FlaskForm):
     ])
     password = PasswordField('Password', validators=[
         DataRequired(),
-        Length(min=12, message='Password must be at least 12 characters long'),
-        Regexp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#()_+\-=\[\]{};:,.<>/\\|])[A-Za-z\d@$!%*?&^#()_+\-=\[\]{};:,.<>/\\|]{12,}$',
-               message='Password must contain at least 12 characters, including uppercase and lowercase letters, numbers, and special characters.')
+        Length(min=8, message='Password must be at least 8 characters long')
     ])
     password_confirm = PasswordField('Confirm Password', validators=[
         DataRequired(),
@@ -63,25 +61,3 @@ class WakeForm(FlaskForm):
     submit = SubmitField('Wake Host')
 
 
-class ChangePasswordForm(FlaskForm):
-    current_password = PasswordField('Current Password', validators=[
-        DataRequired(message='Current password is required')
-    ])
-    new_password = PasswordField('New Password', validators=[
-        DataRequired(),
-        Length(min=12, message='Password must be at least 12 characters long'),
-        Regexp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#()_+\-=\[\]{};:,.<>/\\|])[A-Za-z\d@$!%*?&^#()_+\-=\[\]{};:,.<>/\\|]{12,}$',
-               message='Password must contain at least 12 characters, including uppercase and lowercase letters, numbers, and special characters.')
-    ])
-    confirm_password = PasswordField('Confirm New Password', validators=[
-        DataRequired(),
-        EqualTo('new_password', message='Passwords must match')
-    ])
-    submit = SubmitField('Change Password')
-
-# Note: No changes needed as the ChangePasswordForm already exists at lines 66-80
-# with all the requested fields and validators including:
-# - FlaskForm inheritance for CSRF protection
-# - current_password field
-# - new_password field with strong password policy
-# - confirm_password field with matching validation

@@ -138,20 +138,9 @@ class Host(Base):
     @validates('mac_address')
     def validate_mac_address(self, key, mac_address):
         # Check if the MAC address matches the format XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX
-        # Use a safer regex pattern that prevents ReDoS vulnerabilities
-        if len(mac_address) != 17:  # Length check for format XX:XX:XX:XX:XX:XX
+        pattern = r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
+        if not re.match(pattern, mac_address):
             raise ValueError("Invalid MAC address format. Use XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX")
-        
-        # Validate that the MAC consists of 6 pairs of hex digits separated by : or - consistently
-        parts = mac_address[2::3]  # Get all separator characters (every 3rd char starting at index 2)
-        if not (all(c == ':' for c in parts) or all(c == '-' for c in parts)):
-            raise ValueError("Invalid MAC address format. Separators must be all ':' or all '-'")
-        
-        # Validate each hex octet
-        octets = mac_address.replace(':', '').replace('-', '')
-        if len(octets) != 12 or not all(c in '0123456789ABCDEFabcdef' for c in octets):
-            raise ValueError("Invalid MAC address format. Use XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX")
-            
         return mac_address
     
     @validates('ip')

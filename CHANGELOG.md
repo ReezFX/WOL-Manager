@@ -5,41 +5,6 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.9.1] - 2025-03-08
-
-### Changed
-- Updated database configuration to use SQLite by default in production environments instead of PostgreSQL for improved deployment simplicity
-
-### Fixed
-- Fixed syntax error in forms.py that was causing application initialization failures
-- Added missing init_app method to Config class to prevent errors when initializing the application
-- Added psycopg2-binary to the Dockerfile for PostgreSQL database support
-
-## [1.0.9] - 2025-03-07
-
-### Security
-- Enhanced password security
-  - Implemented stronger password policy requiring at least 12 characters, uppercase and lowercase letters, numbers, and special characters
-  - Updated password validation in both registration and password change forms
-  - Improved password validation feedback for users
-
-- Improved session management
-  - Reduced permanent session lifetime from 1 day to 1 hour for better security
-  - Implemented idle timeout to automatically log out inactive users
-  - Added sliding session expiration to extend sessions for active users
-  - Enhanced session security configuration for production environments
-
-- Fixed MAC address validation vulnerability
-  - Replaced the vulnerable regex pattern with a more efficient one that prevents ReDoS attacks
-  - Maintained proper validation for both colon (:) and hyphen (-) delimited MAC address formats
-  - Improved overall input validation robustness
-
-- Enhanced CSRF protection
-  - Ensured consistent CSRF token usage across all forms
-  - Implemented proper form handling in the change_password route
-  - Added missing CSRF protection to sensitive operations
-  - Integrated proper form validation with error feedback
-
 ## [1.0.8.1] - 2025-03-06
 
 ### Fixed

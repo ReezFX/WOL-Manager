@@ -10,7 +10,6 @@ from flask_migrate import Migrate
 
 from app.config import config
 from app.models import Base, User
-from app.session_management import init_session_management
 
 # Create a scoped session factory
 db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False))
@@ -50,9 +49,6 @@ def create_app(config_name=None):
     
     # Initialize extensions
     login_manager.init_app(app)
-    
-    # Initialize session management
-    init_session_management(app)
     
     # Set up logging
     log_level = logging.DEBUG if app.debug else logging.INFO

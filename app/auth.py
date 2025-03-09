@@ -3,12 +3,11 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from functools import wraps
 import bcrypt
-import re
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.models import User, Role
 from app import db_session
-from app.forms import LoginForm, ChangePasswordForm
+from app.forms import LoginForm
 
 # Create the auth blueprint
 auth = Blueprint('auth', __name__)
@@ -87,16 +86,32 @@ def profile():
 @auth.route('/change-password', methods=['GET', 'POST'])
 @login_required
 def change_password():
-    form = ChangePasswordForm()
-    
-    if form.validate_on_submit():
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Basic validation
+        error = None
+        if not current_password:
+            error = 'Current password is required.'
+        elif not new_password:
+            error = 'New password is required.'
+        elif new_password != confirm_password:
+            error = 'New passwords do not match.'
+        elif len(new_password) < 8:
+            error = 'New password must be at least 8 characters long.'
+        
         # Verify current password
-        if not check_password(current_user.password_hash, form.current_password.data):
-            flash('Current password is incorrect.', 'danger')
+        if not error and not check_password(current_user.password_hash, current_password):
+            error = 'Current password is incorrect.'
+        
+        if error:
+            flash(error, 'danger')
         else:
             try:
                 # Update password
-                current_user.password_hash = hash_password(form.new_password.data)
+                current_user.password_hash = hash_password(new_password)
                 db_session.commit()
                 flash('Password changed successfully!', 'success')
                 return redirect(url_for('auth.profile'))
@@ -104,7 +119,7 @@ def change_password():
                 db_session.rollback()
                 flash(f'Error changing password: {str(e)}', 'danger')
     
-    return render_template('auth/change_password.html', form=form)
+    return render_template('auth/change_password.html')
 
 # User management functionality moved to admin.py
 
