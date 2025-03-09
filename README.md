@@ -49,8 +49,10 @@ The easiest way to run WOL-Manager is using Docker. You have two options:
 
 2. Run the container:
    ```bash
-   docker run -d -p 8008:8080 -v wol-manager-data:/app/instance --name wol-manager officialreez/wol-manager-web
+   docker run -d -p 8008:8080 -v wol-manager-data:/app/instance -e SECRET_KEY=your_secure_key_here --name wol-manager officialreez/wol-manager-web
    ```
+
+   > **Important**: Always set a strong, unique SECRET_KEY environment variable in production. This key is used for securing sessions and should never be publicly exposed.
 
 3. Access the application at `http://localhost:8008`
 
@@ -70,7 +72,30 @@ The easiest way to run WOL-Manager is using Docker. You have two options:
 
 3. Access the application at `http://localhost:8008`
 
-Both Docker setups include:
+#### Building Multi-Architecture Images
+
+For deployment on different CPU architectures (e.g., ARM-based servers or Raspberry Pi), you can build multi-architecture images:
+
+1. Set up Docker Buildx builder:
+   ```bash
+   docker buildx create --name multiarch --driver docker-container --use
+   ```
+
+2. Build for specific platforms:
+   ```bash
+   # For amd64 (standard x86_64 systems)
+   docker buildx build --platform linux/amd64 -t wol-manager:latest-amd64 --load .
+   
+   # For arm64 (e.g., Apple Silicon, Raspberry Pi 4 64-bit)
+   docker buildx build --platform linux/arm64 -t wol-manager:latest-arm64 --load .
+   ```
+
+3. For distribution (e.g., to a container registry):
+   ```bash
+   docker buildx build --platform linux/amd64,linux/arm64 -t yourusername/wol-manager:latest --push .
+   ```
+
+All Docker setups include:
 - Application container running internally on port 8080, mapped to external port 8008
 - Persistent database storage using Docker volumes
 - Automatic database initialization
@@ -122,7 +147,7 @@ The application can be configured using the following environment variables:
 - `FLASK_ENV`: Used in application factory to determine environment (`development`, `testing`, `production`)
 - `FLASK_CONFIG`: Configuration environment used in config.py (`development`, `testing`, `production`)
 - `FLASK_DEBUG`: Enable debug mode (1 for enabled, 0 for disabled)
-- `SECRET_KEY`: Secret key for session management (change this in production!)
+- `SECRET_KEY`: Secret key for session management (critical for security - **must be changed** in production with a strong, unique value)
 
 ### Configuration Classes
 The application uses class-based configuration defined in `app/config.py`:
@@ -281,11 +306,17 @@ Records of wake attempts:
 
 ## Security
 - Passwords are hashed using Werkzeug's security functions
+- Enhanced password policy requiring minimum 12 characters with mix of uppercase, lowercase, numbers, and special characters
+- Improved session management with:
+  - Idle timeout for inactive sessions
+  - Sliding session expiration
+  - Reduced session lifetime (1 hour) for improved security
 - CSRF protection on all forms
 - Rate limiting on wake attempts (10 per 5 minutes)
 - Role-based access control to protected resources
-- Input validation for all form fields
-
+- Input validation for all form fields, including optimized MAC address validation
+- Prevention of debug mode in production environment
+- Improved database connection handling for production deployments
 ## Troubleshooting
 
 ### Wake-on-LAN Not Working
@@ -322,6 +353,25 @@ If you encounter 400 Bad Request errors when submitting forms:
 6. Clear browser cache and cookies if persistent CSRF issues occur
 
 ## Release Notes
+
+### Version 1.0.9.1 (2025-03-08)
+- Fixed critical issues for production deployment:
+  - Fixed syntax error in forms.py that was causing application initialization failure
+  - Added missing init_app method in Config class to properly support production environment
+  - Added psycopg2-binary to the Dockerfile for PostgreSQL database support
+  - Updated database configuration to use SQLite by default in production environments for improved compatibility and ease of deployment
+- Improved error handling during application startup
+
+### Version 1.0.9 (2025-03-07)
+- Implemented comprehensive security improvements:
+  - Enhanced password policy requiring stronger passwords (minimum 12 characters with mix of uppercase, lowercase, numbers, and special characters)
+  - Improved session security with idle timeout and sliding session expiration
+  - Fixed MAC address validation to prevent ReDoS vulnerability
+  - Enhanced CSRF protection for all forms, especially password change functionality
+  - Improved session management with reduced session lifetime
+  - Added production safeguards to prevent debug mode in production
+  - Implemented proper database connection pooling for production environments
+- Updated documentation to reflect security enhancements
 
 ### Version 1.0.8.1 (2025-03-06)
 - Hotfixes for dark/light mode theme switching:

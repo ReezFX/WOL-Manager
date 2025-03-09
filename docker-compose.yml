@@ -2,16 +2,17 @@ version: '3'
 
 services:
   web:
-    build: .
+    build:
+      context: .
     ports:
       - "8008:8080"
     volumes:
       - db_data:/app/instance
     environment:
       - FLASK_APP=wsgi.py
-      - FLASK_CONFIG=development
-      - FLASK_DEBUG=1
-      - SECRET_KEY=dev-key-change-in-production
+      - FLASK_CONFIG=production
+      - FLASK_DEBUG=0
+      - SECRET_KEY=CHANGE_THIS_TO_A_SECURE_RANDOM_VALUE_IN_PRODUCTION
     command: gunicorn --bind 0.0.0.0:8080 wsgi:app
     restart: unless-stopped
 

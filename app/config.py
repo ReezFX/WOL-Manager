@@ -17,7 +17,7 @@ class Config:
     WTF_CSRF_SECRET_KEY = os.environ.get('WTF_CSRF_SECRET_KEY') or secrets.token_hex(16)
     
     # Session configuration
-    PERMANENT_SESSION_LIFETIME = timedelta(days=1)
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
     
     # Wake-on-LAN specific settings
     WOL_PORT = 9  # Standard WoL port
@@ -33,6 +33,21 @@ class Config:
     
     # Debug mode - should be False in production
     DEBUG = os.environ.get('FLASK_DEBUG', 'False') == 'True'
+    
+    @classmethod
+    def init_app(cls, app):
+        """Initialize Flask application with configuration settings.
+        
+        This method is called by the create_app function to apply configuration-specific
+        settings to the Flask application instance.
+        
+        Args:
+            app: Flask application instance
+        """
+        # Apply configuration settings to the Flask app
+        for key, value in cls.__dict__.items():
+            if not key.startswith('__') and not callable(value):
+                app.config[key] = value
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -47,10 +62,25 @@ class ProductionConfig(Config):
     # Production specific configurations
     DEBUG = False
     
+    # Database configuration for production
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f'sqlite:///{os.path.join(Config.BASE_DIR, "instance", "wol.db")}'
+    
+    # Database connection pooling settings
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 10,  # Maximum number of database connections in the pool
+        'pool_timeout': 30,  # Timeout in seconds for getting a connection from the pool
+        'pool_recycle': 1800,  # Recycle connections after 30 minutes
+        'max_overflow': 5,  # Maximum number of connections to overflow from the pool
+    }
+    
     # In production, ensure secret keys are set via environment variables
     @classmethod
     def init_app(cls, app):
-        Config.init_app(app)
+        # Call parent init_app method
+        super().init_app(app)
+        
+        # Force debug mode to be False in production regardless of environment variable
+        app.config['DEBUG'] = False
         
         # Log to syslog if in production
         import logging
@@ -66,4 +96,5 @@ config = {
     'production': ProductionConfig,
     'default': DevelopmentConfig
 }
+
 
