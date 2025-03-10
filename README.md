@@ -357,7 +357,7 @@ If you encounter 400 Bad Request errors when submitting forms:
 - Implemented more robust error handling for CSRF validation failures
 - Extended CSRF token validity period to improve user experience
 
-### Version 1.0.9.2 (2023-04-14)
+### Version 1.0.9.2 (2023-03-10)
 - Added multi-architecture Docker image support for both amd64 and arm64 platforms
 - Fixed container startup issues with gunicorn bind address configuration
 - Corrected Config class initialization issue in configuration system
