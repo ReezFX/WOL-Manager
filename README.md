@@ -42,15 +42,29 @@ The easiest way to run WOL-Manager is using Docker. You have two options:
 
 #### Option 1: Using Pre-built Docker Image (Quickest)
 
+The official Docker image supports both arm64 and amd64 architectures.
+
 1. Pull the image from Docker Hub:
    ```bash
    docker pull officialreez/wol-manager-web
    ```
 
-2. Run the container:
+2. Run the container with proper environment variables:
    ```bash
-   docker run -d -p 8008:8080 -v wol-manager-data:/app/instance --name wol-manager officialreez/wol-manager-web
+   docker run -d \
+     -p 8008:8080 \
+     -v wol-manager-data:/app/instance \
+     -e FLASK_APP=wsgi.py \
+     -e FLASK_CONFIG=production \
+     -e SECRET_KEY=your-secure-key-here \
+     --name wol-manager \
+     officialreez/wol-manager-web
    ```
+
+   **Important Environment Variables:**
+   - `FLASK_APP`: Set to `wsgi.py` (default)
+   - `FLASK_CONFIG`: Set to `production` for production deployments
+   - `SECRET_KEY`: **Required** - Set a secure, unique key for session encryption (change this from the example!)
 
 3. Access the application at `http://localhost:8008`
 
@@ -70,10 +84,27 @@ The easiest way to run WOL-Manager is using Docker. You have two options:
 
 3. Access the application at `http://localhost:8008`
 
-Both Docker setups include:
+#### Option 3: Building Multi-architecture Images (Advanced)
+
+If you need to build the image for multiple architectures (arm64/amd64):
+
+1. Set up Docker buildx:
+   ```bash
+   docker buildx create --name mybuilder --use
+   ```
+
+2. Build and push multi-architecture images:
+   ```bash
+   docker buildx build --platform linux/amd64,linux/arm64 \
+     -t yourusername/wol-manager-web:latest \
+     --push .
+   ```
+
+All Docker setups include:
 - Application container running internally on port 8080, mapped to external port 8008
 - Persistent database storage using Docker volumes
 - Automatic database initialization
+- Cross-platform compatibility (arm64/amd64)
 ### Manual Installation
 
 1. Clone the repository:
