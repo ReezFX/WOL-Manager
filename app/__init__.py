@@ -3,6 +3,7 @@ import logging
 import redis
 from logging.handlers import RotatingFileHandler
 import pathlib
+import stat
 from datetime import timedelta
 from flask import Flask, request, flash, redirect, url_for
 from sqlalchemy import create_engine
@@ -13,10 +14,8 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_session import Session
 
 from app.config import config
-from app.models import Base, User
-
-# Create a scoped session factory
-db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False))
+from app.models import Base, User, db_session
+from app.log_handler import DatabaseLogHandler
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -42,23 +41,50 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     
-    # Configure session security
+    # Configure session security for external access
     app.config.update(
-        SESSION_COOKIE_SECURE=(not app.debug),
-        SESSION_COOKIE_HTTPONLY=True,
-        PERMANENT_SESSION_LIFETIME=timedelta(days=1)
+        SESSION_COOKIE_SECURE=False,                # Allow HTTP for cookies
+        SESSION_COOKIE_HTTPONLY=True,              # Prevent JavaScript access to cookies
+        SESSION_COOKIE_SAMESITE='Lax',             # Allow normal login flows while enhancing security
+        SESSION_COOKIE_NAME='wol_manager_session', # Set custom session cookie name
+        SESSION_COOKIE_PATH='/',                   # Set cookie path to root
+        PERMANENT_SESSION_LIFETIME=timedelta(days=1),
+        WTF_CSRF_TIME_LIMIT=3600,                  # CSRF token valid for 1 hour
+        REMEMBER_COOKIE_DURATION=timedelta(days=1), # Set remember me cookie duration
+        REMEMBER_COOKIE_HTTPONLY=True,             # Prevent JavaScript access to remember cookie
+        REMEMBER_COOKIE_SECURE=False,               # Allow HTTP for remember cookie
+        REMEMBER_COOKIE_SAMESITE='Lax'             # Allow normal login flows for remember cookie while enhancing security
     )
     
-    # Configure Redis for session storage if available
-    if app.config.get('REDIS_URL'):
-        app.config['SESSION_TYPE'] = 'redis'
-        app.config['SESSION_REDIS'] = redis.from_url(app.config['REDIS_URL'])
-    else:
-        app.config['SESSION_TYPE'] = 'filesystem'
-        app.config['SESSION_FILE_DIR'] = os.path.join(app.instance_path, 'flask_session')
-        # Ensure the directory exists
-        os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+    # Allow session cookies across subdomains and external access
+    # Allow session cookies across subdomains and external access
+    # Use the SERVER_NAME from environment if available, otherwise don't restrict domain
+    # SERVER_NAME configuration is disabled to allow Flask to use the host from the request
+    # This fixes routing issues when accessing from external devices
+    # if os.environ.get('SERVER_NAME'):
+    #     app.config['SERVER_NAME'] = os.environ.get('SERVER_NAME')
+    # Don't set SESSION_COOKIE_DOMAIN explicitly to allow access from IP addresses
+    # This allows the browser to use the current domain from the request
+    # Set SESSION_COOKIE_DOMAIN to None to use the domain from the request
+    app.config['SESSION_COOKIE_DOMAIN'] = None
     
+    # Use filesystem-based sessions regardless of Redis availability
+    # This ensures session data is stored on disk and not in cookies
+    app.config.update(
+        SESSION_TYPE='filesystem',                  # Store sessions on disk
+        SESSION_FILE_DIR=os.path.join(app.instance_path, 'flask_session'),
+        SESSION_USE_SIGNER=True,                   # Cryptographically sign session cookies 
+        SESSION_PERMANENT=True,                    # Enable permanent sessions
+        SESSION_REFRESH_EACH_REQUEST=True,         # Refresh the session cookie on each request
+        SESSION_FILE_THRESHOLD=500,                # Maximum number of sessions in filesystem
+        SESSION_KEY_PREFIX='wol_session_'          # Prefix for session files
+    )
+    
+    # Ensure the session directory exists
+    os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+    
+    # Log session configuration
+    print(f"Session config: TYPE={app.config['SESSION_TYPE']}, DOMAIN={app.config['SESSION_COOKIE_DOMAIN']}, PATH={app.config['SESSION_COOKIE_PATH']}")
     # Initialize Flask-Session
     Session(app)
     
@@ -71,16 +97,20 @@ def create_app(config_name=None):
     def shutdown_session(exception=None):
         db_session.remove()
     
-    # Initialize extensions
+    # Initialize extensions with custom session configuration
     login_manager.init_app(app)
+    login_manager.session_protection = 'strong'  # Enable strong session protection
+    login_manager.refresh_view = "auth.login"
+    login_manager.needs_refresh_message = "Please login again to confirm your identity"
+    login_manager.needs_refresh_message_category = "info"
     
-    # Initialize CSRF protection
+    # Enable CSRF protection
     csrf = CSRFProtect(app)
     
-    # Add CSRF error handler
+    # CSRF error handler
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
-        app.logger.warning(f'CSRF error: {e} - URL: {request.url}')
+        app.logger.warning(f'CSRF error: {e} - URL: {request.url}, Referrer: {request.referrer}, Remote Addr: {request.remote_addr}')
         flash('Your form session expired. Please try again.', 'warning')
         return redirect(url_for('main.index'))
     
@@ -103,8 +133,23 @@ def create_app(config_name=None):
     )
     file_handler.setFormatter(log_format)
     
+    # Set file permissions (owner read/write, group read, others no access)
+    os.chmod(log_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)  # 0o640
+    
+    # Configure database handler
+    db_handler = DatabaseLogHandler(db_session=db_session)
+    db_handler.setLevel(log_level)
+    db_handler.setFormatter(log_format)
+    
     # Add handlers
     app.logger.addHandler(file_handler)
+    app.logger.addHandler(db_handler)
+    
+    # Set up additional debug logging for authentication
+    auth_logger = logging.getLogger('auth')
+    auth_logger.setLevel(logging.DEBUG)
+    auth_logger.addHandler(file_handler)
+    auth_logger.addHandler(db_handler)
     
     # Configure console handler for development
     if app.debug:
@@ -114,7 +159,9 @@ def create_app(config_name=None):
         app.logger.addHandler(console_handler)
     
     # Log application startup
-    app.logger.info(f'WOL Manager starting in {config_name} mode')
+    app.logger.info(f'WOL Manager starting in {config_name} mode with file and database logging')
+    app.logger.info(f'Security settings: CSRF protection enabled, SESSION_COOKIE_SAMESITE=Lax, SESSION_COOKIE_SECURE=False')
+    app.logger.info(f'Session settings: TYPE={app.config["SESSION_TYPE"]}, DOMAIN={app.config["SESSION_COOKIE_DOMAIN"]}, PATH={app.config["SESSION_COOKIE_PATH"]}')
     
     # Initialize Flask-Migrate
     migrate = Migrate(app, Base.metadata)
@@ -135,6 +182,23 @@ def create_app(config_name=None):
     # Main route blueprint (can contain dashboard, etc.)
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint)
+    
+    # Dynamic scheme detection middleware
+    @app.before_request
+    def detect_scheme():
+        if request.headers.get('X-Forwarded-Proto') == 'https':
+            request.environ['wsgi.url_scheme'] = 'https'
+    
+    # Implement strict transport security
+    @app.after_request
+    def add_security_headers(response):
+        if request.is_secure:
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000'
+        return response
+    
+    # Logs blueprint for viewing system and auth logs
+    from app.logs import logs as logs_blueprint
+    app.register_blueprint(logs_blueprint, url_prefix='/logs')
     
     # Add context processor for templates
     @app.context_processor

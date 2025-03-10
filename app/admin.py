@@ -7,10 +7,11 @@ from flask_wtf import FlaskForm
 from wtforms import HiddenField, BooleanField, SubmitField, FormField, FieldList
 from wtforms.form import BaseForm
 
-from app.models import User, Permission, Role, AppSettings
+from app.models import User, Permission, Role, AppSettings, Log, Host, AuthLog
 from app import db_session
 from app.forms import UserForm, AppSettingsForm
 from app.auth import hash_password, admin_required
+from sqlalchemy import desc
 
 # Simple form for CSRF protection on action forms
 class CSRFForm(FlaskForm):
@@ -295,4 +296,54 @@ def settings():
                 flash(f'{getattr(form, field).label.text}: {error}', 'danger')
     
     return render_template('admin/settings.html', form=form)
+
+@admin.route('/logs')
+@login_required
+def view_logs():
+    """View unified logs page with WOL and authentication logs."""
+    # Get log type from query parameter, default to 'wol'
+    log_type = request.args.get('type', 'wol')
+    
+    # Retrieve WOL logs if selected
+    wol_logs = []
+    hosts = {}
+    if log_type == 'wol':
+        # Get logs (filtered by user if not admin)
+        if current_user.is_admin:
+            wol_logs = db_session.query(Log).order_by(desc(Log.timestamp)).limit(100).all()
+        else:
+            wol_logs = db_session.query(Log).filter_by(user_id=current_user.id).order_by(desc(Log.timestamp)).limit(50).all()
+        
+        # Get host information for each log
+        for log in wol_logs:
+            if log.host_id not in hosts:
+                host = db_session.query(Host).get(log.host_id)
+                hosts[log.host_id] = host.name if host else "Unknown Host"
+    
+    # Retrieve authentication logs if selected
+    auth_logs = []
+    users = {}
+    if log_type == 'auth':
+        # Only admins can see all auth logs, other users only see their own
+        if current_user.is_admin:
+            auth_logs = db_session.query(AuthLog).order_by(desc(AuthLog.timestamp)).limit(100).all()
+        else:
+            auth_logs = db_session.query(AuthLog).filter_by(user_id=current_user.id).order_by(desc(AuthLog.timestamp)).limit(50).all()
+        
+        # Create a dictionary of usernames for quick lookup
+        for log in auth_logs:
+            if log.user_id and log.user_id not in users:
+                user = db_session.query(User).get(log.user_id)
+                users[log.user_id] = user.username if user else "Unknown User"
+    
+    return render_template(
+        'admin/logs.html', 
+        log_type=log_type,
+        wol_logs=wol_logs,
+        auth_logs=auth_logs,
+        hosts=hosts,
+        users=users,
+        title="System Logs"
+    )
+
 

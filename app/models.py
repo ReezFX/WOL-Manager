@@ -1,4 +1,5 @@
 from datetime import datetime
+import enum
 import re
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, Table
 from sqlalchemy.ext.declarative import declarative_base
@@ -21,6 +22,11 @@ class JSONType(TypeDecorator):
             value = json.loads(value)
         return value
 from flask_login import UserMixin
+from sqlalchemy.orm import scoped_session, sessionmaker
+
+# Create a scoped session factory
+db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False))
+db = db_session
 
 Base = declarative_base()
 
@@ -204,3 +210,46 @@ class AppSettings(Base):
             db_session.commit()
         return settings
 
+
+class LogLevel(enum.Enum):
+    DEBUG = 'DEBUG'
+    INFO = 'INFO'
+    WARNING = 'WARNING'
+    ERROR = 'ERROR'
+    CRITICAL = 'CRITICAL'
+
+class SystemLog(Base):
+    __tablename__ = 'system_logs'
+    
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    log_level = Column(String(10), nullable=False)  # Using string to store enum value
+    source_module = Column(String(100), nullable=False)
+    message = Column(Text, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # Optional user reference
+    log_metadata = Column(JSONType, nullable=True)  # Additional data in JSON format
+    
+    # Relationship
+    user = relationship('User', backref='system_logs')
+    
+    def __repr__(self):
+        return f'<SystemLog [{self.log_level}] {self.timestamp}: {self.message[:50]}>'
+
+class AuthLog(Base):
+    __tablename__ = 'auth_logs'
+    
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # Nullable for failed login attempts
+    event_type = Column(String(50), nullable=False, index=True)  # login, logout, password_change, etc.
+    ip_address = Column(String(45), nullable=True)  # Support IPv6 addresses
+    user_agent = Column(Text, nullable=True)
+    success = Column(Boolean, default=True)
+    details = Column(JSONType, nullable=True)  # Additional details as JSON
+    
+    # Relationship
+    user = relationship('User', backref='auth_logs')
+    
+    def __repr__(self):
+        status = "Success" if self.success else "Failed"
+        return f'<AuthLog [{status}] {self.event_type} at {self.timestamp} - User ID: {self.user_id}>'

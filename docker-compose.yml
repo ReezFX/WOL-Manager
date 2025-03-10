@@ -9,15 +9,19 @@ services:
       - "8008:8080"
     volumes:
       - db_data:/app/instance
+      - ./detect_ip.sh:/app/detect_ip.sh
     depends_on:
       - redis
     environment:
       - FLASK_APP=wsgi.py
       - FLASK_CONFIG=development
-      - FLASK_DEBUG=1
+      - FLASK_DEBUG=0
       - SECRET_KEY=dev-key-change-in-production
       - WTF_CSRF_SECRET_KEY=csrf-secret-key-change-in-production
       - REDIS_URL=redis://redis:6379/0
+      - SESSION_COOKIE_DOMAIN=
+      - SESSION_COOKIE_SECURE=False
+    entrypoint: ["/bin/bash", "-c", "chmod +x /app/detect_ip.sh && /app/detect_ip.sh /app/entrypoint.sh"]
     restart: unless-stopped
 
 volumes:

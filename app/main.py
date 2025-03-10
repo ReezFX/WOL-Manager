@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from sqlalchemy import desc, or_
@@ -23,24 +23,61 @@ def index():
 
 
 @main.route('/dashboard')
-@login_required
 def dashboard():
     """
     Dashboard showing the user's hosts and recent Wake-on-LAN attempts.
     Admin users can see all hosts and logs.
+    Support both Flask-Login and custom session authentication.
     """
+    # Check if the user is authenticated (either via Flask-Login or custom session)
+    if not current_user.is_authenticated and not session.get('authenticated'):
+        flash('Please log in to access this page.', 'warning')
+        return redirect(url_for('auth.login', next='/dashboard'))
+    
+    # Create a User-like object if using custom session authentication
+    if not current_user.is_authenticated and session.get('authenticated'):
+        from app.models import User
+        
+        class CustomSessionUser:
+            def __init__(self, user_id, username, is_admin):
+                self.id = user_id
+                self.username = username
+                self.is_admin = is_admin
+                self.is_authenticated = True
+                self.roles = []  # Default empty roles
+            
+            def has_permission(self, permission):
+                # Simple permission check for custom session users
+                if self.is_admin:
+                    return True
+                if permission == 'send_wol':  # Allow basic permissions
+                    return True
+                return False
+        
+        # Create the custom user object from session data
+        session_user = CustomSessionUser(
+            session.get('user_id'),
+            session.get('username'),
+            session.get('is_admin', False)
+        )
+        
+        # Use the custom user for the view
+        user = session_user
+    else:
+        # Use Flask-Login's current_user
+        user = current_user
     # Get hosts based on user role
     # Get hosts based on user role
-    if current_user.is_admin:
+    if user.is_admin:
         hosts = db_session.query(Host).all()
     else:
         # Get all the role IDs of the current user
-        user_role_ids = [role.id for role in current_user.roles]
+        # Get all the role IDs of the current user
+        user_role_ids = [role.id for role in user.roles]
         user_role_ids_str = [str(role_id) for role_id in user_role_ids]
-        logging.info(f"Dashboard: User {current_user.id} roles (str): {user_role_ids_str}")
-        
+        logging.info(f"Dashboard: User {user.id} roles (str): {user_role_ids_str}")
         # Start with hosts created by the current user
-        created_by_filter = (Host.created_by == current_user.id)
+        created_by_filter = (Host.created_by == user.id)
         
         # Find hosts where user's role exists in visible_to_roles
         visible_to_user_hosts = []
@@ -60,7 +97,7 @@ def dashboard():
                         role_id_str = str(role_id)
                         if role_id_str in host_role_ids:
                             visible_to_user_hosts.append(host.id)
-                            logging.info(f"Dashboard: Host {host.id} ({host.name}) IS visible to user {current_user.id}")
+                            logging.info(f"Dashboard: Host {host.id} ({host.name}) IS visible to user {user.id}")
                             break
             
             # Query hosts created by user OR visible to user based on roles
@@ -82,7 +119,7 @@ def dashboard():
             flash(f"Limited dashboard visibility due to an error: {str(e)}", "warning")
     
     # Get recent logs
-    if current_user.is_admin:
+    if user.is_admin:
         recent_logs = db_session.query(Log).order_by(desc(Log.timestamp)).limit(10).all()
     else:
         # For regular users, only show logs for their hosts
@@ -95,7 +132,7 @@ def dashboard():
     # Count statistics
     host_count = len(hosts)
     successful_wakes = db_session.query(Log)\
-        .filter_by(user_id=current_user.id, success=True).count()
+        .filter_by(user_id=user.id, success=True).count()
     
     # Create CSRF form
     csrf_form = CSRFForm()
@@ -106,7 +143,8 @@ def dashboard():
         recent_logs=recent_logs,
         host_count=host_count,
         successful_wakes=successful_wakes,
-        csrf_form=csrf_form
+        csrf_form=csrf_form,
+        current_user=user  # Pass the user (either Flask-Login or custom) to the template
     )
 
 
