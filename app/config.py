@@ -33,6 +33,10 @@ class Config:
     
     # Debug mode - should be False in production
     DEBUG = os.environ.get('FLASK_DEBUG', 'False') == 'True'
+    
+    @classmethod
+    def init_app(cls, app):
+        pass
 
 class DevelopmentConfig(Config):
     DEBUG = True

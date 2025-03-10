@@ -46,19 +46,12 @@ The official Docker image supports both arm64 and amd64 architectures.
 
 1. Pull the image from Docker Hub:
    ```bash
-   docker pull officialreez/wol-manager-web
+   docker pull officialreez/wol-manager-web:latest
    ```
 
 2. Run the container with proper environment variables:
    ```bash
-   docker run -d \
-     -p 8008:8080 \
-     -v wol-manager-data:/app/instance \
-     -e FLASK_APP=wsgi.py \
-     -e FLASK_CONFIG=production \
-     -e SECRET_KEY=your-secure-key-here \
-     --name wol-manager \
-     officialreez/wol-manager-web
+   docker run -d --name wol-manager -p 8008:8080 -v wol_data:/app/instance -e FLASK_APP=wsgi.py -e FLASK_CONFIG=development -e FLASK_DEBUG=1 -e SECRET_KEY=dev-key-change-in-production --restart unless-stopped officialreez/wol-manager-web:latest
    ```
 
    **Important Environment Variables:**
@@ -104,7 +97,7 @@ All Docker setups include:
 - Application container running internally on port 8080, mapped to external port 8008
 - Persistent database storage using Docker volumes
 - Automatic database initialization
-- Cross-platform compatibility (arm64/amd64)
+- Cross-platform compatibility (arm64/amd64) - Docker images are built for both architectures and will automatically use the correct one for your system
 ### Manual Installation
 
 1. Clone the repository:
@@ -355,6 +348,13 @@ If you encounter 400 Bad Request errors when submitting forms:
 6. Clear browser cache and cookies if persistent CSRF issues occur
 
 ## Release Notes
+
+### Version 1.0.9.2 (2023-04-14)
+- Added multi-architecture Docker image support for both amd64 and arm64 platforms
+- Fixed container startup issues with gunicorn bind address configuration
+- Corrected Config class initialization issue in configuration system
+- Updated Docker deployment documentation with specific version tags
+- Improved Docker Hub integration with automated multi-platform builds
 
 ### Version 1.0.9 (2025-03-09)
 - Added new AppSettings feature for application-wide configuration
