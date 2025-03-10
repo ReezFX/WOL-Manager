@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Application Settings{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-tertiary-theme">
+          <h2 class="card-title">Application Settings</h2>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('admin.settings') }}">
+            {{ form.csrf_token }}
+
+            <div class="row mb-4">
+              <div class="col-md-12">
+                <h4>Password Policy</h4>
+                <hr>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.min_password_length.label(class="form-label") }}
+                  {{ form.min_password_length(class="form-control") }}
+                  <small class="form-text text-muted">Minimum number of characters required for user passwords.</small>
+                  {% if form.min_password_length.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.min_password_length.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.password_expiration_days.label(class="form-label") }}
+                  {{ form.password_expiration_days(class="form-control") }}
+                  <small class="form-text text-muted">Number of days until users must change their password. Use 0 for no expiration.</small>
+                  {% if form.password_expiration_days.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.password_expiration_days.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  {{ form.require_special_characters(class="form-check-input") }}
+                  {{ form.require_special_characters.label(class="form-check-label") }}
+                  <div class="form-text text-muted">Require at least one special character in passwords.</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  {{ form.require_numbers(class="form-check-input") }}
+                  {{ form.require_numbers.label(class="form-check-label") }}
+                  <div class="form-text text-muted">Require at least one number in passwords.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-12">
+                <h4>Session Management</h4>
+                <hr>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.session_timeout_minutes.label(class="form-label") }}
+                  {{ form.session_timeout_minutes(class="form-control") }}
+                  <small class="form-text text-muted">Number of minutes until a user session expires due to inactivity.</small>
+                  {% if form.session_timeout_minutes.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.session_timeout_minutes.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.max_concurrent_sessions.label(class="form-label") }}
+                  {{ form.max_concurrent_sessions(class="form-control") }}
+                  <small class="form-text text-muted">Maximum number of active sessions per user. Use 0 for unlimited.</small>
+                  {% if form.max_concurrent_sessions.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.max_concurrent_sessions.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-md-12">
+                <div class="float-end">
+                  <a href="{{ url_for('admin.list_users') }}" class="btn btn-secondary">Cancel</a>
+                  <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

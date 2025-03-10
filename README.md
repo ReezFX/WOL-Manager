@@ -97,16 +97,16 @@ Both Docker setups include:
 
 5. Initialize the database:
    ```bash
-   flask init-db
-   flask db-init
-   flask db-migrate
-   flask db-upgrade
-   flask create-permissions  # Creates standard permissions: create_host, read_host, update_host, delete_host, admin
+   python manage.py init-db
+   python manage.py db-init
+   python manage.py db-migrate
+   python manage.py db-upgrade
+   python manage.py create-permissions  # Creates standard permissions: create_host, read_host, update_host, delete_host, admin
    ```
 
 6. Create an admin user:
    ```bash
-   flask create-admin
+   python manage.py create-admin
    ```
 
 7. Run the application:
@@ -166,7 +166,8 @@ After installation, you can log in with the default admin account:
 
 ### User Management (Admin Only)
 1. Navigate to "Admin" > "Users"
-2. Manage user accounts:
+2. Click on "Settings" to configure application-wide settings
+3. Manage user accounts:
    - Create new users (only administrators can create user accounts)
    - Edit existing users
    - Assign roles and permissions
@@ -278,6 +279,7 @@ Records of wake attempts:
 - `GET /admin/users`: List users
 - `GET/POST /admin/user/<id>/edit`: Edit user details
 - `POST /admin/user/<id>/delete`: Delete a user
+- `GET/POST /admin/settings`: Configure application settings
 
 ## Security
 - Passwords are hashed using Werkzeug's security functions
@@ -305,7 +307,7 @@ If users cannot see hosts that should be visible to them:
 If you encounter database errors:
 1. For Docker: Ensure the volume is properly mounted
 2. For manual installation: Check file permissions on the database file
-3. Run database initialization: `flask init-db` or `flask db-init`
+3. Run database initialization: `python manage.py init-db` or `python manage.py db-init`
 
 ### Cannot Access Web Interface
 1. Verify the container/service is running
@@ -322,6 +324,15 @@ If you encounter 400 Bad Request errors when submitting forms:
 6. Clear browser cache and cookies if persistent CSRF issues occur
 
 ## Release Notes
+
+### Version 1.0.9 (2025-03-09)
+- Added new AppSettings feature for application-wide configuration
+- Created dedicated Settings page in Admin interface for managing application settings
+- Implemented configurable password policies (minimum length, special characters, numbers)
+- Added session timeout configuration
+- Added password expiration policies
+- Enhanced security with configurable concurrent session limits
+- All settings accessible through a centralized admin interface
 
 ### Version 1.0.8.1 (2025-03-06)
 - Hotfixes for dark/light mode theme switching:

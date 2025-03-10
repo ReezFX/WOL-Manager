@@ -5,6 +5,25 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9.1] - 2025-03-10
+
+### Fixed
+- Database migration and initialization improvements:
+  - Fixed SQLAlchemy compatibility issue by properly using text() function for raw SQL queries
+  - Updated database initialization process in entrypoint.sh to ensure proper setup
+  - Improved error handling during database creation and migration
+  - Resolved issues with admin user creation during container initialization
+  - Enhanced container startup reliability for Docker environments
+
+## [1.0.9] - 2025-03-09
+
+### Added
+- Application Settings management
+  - Added AppSettings model for centralized application configuration
+  - Implemented configurable password policies (minimum length, complexity requirements)
+  - Added session timeout configuration options
+  - Added support for limiting concurrent user sessions
+  - Created admin interface for managing application settings
 ## [1.0.8.1] - 2025-03-06
 
 ### Fixed

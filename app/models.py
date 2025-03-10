@@ -174,5 +174,33 @@ class Log(Base):
     
     def __repr__(self):
         status = "Success" if self.success else "Failed"
+        status = "Success" if self.success else "Failed"
         return f'<Log {status} - {self.user.username} -> {self.host.name} at {self.timestamp}>'
+
+class AppSettings(Base):
+    __tablename__ = 'app_settings'
+    
+    id = Column(Integer, primary_key=True)
+    min_password_length = Column(Integer, default=8, nullable=False)
+    require_special_characters = Column(Boolean, default=False, nullable=False)
+    require_numbers = Column(Boolean, default=False, nullable=False)
+    password_expiration_days = Column(Integer, default=90, nullable=False)
+    session_timeout_minutes = Column(Integer, default=1440, nullable=False)  # Default 1 day (24 hours * 60 minutes)
+    max_concurrent_sessions = Column(Integer, default=0, nullable=False)  # 0 means unlimited
+    
+    def __repr__(self):
+        return f'<AppSettings id={self.id}>'
+    
+    @classmethod
+    def get_settings(cls, db_session):
+        """
+        Get the current application settings.
+        If no settings exist, create a default settings record.
+        """
+        settings = db_session.query(cls).first()
+        if not settings:
+            settings = cls()
+            db_session.add(settings)
+            db_session.commit()
+        return settings
 

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import os
 import click
+import sys
+import logging
 from flask.cli import FlaskGroup
 from flask_migrate import Migrate
+from sqlalchemy import text
 from app import create_app, db_session
 from app.models import User, Role, Permission, Base
 from app.auth import hash_password
@@ -162,27 +165,138 @@ def db_upgrade(revision):
 
 @app.cli.command("db-downgrade")
 @click.option('--revision', default='-1', help='Revision identifier')
-def db_downgrade(revision):
+@click.option('--force', is_flag=True, help='Force downgrade without confirmation')
+def db_downgrade(revision, force):
     """Downgrade database to an earlier version."""
-    from flask_migrate import downgrade
-    downgrade(revision=revision)
-    click.echo("Database downgraded.")
+    from flask_migrate import downgrade, current
+    from alembic.util.exc import CommandError
+    from sqlalchemy.exc import SQLAlchemyError
+    
+    try:
+        # Get current version
+        current_version = None
+        try:
+            with app.app_context():
+                migration_context = current.context._proxy._get_impl()
+                current_version = migration_context.get_current_revision()
+                
+            if current_version:
+                click.echo(f"Current database version: {current_version}")
+            else:
+                click.echo("No migrations applied yet.")
+                return
+        except Exception as e:
+            click.echo(f"Warning: Could not determine current migration version: {str(e)}")
+        
+        # Confirm downgrade with the user
+        if not force:
+            click.echo("WARNING: Downgrading the database can result in data loss.")
+            if not click.confirm('Are you sure you want to downgrade the database?'):
+                click.echo("Database downgrade cancelled.")
+                return
+        
+        # Create a backup if possible
+        if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite'):
+            try:
+                import shutil
+                import datetime
+                
+                # Extract database path from URI
+                db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+                if os.path.exists(db_path):
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    backup_path = f"{db_path}_{timestamp}.bak"
+                    shutil.copy2(db_path, backup_path)
+                    click.echo(f"Database backup created at: {backup_path}")
+            except Exception as e:
+                click.echo(f"Warning: Failed to create database backup: {str(e)}")
+                
+        # Perform the downgrade
+        downgrade(revision=revision)
+        click.echo("Database downgraded.")
+        
+        # Basic integrity check
+        try:
+            with app.app_context():
+                db_session.execute(text("SELECT 1")).scalar()
+            click.echo("Database integrity check passed.")
+        except SQLAlchemyError as e:
+            click.echo(f"Warning: Database integrity check failed: {str(e)}")
+            click.echo("The schema might be in an inconsistent state.")
+            
+    except CommandError as e:
+        click.echo(f"Migration error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error during database downgrade: {str(e)}", err=True)
+        sys.exit(1)
 
 
 @app.cli.command("db-current")
 def db_current():
     """Display the current revision for the database."""
     from flask_migrate import current
-    current()
+    try:
+        current()
+    except Exception as e:
+        click.echo(f"Error retrieving current migration version: {str(e)}", err=True)
 
 
 @app.cli.command("db-history")
 def db_history():
     """List migration history."""
     from flask_migrate import history
-    history()
+    try:
+        history()
+    except Exception as e:
+        click.echo(f"Error retrieving migration history: {str(e)}", err=True)
 
 
+@app.cli.command("db-check")
+def db_check():
+    """Verify database migration status and integrity."""
+    from flask_migrate import current
+    from sqlalchemy.exc import SQLAlchemyError
+    
+    click.echo("Checking database migration status and integrity...")
+    
+    # Check alembic migration state
+    try:
+        with app.app_context():
+            migration_context = current.context._proxy._get_impl()
+            current_version = migration_context.get_current_revision()
+        
+        if current_version:
+            click.echo(f"✓ Current migration version: {current_version}")
+        else:
+            click.echo("⚠ No migrations have been applied yet.")
+    except Exception as e:
+        click.echo(f"⚠ Error checking migration status: {str(e)}", err=True)
+        
+    # Verify database connection and basic queries
+    try:
+        with app.app_context():
+            # Test database connection
+            result = db_session.execute(text("SELECT 1")).scalar()
+            if result == 1:
+                click.echo("✓ Database connection successful")
+            else:
+                click.echo("⚠ Database connection returned unexpected result")
+                
+            # Check for presence of essential tables
+            tables_to_check = ['user', 'role', 'permission']
+            for table in tables_to_check:
+                try:
+                    db_session.execute(text(f"SELECT 1 FROM {table} LIMIT 1"))
+                    click.echo(f"✓ Table '{table}' exists")
+                except SQLAlchemyError as e:
+                    click.echo(f"⚠ Table '{table}' check failed: {str(e)}")
+    except SQLAlchemyError as e:
+        click.echo(f"⚠ Database integrity check failed: {str(e)}", err=True)
+    except Exception as e:
+        click.echo(f"⚠ Unexpected error during database check: {str(e)}", err=True)
+        
+    click.echo("Database check completed.")
 if __name__ == '__main__':
     # Create a Flask CLI group with the Flask app
     cli = FlaskGroup(create_app=lambda: app)

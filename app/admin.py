@@ -6,9 +6,9 @@ from werkzeug.security import generate_password_hash
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import HiddenField
 
-from app.models import User, Permission, Role
+from app.models import User, Permission, Role, AppSettings
 from app import db_session
-from app.forms import UserForm
+from app.forms import UserForm, AppSettingsForm
 from app.auth import hash_password, admin_required
 
 # Create a CSRF protection instance
@@ -242,4 +242,47 @@ def edit_permissions(user_id):
         user_permissions=user_permissions,
         csrf_form=csrf_form
     )
+
+@admin.route('/settings', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def settings():
+    """Admin page to manage application settings"""
+    form = AppSettingsForm()
+    
+    # Get current settings
+    current_settings = AppSettings.get_settings(db_session)
+    
+    if request.method == 'GET':
+        # Populate form with current settings
+        form.min_password_length.data = current_settings.min_password_length
+        form.require_special_characters.data = current_settings.require_special_characters
+        form.require_numbers.data = current_settings.require_numbers
+        form.password_expiration_days.data = current_settings.password_expiration_days
+        form.session_timeout_minutes.data = current_settings.session_timeout_minutes
+        form.max_concurrent_sessions.data = current_settings.max_concurrent_sessions
+    
+    if form.validate_on_submit():
+        try:
+            # Update settings with form data
+            current_settings.min_password_length = form.min_password_length.data
+            current_settings.require_special_characters = form.require_special_characters.data
+            current_settings.require_numbers = form.require_numbers.data
+            current_settings.password_expiration_days = form.password_expiration_days.data
+            current_settings.session_timeout_minutes = form.session_timeout_minutes.data
+            current_settings.max_concurrent_sessions = form.max_concurrent_sessions.data
+            
+            db_session.commit()
+            flash('Application settings have been updated successfully.', 'success')
+            return redirect(url_for('admin.settings'))
+        except SQLAlchemyError as e:
+            db_session.rollback()
+            flash(f'Error updating settings: {str(e)}', 'danger')
+    elif request.method == 'POST':
+        # Handle validation errors
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{getattr(form, field).label.text}: {error}', 'danger')
+    
+    return render_template('admin/settings.html', form=form)
 

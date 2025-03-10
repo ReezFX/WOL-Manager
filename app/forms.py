@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, HiddenField, SelectMultipleField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Regexp, Optional
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, HiddenField, SelectMultipleField, IntegerField
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Regexp, Optional, NumberRange
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -60,4 +60,41 @@ class WakeForm(FlaskForm):
     host_id = HiddenField('Host ID', validators=[DataRequired()])
     submit = SubmitField('Wake Host')
 
+
+class AppSettingsForm(FlaskForm):
+    min_password_length = IntegerField('Minimum Password Length', 
+        validators=[
+            DataRequired(),
+            NumberRange(min=6, max=16, message='Password length must be between 6 and 16 characters')
+        ],
+        description='The minimum number of characters required for user passwords')
+    
+    require_special_characters = BooleanField('Require Special Characters',
+        description='Require passwords to contain at least one special character (e.g., @, #, $, %)')
+    
+    require_numbers = BooleanField('Require Numbers',
+        description='Require passwords to contain at least one number')
+    
+    password_expiration_days = IntegerField('Password Expiration (Days)',
+        validators=[
+            DataRequired(),
+            NumberRange(min=0, max=365, message='Password expiration must be between 0 and 365 days')
+        ],
+        description='Number of days before passwords expire. Use 0 for no expiration.')
+    
+    session_timeout_minutes = IntegerField('Session Timeout (Minutes)',
+        validators=[
+            DataRequired(),
+            NumberRange(min=5, max=10080, message='Session timeout must be between 5 minutes and 7 days (10080 minutes)')
+        ],
+        description='Number of minutes before user sessions expire. Minimum 5 minutes, maximum 7 days.')
+    
+    max_concurrent_sessions = IntegerField('Maximum Concurrent Sessions',
+        validators=[
+            DataRequired(),
+            NumberRange(min=0, max=10, message='Maximum concurrent sessions must be between 0 and 10')
+        ],
+        description='Maximum number of concurrent sessions per user. Use 0 for unlimited sessions.')
+    
+    submit = SubmitField('Save Settings')
 

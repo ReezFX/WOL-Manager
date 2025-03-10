@@ -8,7 +8,7 @@ class Config:
     
     # Database configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        f'sqlite:///{os.path.join(BASE_DIR, "..", "wol.db")}'
+        'sqlite:////app/instance/wol.db'  # Changed path for Docker
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Security
