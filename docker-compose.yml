@@ -1,15 +1,23 @@
 services:
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+
   web:
     build: .
     ports:
       - "8008:8080"
     volumes:
       - db_data:/app/instance
+    depends_on:
+      - redis
     environment:
       - FLASK_APP=wsgi.py
       - FLASK_CONFIG=development
       - FLASK_DEBUG=1
       - SECRET_KEY=dev-key-change-in-production
+      - WTF_CSRF_SECRET_KEY=csrf-secret-key-change-in-production
+      - REDIS_URL=redis://redis:6379/0
     restart: unless-stopped
 
 volumes:

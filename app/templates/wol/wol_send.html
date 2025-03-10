@@ -33,7 +33,7 @@
                     </div>
                     
                     <form method="POST" action="{{ url_for('wol.wake_host', host_id=host.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {{ csrf_form.hidden_tag() }}
                         <div class="d-flex justify-content-between">
                             <a href="{{ url_for('host.list_hosts') }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left me-1"></i> Cancel

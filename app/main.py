@@ -1,10 +1,15 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
+from flask_wtf import FlaskForm
 from sqlalchemy import desc, or_
 import logging
 
 from app.models import Host, Log
 from app import db_session
+
+class CSRFForm(FlaskForm):
+    """Form with CSRF protection only"""
+    pass
 
 main = Blueprint('main', __name__)
 
@@ -92,12 +97,16 @@ def dashboard():
     successful_wakes = db_session.query(Log)\
         .filter_by(user_id=current_user.id, success=True).count()
     
+    # Create CSRF form
+    csrf_form = CSRFForm()
+    
     return render_template(
         'main/dashboard.html',
         hosts=hosts,
         recent_logs=recent_logs,
         host_count=host_count,
-        successful_wakes=successful_wakes
+        successful_wakes=successful_wakes,
+        csrf_form=csrf_form
     )
 
 

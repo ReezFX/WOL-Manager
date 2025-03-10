@@ -37,14 +37,14 @@
                                 {% if user.id != current_user.id %}
                                     {% if not user.is_admin %}
                                         <form action="{{ url_for('auth.promote_user', user_id=user.id) }}" method="post" class="d-inline">
-                                            {{ csrf_token() }}
+                                            {{ csrf_form.hidden_tag() }}
                                             <button type="submit" class="btn btn-success btn-sm">
                                                 <i class="fas fa-arrow-up"></i> Promote
                                             </button>
                                         </form>
                                     {% else %}
                                         <form action="{{ url_for('auth.demote_user', user_id=user.id) }}" method="post" class="d-inline">
-                                            {{ csrf_token() }}
+                                            {{ csrf_form.hidden_tag() }}
                                             <button type="submit" class="btn btn-warning btn-sm">
                                                 <i class="fas fa-arrow-down"></i> Demote
                                             </button>

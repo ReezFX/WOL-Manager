@@ -20,6 +20,7 @@
                     {% endwith %}
                     
                     <form method="POST" action="{{ url_for('wol.test_wol') }}">
+                        {{ form.hidden_tag() }}
                         <div class="mb-3">
                             <label for="mac_address" class="form-label">MAC Address</label>
                             <input type="text" class="form-control {% if mac_error %}is-invalid{% endif %}" 

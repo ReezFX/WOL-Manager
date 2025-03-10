@@ -48,7 +48,7 @@
                     {% set is_owner = host.created_by == current_user.id %}
                     {% if current_user.has_permission('send_wol') or is_owner or current_user.is_admin or visible_to_user %}
                     <form action="{{ url_for('wol.wake_host', host_id=host.id) }}" method="post" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {{ csrf_form.hidden_tag() }}
                         <button type="submit" class="btn btn-success">
                             <i class="fas fa-power-off"></i> Wake
                         </button>

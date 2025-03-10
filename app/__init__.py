@@ -1,12 +1,16 @@
 import os
 import logging
+import redis
 from logging.handlers import RotatingFileHandler
 import pathlib
-from flask import Flask
+from datetime import timedelta
+from flask import Flask, request, flash, redirect, url_for
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_session import Session
 
 from app.config import config
 from app.models import Base, User
@@ -38,6 +42,26 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     
+    # Configure session security
+    app.config.update(
+        SESSION_COOKIE_SECURE=(not app.debug),
+        SESSION_COOKIE_HTTPONLY=True,
+        PERMANENT_SESSION_LIFETIME=timedelta(days=1)
+    )
+    
+    # Configure Redis for session storage if available
+    if app.config.get('REDIS_URL'):
+        app.config['SESSION_TYPE'] = 'redis'
+        app.config['SESSION_REDIS'] = redis.from_url(app.config['REDIS_URL'])
+    else:
+        app.config['SESSION_TYPE'] = 'filesystem'
+        app.config['SESSION_FILE_DIR'] = os.path.join(app.instance_path, 'flask_session')
+        # Ensure the directory exists
+        os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+    
+    # Initialize Flask-Session
+    Session(app)
+    
     # Initialize the database engine and bind it to the session
     engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
     db_session.configure(bind=engine)
@@ -49,6 +73,16 @@ def create_app(config_name=None):
     
     # Initialize extensions
     login_manager.init_app(app)
+    
+    # Initialize CSRF protection
+    csrf = CSRFProtect(app)
+    
+    # Add CSRF error handler
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        app.logger.warning(f'CSRF error: {e} - URL: {request.url}')
+        flash('Your form session expired. Please try again.', 'warning')
+        return redirect(url_for('main.index'))
     
     # Set up logging
     log_level = logging.DEBUG if app.debug else logging.INFO
@@ -95,9 +129,8 @@ def create_app(config_name=None):
     app.register_blueprint(wol_blueprint, url_prefix='/wol')
     
     # Admin blueprint for user management
-    from app.admin import admin as admin_blueprint, init_csrf
+    from app.admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix='/admin')
-    init_csrf(app)
     
     # Main route blueprint (can contain dashboard, etc.)
     from app.main import main as main_blueprint

@@ -14,7 +14,8 @@ class Config:
     # Security
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(16)
     CSRF_ENABLED = True
-    WTF_CSRF_SECRET_KEY = os.environ.get('WTF_CSRF_SECRET_KEY') or secrets.token_hex(16)
+    WTF_CSRF_SECRET_KEY = os.environ.get('WTF_CSRF_SECRET_KEY') or secrets.token_hex(24)
+    WTF_CSRF_TIME_LIMIT = 3600  # 1 hour in seconds
     
     # Session configuration
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)

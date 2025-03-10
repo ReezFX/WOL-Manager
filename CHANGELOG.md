@@ -5,6 +5,28 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-03-10
+
+### Security
+- Enhanced CSRF token management for multi-worker environments
+  - Fixed "Bad Request error CSRF Token is invalid" issues
+  - Added consistent CSRF secret key handling across multiple Gunicorn workers
+  - Set proper CSRF token time limit to 1 hour
+  - Added specific CSRF error handler with user-friendly messages
+  - Improved session cookie security with HttpOnly and Secure flags
+
+### Added
+- Implemented Redis for session storage
+  - Added Redis service to Docker composition
+  - Configured session serialization for sharing between worker processes
+  - Added fallback to filesystem sessions when Redis is unavailable
+  - Enhanced session management for improved reliability in multi-user environments
+
+### Fixed
+- Resolved CSRF token validation issues in multi-worker environment
+  - Fixed inconsistent token generation across Gunicorn workers
+  - Eliminated authentication failures caused by worker process switching
+  - Improved overall application stability during form submissions
 ## [1.0.9.1] - 2025-03-10
 
 ### Fixed

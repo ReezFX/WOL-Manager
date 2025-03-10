@@ -61,7 +61,7 @@
                                     {% if current_user.has_permission('delete_hosts') or is_owner %}
                                     <form action="{{ url_for('host.delete_host', host_id=host.id) }}" method="POST" class="d-inline" 
                                           onsubmit="return confirm('Are you sure you want to delete this host?');">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        {{ csrf_form.hidden_tag() }}
                                         <button type="submit" class="btn btn-sm btn-danger" title="Delete">
                                             <i class="fas fa-trash"></i> Delete
                                         </button>

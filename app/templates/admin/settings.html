@@ -12,7 +12,7 @@
         </div>
         <div class="card-body">
           <form method="POST" action="{{ url_for('admin.settings') }}">
-            {{ form.csrf_token }}
+            {{ form.hidden_tag() }}
 
             <div class="row mb-4">
               <div class="col-md-12">

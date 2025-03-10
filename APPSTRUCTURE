@@ -109,23 +109,39 @@ BaseConfig
 - Migration scripts stored in migrations directory
 
 ### Session Management
-- Flask-Login handles user session management
+- **Redis Backend**: Uses Redis for centralized session storage
+  - Ensures consistent session data across multiple worker processes
+  - Improves scalability and reliability in multi-worker environments
+  - Allows for distributed deployment with shared session state
+  - Falls back to filesystem sessions when Redis is unavailable
+- Flask-Login handles user authentication state
 - Remember-me functionality implemented
-- Session security features (e.g., secure cookies, HTTPS only)
+- Session security features:
+  - Secure cookies (HTTPS only in production)
+  - HttpOnly flag to prevent JavaScript access
+  - Configurable session lifetime (currently 1 day)
 - Session timeout and refresh mechanisms
 
 ### Security Measures
 - **CSRF Protection**: Implemented in forms using Flask-WTF's CSRF protection
+  - Consistent CSRF secret key shared across all worker processes
+  - One-hour token validity period via WTF_CSRF_TIME_LIMIT
+  - Dedicated error handler with user-friendly messages
+  - Token generation using 24-byte cryptographically secure keys
 - **Password Hashing**: Bcrypt used for secure password storage in `app/auth.py`
 - **Rate Limiting**: Implemented for WOL routes to prevent abuse
 - **Input Validation**: WTForms validation on all user inputs
 - **Permission Checks**: Authorization checks before sensitive operations
 
 ### Docker Architecture
+- **Multi-container Setup**:
+  - Web service: Flask application with Gunicorn workers
+  - Redis service: Session storage and caching
 - **Multi-stage Build**: Optimized Docker image size via multi-stage build
 - **Volume Persistence**:
   - Database stored in a persistent volume
   - Logs and user-generated content persisted across container restarts
+  - Redis data optionally persisted for session continuity
 - **Entrypoint Initialization**:
   - `entrypoint.sh` handles database initialization and migration
   - Waits for database to be available before starting the application
@@ -139,6 +155,9 @@ BaseConfig
     * For existing databases, runs migrations via `python manage.py db-upgrade`
     * Uses persistent Docker volume (`db_data:/app/instance`) to maintain database across restarts
 - **Environment Configuration**: Environment variables used for configuration
+  - REDIS_URL for session storage connection
+  - WTF_CSRF_SECRET_KEY for consistent CSRF token generation
+  - Separate configuration for development, testing, and production environments
 
 ## 4. Data Flow Documentation
 

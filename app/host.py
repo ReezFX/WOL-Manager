@@ -4,10 +4,15 @@ from sqlalchemy import desc, or_
 from app import db_session
 from app.models import Host, Role, Permission
 from app.forms import HostForm
+from flask_wtf import FlaskForm
 import re
 import logging
 
 host = Blueprint('host', __name__, url_prefix='/hosts')
+
+# Simple form for CSRF protection
+class CSRFForm(FlaskForm):
+    pass
 
 # MAC address validation regex pattern
 MAC_PATTERN = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
@@ -164,11 +169,13 @@ def list_hosts():
                 return hosts
                 
         pagination = Pagination(page, per_page, total)
-        return render_template('host/host_list.html', hosts=hosts, pagination=pagination)
+        csrf_form = CSRFForm()
+        return render_template('host/host_list.html', hosts=hosts, pagination=pagination, csrf_form=csrf_form)
     except Exception as e:
         logging.error(f"Unexpected error in list_hosts: {str(e)}")
         flash(f"An unexpected error occurred: {str(e)}", "danger")
-        return render_template('host/host_list.html', hosts=[], pagination=Pagination(1, per_page, 0))
+        csrf_form = CSRFForm()
+        return render_template('host/host_list.html', hosts=[], pagination=Pagination(1, per_page, 0), csrf_form=csrf_form)
 
 @host.route('/add', methods=['GET', 'POST'])
 @login_required

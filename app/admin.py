@@ -3,27 +3,39 @@ from flask_login import login_required, current_user
 from functools import wraps
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import generate_password_hash
-from flask_wtf import FlaskForm, CSRFProtect
-from wtforms import HiddenField
+from flask_wtf import FlaskForm
+from wtforms import HiddenField, BooleanField, SubmitField, FormField, FieldList
+from wtforms.form import BaseForm
 
 from app.models import User, Permission, Role, AppSettings
 from app import db_session
 from app.forms import UserForm, AppSettingsForm
 from app.auth import hash_password, admin_required
 
-# Create a CSRF protection instance
-csrf = CSRFProtect()
-
 # Simple form for CSRF protection on action forms
 class CSRFForm(FlaskForm):
     pass
 
+# Dynamic form for permission editing
+class PermissionsForm(FlaskForm):
+    submit = SubmitField('Save Permissions')
+    
+    def __init__(self, *args, permissions=None, user_permissions=None, **kwargs):
+        super(PermissionsForm, self).__init__(*args, **kwargs)
+        
+        if permissions:
+            # Dynamically add fields for each permission
+            for perm in permissions:
+                field_name = f'perm_{perm.id}'
+                # Check if the permission is currently enabled for the user
+                default = False
+                if user_permissions and perm.name in user_permissions:
+                    default = user_permissions[perm.name]
+                
+                setattr(self, field_name, BooleanField(perm.description, default=default))
+
 # Create the admin blueprint
 admin = Blueprint('admin', __name__, url_prefix='/admin')
-
-# Initialize CSRF protection with the blueprint
-def init_csrf(app):
-    csrf.init_app(app)
 
 @admin.route('/users')
 @login_required
@@ -32,7 +44,7 @@ def list_users():
     """Admin page to list all users"""
     users = db_session.query(User).all()
     form = UserForm()
-    # Create a CSRF form for the promote/demote actions
+    # Create a CSRF form for the promote/demote/delete actions
     csrf_form = CSRFForm()
     return render_template('admin/users.html', users=users, form=form, csrf_form=csrf_form)
 
@@ -204,19 +216,23 @@ def edit_permissions(user_id):
             categorized_permissions[perm.category] = []
         categorized_permissions[perm.category].append(perm)
     
-    if request.method == 'POST':
+    # For both GET and POST, prepare user's current permissions
+    user_permissions = user.permissions or {}
+    
+    # Create a form for the permission editing
+    form = PermissionsForm(permissions=all_permissions, user_permissions=user_permissions)
+    
+    if form.validate_on_submit():
         try:
             # Create a permissions dictionary based on the form data
             updated_permissions = {}
             
-            # Process the form data
+            # Process the form data using the form fields
             for perm in all_permissions:
-                perm_key = f'perm_{perm.id}'
-                if perm_key in request.form:
-                    updated_permissions[perm.name] = True
-                else:
-                    # Explicitly set to False to override role-based permissions
-                    updated_permissions[perm.name] = False
+                field_name = f'perm_{perm.id}'
+                if hasattr(form, field_name):
+                    field_value = getattr(form, field_name).data
+                    updated_permissions[perm.name] = field_value
             
             # Update the user's permissions
             user.permissions = updated_permissions
@@ -229,18 +245,12 @@ def edit_permissions(user_id):
             db_session.rollback()
             flash(f'Error updating permissions: {str(e)}', 'danger')
     
-    # For GET requests, prepare user's current permissions
-    user_permissions = user.permissions or {}
-    
-    # Create a CSRF form for the permission update
-    csrf_form = CSRFForm()
-    
     return render_template(
         'admin/edit_permissions.html', 
         user=user, 
         categorized_permissions=categorized_permissions,
         user_permissions=user_permissions,
-        csrf_form=csrf_form
+        form=form
     )
 
 @admin.route('/settings', methods=['GET', 'POST'])

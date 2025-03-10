@@ -4,6 +4,9 @@ from werkzeug.security import check_password_hash
 from functools import wraps
 import bcrypt
 from sqlalchemy.exc import SQLAlchemyError
+from flask_wtf import FlaskForm
+from wtforms import PasswordField, StringField, SubmitField
+from wtforms.validators import DataRequired, EqualTo, Length, ValidationError
 
 from app.models import User, Role
 from app import db_session
@@ -36,6 +39,18 @@ def check_password(hashed_password, password):
         password.encode('utf-8'),
         hashed_password.encode('utf-8')
     )
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[
+        DataRequired(),
+        Length(min=8, message='New password must be at least 8 characters long.')
+    ])
+    confirm_password = PasswordField('Confirm New Password', validators=[
+        DataRequired(),
+        EqualTo('new_password', message='New passwords do not match.')
+    ])
+    submit = SubmitField('Change Password')
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -86,32 +101,16 @@ def profile():
 @auth.route('/change-password', methods=['GET', 'POST'])
 @login_required
 def change_password():
-    if request.method == 'POST':
-        current_password = request.form.get('current_password')
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
-        
-        # Basic validation
-        error = None
-        if not current_password:
-            error = 'Current password is required.'
-        elif not new_password:
-            error = 'New password is required.'
-        elif new_password != confirm_password:
-            error = 'New passwords do not match.'
-        elif len(new_password) < 8:
-            error = 'New password must be at least 8 characters long.'
-        
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
         # Verify current password
-        if not error and not check_password(current_user.password_hash, current_password):
-            error = 'Current password is incorrect.'
-        
-        if error:
-            flash(error, 'danger')
+        if not check_password(current_user.password_hash, form.current_password.data):
+            flash('Current password is incorrect.', 'danger')
         else:
             try:
                 # Update password
-                current_user.password_hash = hash_password(new_password)
+                current_user.password_hash = hash_password(form.new_password.data)
                 db_session.commit()
                 flash('Password changed successfully!', 'success')
                 return redirect(url_for('auth.profile'))
@@ -119,7 +118,7 @@ def change_password():
                 db_session.rollback()
                 flash(f'Error changing password: {str(e)}', 'danger')
     
-    return render_template('auth/change_password.html')
+    return render_template('auth/change_password.html', form=form)
 
 # User management functionality moved to admin.py
 

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from flask import Blueprint, request, flash, redirect, url_for, render_template
 from flask_login import login_required, current_user
+from flask_wtf import FlaskForm
 
 from app.models import Host, Log, Role
 from app import db_session
@@ -12,6 +13,13 @@ from sqlalchemy import desc
 
 # Create blueprint
 wol = Blueprint('wol', __name__, url_prefix='/wol')
+
+
+class CSRFForm(FlaskForm):
+    """
+    A simple form that provides CSRF protection.
+    """
+    pass
 
 # Rate limiting storage - in a production app, this would use Redis or similar
 # Format: {user_id: [(timestamp1), (timestamp2), ...]}
@@ -178,6 +186,9 @@ def wol_send(host_id):
     Returns:
         Rendered template with host details
     """
+    # Create a CSRF form instance for protection
+    csrf_form = CSRFForm()
+    
     host = db_session.query(Host).get(host_id)
     if not host:
         flash('Host not found.', 'danger')
@@ -212,7 +223,7 @@ def wol_send(host_id):
         flash('You do not have permission to wake this host.', 'danger')
         return redirect(url_for('host.list_hosts'))
     
-    return render_template('wol/wol_send.html', host=host)
+    return render_template('wol/wol_send.html', host=host, csrf_form=csrf_form)
 
 
 @wol.route('/logs')
@@ -255,6 +266,9 @@ def test_wol():
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('main.dashboard'))
     
+    # Create a CSRF form instance for protection
+    form = CSRFForm()
+    
     mac_error = None
     ip_error = None
     
@@ -265,14 +279,14 @@ def test_wol():
         # Validate MAC address format
         if not is_valid_mac(mac_address):
             mac_error = 'Invalid MAC address format. Use format XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX.'
-            return render_template('wol/test.html', mac_error=mac_error, ip_error=ip_error)
+            return render_template('wol/test.html', mac_error=mac_error, ip_error=ip_error, form=form)
         
         # Validate IP address format
         try:
             socket.inet_aton(broadcast)
         except socket.error:
             ip_error = 'Invalid broadcast IP address format.'
-            return render_template('wol/test.html', mac_error=mac_error, ip_error=ip_error, mac_address=mac_address)
+            return render_template('wol/test.html', mac_error=mac_error, ip_error=ip_error, mac_address=mac_address, form=form)
         
         # Attempt to wake the host
         success = send_magic_packet(mac_address, broadcast)
@@ -283,7 +297,7 @@ def test_wol():
         else:
             flash(f'Failed to send Wake-on-LAN packet to {mac_address}.', 'danger')
     
-    return render_template('wol/test.html', mac_error=mac_error, ip_error=ip_error, title="Test Wake-on-LAN")
+    return render_template('wol/test.html', mac_error=mac_error, ip_error=ip_error, title="Test Wake-on-LAN", form=form)
 
 
 def is_valid_mac(mac_address):

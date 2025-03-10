@@ -7,7 +7,7 @@
     <h1 class="mb-4">Edit Permissions for {{ user.username }}</h1>
     
     <form method="POST" action="{{ url_for('admin.edit_permissions', user_id=user.id) }}">
-        {{ csrf_form.csrf_token }}
+        {{ form.hidden_tag() }}
         
         <div class="card mb-4">
             <div class="card-body">

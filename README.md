@@ -349,6 +349,14 @@ If you encounter 400 Bad Request errors when submitting forms:
 
 ## Release Notes
 
+### Version 1.1.0 (2025-03-10)
+- Improved CSRF token management for multi-worker environments
+- Added Redis session storage for consistent session handling across worker processes
+- Enhanced security with configurable session cookie parameters
+- Fixed "Bad Request error CSRF Token is invalid" during login and form submissions
+- Implemented more robust error handling for CSRF validation failures
+- Extended CSRF token validity period to improve user experience
+
 ### Version 1.0.9.2 (2023-04-14)
 - Added multi-architecture Docker image support for both amd64 and arm64 platforms
 - Fixed container startup issues with gunicorn bind address configuration
