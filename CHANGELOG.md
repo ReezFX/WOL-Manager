@@ -5,6 +5,29 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-03-10
+
+### Security
+- Enhanced session and cookie security for external access
+  - Improved session cookie handling with secure attribute settings
+  - Added stronger validation for session data
+  - Hardened cookie security parameters for external facing deployments
+  - Implemented more robust session handling mechanisms
+
+### Added
+- Database-based authentication event logging
+  - Added comprehensive tracking of all authentication attempts
+  - Created database schema for storing auth events
+  - Implemented logging of login successes, failures, and logouts
+  - Added IP address and user agent recording for security analysis
+
+### Changed
+- Refactored login method implementation for external login fix
+  - Improved login mechanism for better compatibility with external access
+  - Enhanced error handling during authentication process
+  - Restructured authentication workflow for more reliable operation
+  - Fixed edge cases in authentication with external proxies
+
 ## [1.1.0] - 2025-03-10
 
 ### Security

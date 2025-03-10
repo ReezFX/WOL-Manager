@@ -22,9 +22,9 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 ## Features
 - **Host Management**: Add, edit, view, and delete networked devices with MAC addresses
 - **Wake-on-LAN**: Send magic packets to wake devices remotely
-- **User Authentication**: Secure login system with session management (admin-managed user accounts)
+- **User Authentication**: Secure login system with session management (admin-managed user accounts) and comprehensive authentication logging
 - **Role-based Access Control**: Different permission levels for users and administrators, with host visibility controls based on user roles
-- **Logging**: Track wake attempts and results for auditing purposes
+- **Logging**: Track wake attempts, authentication events, and system actions for auditing purposes
 - **Responsive UI**: Web interface that works on desktop and mobile devices
 - **Dark/Light Mode**: Toggle between dark and light themes with automatic system preference detection
 - **Docker Support**: Easy deployment using containers
@@ -311,6 +311,8 @@ Records of wake attempts:
 - Rate limiting on wake attempts (10 per 5 minutes)
 - Role-based access control to protected resources
 - Input validation for all form fields
+- Comprehensive authentication logging of login attempts, failures, and logouts
+- Enhanced session and cookie security for external access deployments
 
 ## Troubleshooting
 
@@ -348,6 +350,12 @@ If you encounter 400 Bad Request errors when submitting forms:
 6. Clear browser cache and cookies if persistent CSRF issues occur
 
 ## Release Notes
+
+### Version 1.1.1 (2025-03-10)
+- Added authentication logging functionality for improved security auditing
+- Refactored login method to fix issues with external access
+- Enhanced session and cookie security for external deployments
+- Implemented database-based authentication event tracking
 
 ### Version 1.1.0 (2025-03-10)
 - Improved CSRF token management for multi-worker environments

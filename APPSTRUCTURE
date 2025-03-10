@@ -58,6 +58,7 @@ Host (1) <-----> (M) Log
 - **Permission**: Granular access controls
 - **Host**: Network device information (MAC address, IP, name)
 - **Log**: Record of WOL operations and system events
+- **AuthEvent**: Record of authentication attempts, successes, failures, and logouts
 - **AdminSettings**: System-wide configuration options
 
 ### WOL Packet Generation
@@ -66,12 +67,14 @@ Host (1) <-----> (M) Log
 - Sends packets via UDP to broadcast address on port 9
 - Includes MAC address validation and formatting
 - Implements rate limiting for security
-
 ### Authentication Flow
 1. User submits credentials via login form
 2. Credentials validated against database (password hashed with bcrypt)
-3. User session created with Flask-Login
-4. Role and permissions attached to session
+3. Authentication attempt logged to database with timestamp, IP address, and user agent
+4. User session created with Flask-Login if authentication successful
+5. Role and permissions attached to session
+6. Authentication result (success/failure) logged with detailed information
+7. Redirected to appropriate page based on role/permissions
 5. Redirected to appropriate page based on role/permissions
 
 ### Host Visibility Rules
@@ -119,6 +122,8 @@ BaseConfig
 - Session security features:
   - Secure cookies (HTTPS only in production)
   - HttpOnly flag to prevent JavaScript access
+  - Enhanced cookie parameters for external deployments
+  - Strengthened session validation mechanisms
   - Configurable session lifetime (currently 1 day)
 - Session timeout and refresh mechanisms
 
@@ -132,6 +137,11 @@ BaseConfig
 - **Rate Limiting**: Implemented for WOL routes to prevent abuse
 - **Input Validation**: WTForms validation on all user inputs
 - **Permission Checks**: Authorization checks before sensitive operations
+- **Authentication Logging**: Comprehensive tracking of authentication events via `app/auth_logger.py`
+  - Records login attempts, successes, failures, and logouts
+  - Stores IP addresses and user agents for security analysis
+  - Database-backed for persistent audit trail
+  - Used for security monitoring and troubleshooting
 
 ### Docker Architecture
 - **Multi-container Setup**:
@@ -187,11 +197,18 @@ BaseConfig
 3. Log retention policy applied based on configuration
 4. Log entries associated with relevant model objects (User, Host)
 
+### Authentication Event Logging
+1. All authentication events captured in database (login attempts, successes, failures, logouts)
+2. Records include timestamp, username, IP address, and user agent information
+3. Provides comprehensive audit trail for security monitoring
+4. Helps identify suspicious login patterns and potential security threats
+
 ## 5. Key Implementation Files
 
 - `app/__init__.py`: Application factory and extension initialization
 - `app/models.py`: Database models and relationships
 - `app/auth.py`: Authentication blueprint and logic
+- `app/auth_logger.py`: Authentication event logging system
 - `app/host.py`: Host management operations
 - `app/wol.py`: Wake-on-LAN implementation
 - `app/config.py`: Configuration classes
