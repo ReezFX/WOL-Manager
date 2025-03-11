@@ -20,7 +20,23 @@
                 <i class="fas fa-shield-alt me-1"></i>Authentication Logs
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link {% if log_type == 'system' %}active{% endif %}" href="{{ url_for('admin.system_logs') }}">
+                <i class="fas fa-server me-1"></i>System Logs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if log_type == 'combined' %}active{% endif %}" href="{{ url_for('admin.combined_logs') }}">
+                <i class="fas fa-layer-group me-1"></i>Combined Logs
+            </a>
+        </li>
     </ul>
+    
+    {% if advanced_logs_message is defined and advanced_logs_message %}
+    <div class="alert alert-info mt-2 mb-3">
+        <i class="fas fa-info-circle me-2"></i> {{ advanced_logs_message }}
+    </div>
+    {% endif %}
     
     {% if log_type == 'wol' %}
         <!-- WOL Logs -->

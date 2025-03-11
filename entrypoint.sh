@@ -24,7 +24,39 @@ python manage.py db-upgrade || echo "Migration upgrade failed, continuing..."
 
 # Always run init-db to ensure all tables are created (regardless of whether the database exists)
 echo "Ensuring all database tables are created..."
-python manage.py init-db || echo "Table creation failed, continuing..."
+python manage.py init-db
+
+# Verify critical tables exist and create them if needed
+echo "Verifying critical tables exist..."
+python -c "
+import sqlite3
+from app import create_app
+from app.models import Base, SystemLog, AuthLog
+from sqlalchemy import inspect, create_engine
+
+app = create_app()
+with app.app_context():
+    # Get database URI from app config
+    db_uri = app.config['SQLALCHEMY_DATABASE_URI']
+    engine = create_engine(db_uri)
+    inspector = inspect(engine)
+    
+    # Check if the tables exist
+    existing_tables = inspector.get_table_names()
+    print(f'Existing tables: {existing_tables}')
+    
+    # Check SystemLog table
+    if 'system_logs' not in existing_tables:
+        print('SystemLog table not found, creating...')
+        SystemLog.__table__.create(engine, checkfirst=True)
+    
+    # Check AuthLog table
+    if 'auth_logs' not in existing_tables:
+        print('AuthLog table not found, creating...')
+        AuthLog.__table__.create(engine, checkfirst=True)
+    
+    print('Table verification complete.')
+" || echo "Table verification failed, please check database configuration."
 
 # Check if database exists and need to initialize data
 if [ -f /app/instance/wol.db ]; then

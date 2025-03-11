@@ -223,7 +223,7 @@ class SystemLog(Base):
     
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
-    log_level = Column(String(10), nullable=False)  # Using string to store enum value
+    log_level = Column(String(10), nullable=False, index=True)  # Using string to store enum value
     source_module = Column(String(100), nullable=False)
     message = Column(Text, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # Optional user reference
@@ -232,8 +232,19 @@ class SystemLog(Base):
     # Relationship
     user = relationship('User', backref='system_logs')
     
+    @validates('log_level')
+    def validate_log_level(self, key, log_level):
+        """Validate log_level to ensure it's a valid LogLevel enum value."""
+        try:
+            return LogLevel(log_level).value
+        except ValueError:
+            valid_levels = ', '.join([level.value for level in LogLevel])
+            raise ValueError(f"Invalid log level. Must be one of: {valid_levels}")
+    
     def __repr__(self):
-        return f'<SystemLog [{self.log_level}] {self.timestamp}: {self.message[:50]}>'
+        user_info = f"User:{self.user_id}" if self.user_id else "No User"
+        metadata_preview = str(self.log_metadata)[:30] + "..." if self.log_metadata else "No metadata"
+        return f'<SystemLog [{self.log_level}] {self.timestamp} | {self.source_module} | {user_info} | {self.message[:50]} | {metadata_preview}>'
 
 class AuthLog(Base):
     __tablename__ = 'auth_logs'
