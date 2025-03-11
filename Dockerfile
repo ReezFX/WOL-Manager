@@ -16,7 +16,7 @@ ENV FLASK_DEBUG=0
 ENV PYTHONUNBUFFERED=1
 
 # Expose the port the app will run on
-EXPOSE 8080
+EXPOSE 8008
 
 # Command to run the application
 # Make entrypoint script executable

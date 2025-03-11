@@ -1,12 +1,13 @@
 services:
   redis:
     image: redis:alpine
+    ports:
+      - "6379:6379"  # Expose Redis port for web service in host network mode
     restart: unless-stopped
 
   web:
     build: .
-    ports:
-      - "8008:8080"
+    network_mode: "host"  # Use host network mode to allow WoL packets to reach physical network
     volumes:
       - db_data:/app/instance
       - ./detect_ip.sh:/app/detect_ip.sh
@@ -18,7 +19,7 @@ services:
       - FLASK_DEBUG=0
       - SECRET_KEY=dev-key-change-in-production
       - WTF_CSRF_SECRET_KEY=csrf-secret-key-change-in-production
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=redis://localhost:6379/0  # Updated to use localhost since we're in host network mode
       - SESSION_COOKIE_DOMAIN=
       - SESSION_COOKIE_SECURE=False
     entrypoint: ["/bin/bash", "-c", "chmod +x /app/detect_ip.sh && /app/detect_ip.sh /app/entrypoint.sh"]

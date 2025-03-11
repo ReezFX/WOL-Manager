@@ -51,7 +51,9 @@ The official Docker image supports both arm64 and amd64 architectures.
 
 2. Run the container with proper environment variables:
    ```bash
-   docker run -d --name wol-manager -p 8008:8080 -v wol_data:/app/instance -e FLASK_APP=wsgi.py -e FLASK_CONFIG=development -e FLASK_DEBUG=1 -e SECRET_KEY=dev-key-change-in-production --restart unless-stopped officialreez/wol-manager-web:latest
+   
+   # Host network mode (required for Wake-on-LAN to work properly)
+   docker run -d --name wol-manager --network host -v wol_data:/app/instance -e FLASK_APP=wsgi.py -e FLASK_CONFIG=production -e FLASK_DEBUG=1 -e SECRET_KEY=dev-key-change-in-production --restart unless-stopped officialreez/wol-manager-web:latest
    ```
 
    **Important Environment Variables:**
@@ -59,7 +61,8 @@ The official Docker image supports both arm64 and amd64 architectures.
    - `FLASK_CONFIG`: Set to `production` for production deployments
    - `SECRET_KEY`: **Required** - Set a secure, unique key for session encryption (change this from the example!)
 
-3. Access the application at `http://localhost:8008`
+3. Access the application:
+   - Host network mode: `http://localhost:8008`
 
 #### Option 2: Building from Source
 
@@ -75,7 +78,8 @@ The official Docker image supports both arm64 and amd64 architectures.
    docker compose up -d
    ```
 
-3. Access the application at `http://localhost:8008`
+3. Access the application:
+   - Host network mode (if configured): `http://localhost:8008`
 
 #### Option 3: Building Multi-architecture Images (Advanced)
 
@@ -94,7 +98,9 @@ If you need to build the image for multiple architectures (arm64/amd64):
    ```
 
 All Docker setups include:
-- Application container running internally on port 8080, mapped to external port 8008
+- Application container running internally on port 8008
+  - Standard mode: mapped to external port 8008
+  - Host network mode: accessed directly on port 8008
 - Persistent database storage using Docker volumes
 - Automatic database initialization
 - Cross-platform compatibility (arm64/amd64) - Docker images are built for both architectures and will automatically use the correct one for your system
@@ -321,6 +327,7 @@ Records of wake attempts:
 2. Verify the MAC address is correct
 3. Check if your network allows broadcast UDP packets
 4. Try using a specific IP address if broadcast packets are blocked
+5. **Docker Network Mode**: Ensure the container is running in host network mode for WoL to work properly
 
 ### Host Visibility Issues
 If users cannot see hosts that should be visible to them:
@@ -337,7 +344,9 @@ If you encounter database errors:
 
 ### Cannot Access Web Interface
 1. Verify the container/service is running
-2. Check port mappings (8008 by default)
+2. Check port mappings:
+   - Standard network mode: port 8008 by default
+   - Host network mode: port 8008 directly on host
 3. Ensure there are no firewall rules blocking access
 
 ### Form Submission Errors
@@ -348,6 +357,37 @@ If you encounter 400 Bad Request errors when submitting forms:
 4. Verify that your session hasn't expired, as CSRF tokens are session-specific
 5. If using AJAX requests, ensure the CSRF token is included in the request headers
 6. Clear browser cache and cookies if persistent CSRF issues occur
+
+### Docker Network Mode Issues for Wake-on-LAN
+If the Wake-on-LAN functionality is not working when running the application in Docker:
+
+1. **Requirement for Host Network Mode**:
+   - Wake-on-LAN requires the Docker container to run in host network mode to send broadcast UDP packets to the physical network
+   - Default bridge network mode isolates the container from the host network, preventing WoL packets from reaching target devices
+
+2. **How to Enable Host Network Mode**:
+   - For docker-compose:
+     ```yaml
+     services:
+       web:
+         # ... other configuration
+         network_mode: "host"  # Add this line
+     ```
+   - For docker run:
+     ```bash
+     docker run --network host -d --name wol-manager -v wol_data:/app/instance -e FLASK_APP=wsgi.py ...
+     ```
+
+3. **Port Access with Host Network Mode**:
+   - When using host network mode, access the web interface on port 8008
+   - Port mapping is ignored in host network mode as the container shares the host network stack
+
+4. **Buildx Multi-Architecture Images**:
+   - For buildx built images, ensure the host network mode is specified in your deployment configuration
+   - When using docker run with buildx images:
+     ```bash
+     docker run --network host -d --name wol-manager -v wol_data:/app/instance ...
+     ```
 
 ## Release Notes
 

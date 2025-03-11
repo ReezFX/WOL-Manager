@@ -104,7 +104,7 @@ chown -R nobody:nogroup /app/instance || echo "Failed to set permissions on inst
 echo "Starting the application in production mode..."
 
 # Ensure we're binding to all interfaces
-echo "Binding gunicorn to 0.0.0.0:8080 to accept connections from all network interfaces"
+echo "Binding gunicorn to 0.0.0.0:8008 to accept connections from all network interfaces"
 
 # Check current network interfaces for diagnostic purposes
 echo "Network interfaces on this container:"
@@ -120,7 +120,7 @@ export SESSION_COOKIE_DOMAIN="${SESSION_COOKIE_DOMAIN}"
 
 # Explicitly set host to 0.0.0.0 to ensure binding to all interfaces
 HOST="0.0.0.0"
-PORT="8080"
+PORT="8008"
 echo "Starting Gunicorn on ${HOST}:${PORT} with 4 workers"
 
 # Execute gunicorn with binding to all interfaces
