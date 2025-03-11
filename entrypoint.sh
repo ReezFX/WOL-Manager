@@ -8,7 +8,15 @@ export FLASK_CONFIG=production
 
 # Create instance directory with proper permissions
 mkdir -p /app/instance
-chmod 777 /app/instance
+chmod 770 /app/instance
+
+# Create flask_session directory with proper permissions
+mkdir -p /app/instance/flask_session
+chmod 770 /app/instance/flask_session
+
+# Create logs directory with proper permissions
+mkdir -p /app/logs
+chmod 770 /app/logs
 
 # Database initialization and migration process
 echo "Starting database initialization and migration process..."
@@ -98,7 +106,7 @@ fi
 chmod +x check_admin.py
 
 # Ensure proper permissions on database file
-chown -R nobody:nogroup /app/instance || echo "Failed to set permissions on instance directory, continuing..."
+chown -R nobody:nogroup /app/instance /app/instance/flask_session /app/logs || echo "Failed to set permissions on instance directory, continuing..."
 
 # Start the application
 echo "Starting the application in production mode..."
@@ -124,5 +132,5 @@ PORT="8008"
 echo "Starting Gunicorn on ${HOST}:${PORT} with 4 workers"
 
 # Execute gunicorn with binding to all interfaces
-exec gunicorn --bind ${HOST}:${PORT} --workers 4 --timeout 120 wsgi:app
+exec gunicorn --user nobody --bind ${HOST}:${PORT} --workers 4 --timeout 120 wsgi:app
 
