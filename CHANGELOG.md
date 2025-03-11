@@ -5,6 +5,23 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2023-11-22
+
+### Fixed
+- Port consistency improvements
+  - Aligned port configuration across Dockerfile, entrypoint.sh, and application settings
+  - Fixed inconsistent port references between 8008 and 8080
+  - Updated documentation to consistently reference port 8008
+  - Improved port configuration clarity in startup scripts
+
+### Enhanced
+- Wake-on-LAN (WoL) functionality improvements
+  - Changed Docker network mode to host mode to allow WoL packets to reach physical network
+  - Fixed UDP port 9 access for proper magic packet delivery
+  - Enhanced broadcast packet handling to ensure compatibility with local networks
+  - Updated documentation with WoL troubleshooting information
+  - Added configuration to maintain compatibility with buildx-built images
+
 ## [1.1.1] - 2025-03-10
 
 ### Security

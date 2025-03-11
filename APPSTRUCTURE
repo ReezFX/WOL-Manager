@@ -168,6 +168,19 @@ BaseConfig
   - REDIS_URL for session storage connection
   - WTF_CSRF_SECRET_KEY for consistent CSRF token generation
   - Separate configuration for development, testing, and production environments
+- **Network Configuration**:
+  - **Host Network Mode**: Required for Wake-on-LAN functionality
+    * Uses `network_mode: "host"` in docker-compose.yml for the web service
+    * Provides direct access to UDP port 9 used by WoL magic packets
+    * Allows broadcasting packets to the physical network (255.255.255.255)
+    * Bypasses Docker's NAT which would otherwise block broadcast packets
+  - **Default Bridge Network Limitations**:
+    * Standard bridge mode isolates containers from the host network
+    * Broadcast packets (255.255.255.255) cannot reach physical network devices
+    * Even with exposed UDP port 9, NAT interferes with broadcast packet distribution
+  - **Redis Configuration**:
+    * Redis remains in bridge network mode with exposed port
+    * Web service connects to Redis via localhost when in host network mode
 
 ## 4. Data Flow Documentation
 
