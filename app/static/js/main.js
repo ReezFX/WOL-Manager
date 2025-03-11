@@ -167,3 +167,84 @@ document.addEventListener('DOMContentLoaded', function() {
   window.toggleTheme = toggleTheme;
 });
 
+// JavaScript to enforce proper text color in modal pre elements
+document.addEventListener('DOMContentLoaded', function() {
+  /**
+   * Fix pre element text color in modals based on current theme
+   */
+  function fixModalPreElementColors() {
+    const isDarkTheme = document.body.classList.contains('dark-theme');
+    const preTextColor = isDarkTheme ? '#ffffff' : '#212529'; // Brighter white for dark theme
+    
+    // Target all pre elements in modal dialogs
+    document.querySelectorAll('.modal pre').forEach(preElement => {
+      // Set text color and ensure it's inherited by all child elements
+      preElement.style.color = preTextColor;
+      
+      // Force all child elements to inherit the text color, 
+      // unless they have specific styling classes
+      Array.from(preElement.querySelectorAll('*')).forEach(child => {
+        // Skip elements with specific styling classes
+        if (!child.classList.contains('metadata') && 
+            !child.classList.contains('timestamp') && 
+            !child.classList.contains('log-level') &&
+            !child.classList.contains('error') &&
+            !child.classList.contains('warning') &&
+            !child.classList.contains('info')) {
+          child.style.color = 'inherit';
+        }
+      });
+      
+      // Enhance readability by highlighting key parts of log lines
+      if (isDarkTheme) {
+        // Apply automatic log formatting to improve readability
+        const content = preElement.innerHTML;
+        
+        // This is a light-touch formatting approach that won't break existing content
+        // but will help identify common log patterns for better readability
+        if (!preElement.hasAttribute('data-formatted')) {
+          preElement.innerHTML = content
+            .replace(/(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/g, '<span class="timestamp">$1</span>')
+            .replace(/(\[ERROR\]|\bERROR\b)/gi, '<span class="error">$1</span>')
+            .replace(/(\[WARN\]|\bWARNING\b)/gi, '<span class="warning">$1</span>')
+            .replace(/(\[INFO\]|\bINFO\b)/gi, '<span class="info">$1</span>');
+            
+          preElement.setAttribute('data-formatted', 'true');
+        }
+      }
+    });
+  }
+
+  // Fix colors when page loads
+  fixModalPreElementColors();
+  
+  // Fix colors when the theme changes
+  document.querySelectorAll('.theme-toggle').forEach(button => {
+    button.addEventListener('click', function() {
+      // Small timeout to ensure theme has been applied before fixing colors
+      setTimeout(fixModalPreElementColors, 50);
+    });
+  });
+
+  // Fix colors when any modal is shown
+  document.body.addEventListener('shown.bs.modal', function() {
+    // Use a slight delay to ensure the modal is fully rendered
+    setTimeout(fixModalPreElementColors, 10);
+  });
+  
+  // Also apply formatting when content is dynamically loaded into a modal
+  document.body.addEventListener('DOMNodeInserted', function(e) {
+    if (document.querySelector('.modal.show') && 
+        (e.target.tagName === 'PRE' || e.target.querySelector('pre'))) {
+      setTimeout(fixModalPreElementColors, 10);
+    }
+  });
+
+  // Re-fix colors when window resizes (in case of responsive styling changes)
+  window.addEventListener('resize', function() {
+    if (document.querySelector('.modal.show')) {
+      fixModalPreElementColors();
+    }
+  });
+});
+

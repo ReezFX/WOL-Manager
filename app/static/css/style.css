@@ -316,6 +316,70 @@ body:not(.dark-theme) .footer .footer-text {
   border-color: var(--border-color);
 }
 
+/* Pre element styling in modals for proper contrast */
+.modal-content pre {
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  overflow: auto;
+  max-height: 400px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Force all elements inside pre to inherit text color for proper contrast */
+.modal-content pre * {
+  color: inherit !important;
+}
+
+/* Additional styles for <pre> metadata in dark theme for better readability */
+.dark-theme .modal-content pre .metadata,
+.dark-theme .modal-content pre .timestamp,
+.dark-theme .modal-content pre .log-level {
+  color: #80d8ff !important; /* Light blue for metadata */
+  font-weight: 500;
+}
+
+/* Improve readability of different log levels in dark theme */
+.dark-theme .modal-content pre .error {
+  color: #ff8a80 !important; /* Light red for errors */
+  font-weight: 500;
+}
+
+.dark-theme .modal-content pre .warning {
+  color: #ffd180 !important; /* Light orange for warnings */
+  font-weight: 500;
+}
+
+.dark-theme .modal-content pre .info {
+  color: #b9f6ca !important; /* Light green for info */
+  font-weight: 500;
+}
+
+/* Light theme specific pre styling */
+body:not(.dark-theme) .modal-content pre {
+  background-color: #f1f3f5;
+  color: #212529 !important; /* Force color even on nested elements */
+  border: 1px solid #dee2e6;
+}
+
+/* Dark theme specific pre styling */
+.dark-theme .modal-content pre {
+  background-color: #1a1a1a; /* Darker background for better contrast */
+  color: #ffffff !important; /* Brighter white text for better contrast */
+  border: 1px solid #343a40;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2); /* Subtle inset shadow for depth */
+}
+
+/* Fix for pre elements with bg-light class in modals in dark mode */
+.dark-theme .modal-content pre.bg-light {
+  background-color: #1a1a1a !important; /* Override Bootstrap's bg-light in dark mode */
+  color: #ffffff !important; /* Ensure text is visible */
+  border: 1px solid #343a40;
+}
+
+
 .dark-theme .list-group-item {
   background-color: var(--bg-secondary);
   border-color: var(--border-color);

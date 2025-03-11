@@ -461,6 +461,69 @@ def combined_logs():
         log_level = request.args.get('level', '')
         start_date = request.args.get('start_date', '')
         end_date = request.args.get('end_date', '')
+        page = request.args.get('page', 1, type=int)
+        per_page = 20  # Set a reasonable number of logs per page
+        
+        # Create a pagination class similar to the one in host.py
+        class Pagination:
+            def __init__(self, items, page, per_page, total_count):
+                self.items = items
+                self.page = page
+                self.per_page = per_page
+                self.total_count = total_count
+                
+            @property
+            def pages(self):
+                return max(0, self.total_count - 1) // self.per_page + 1
+                
+            @property
+            def has_prev(self):
+                return self.page > 1
+                
+            @property
+            def has_next(self):
+                return self.page < self.pages
+                
+            @property
+            def prev_num(self):
+                return self.page - 1 if self.has_prev else None
+                
+            @property
+            def next_num(self):
+                return self.page + 1 if self.has_next else None
+            
+            def iter_pages(self, left_edge=2, left_current=2, right_current=5, right_edge=2):
+                """
+                Generates page numbers for pagination controls.
+                
+                Args:
+                    left_edge: Number of pages to show at the beginning
+                    left_current: Number of pages to show before current page
+                    right_current: Number of pages to show after current page
+                    right_edge: Number of pages to show at the end
+                
+                Returns:
+                    A list of page numbers with None to indicate gaps
+                """
+                last = 0
+                for num in range(1, self.pages + 1):
+                    # Add left edge pages
+                    if num <= left_edge:
+                        yield num
+                        last = num
+                    # Add pages around current page
+                    elif (num > self.page - left_current - 1 and 
+                          num < self.page + right_current):
+                        if last + 1 != num:
+                            yield None
+                        yield num
+                        last = num
+                    # Add right edge pages
+                    elif num > self.pages - right_edge:
+                        if last + 1 != num:
+                            yield None
+                        yield num
+                        last = num
         
         # Get logs from all sources
         system_logs = get_system_logs(search_term, log_level, start_date, end_date)
@@ -479,8 +542,21 @@ def combined_logs():
         for log in wol_logs:
             combined.append({'type': 'wol', 'content': log})
         
+        # Get total log count for pagination
+        total = len(combined)
+        
+        # Calculate start and end for slicing
+        start = (page - 1) * per_page
+        end = start + per_page
+        
+        # Get the logs for the current page
+        current_page_logs = combined[start:end]
+        
+        # Create pagination object
+        pagination = Pagination(current_page_logs, page, per_page, total)
+        
         return render_template('logs/combined.html',
-                              combined_logs=combined,
+                              pagination=pagination,
                               search_term=search_term,
                               log_level=log_level,
                               start_date=start_date,
