@@ -8,6 +8,8 @@ services:
   web:
     build: .
     network_mode: "host"  # Use host network mode to allow WoL packets to reach physical network
+    cap_add:
+      - NET_RAW
     volumes:
       - db_data:/app/instance
       - ./detect_ip.sh:/app/detect_ip.sh

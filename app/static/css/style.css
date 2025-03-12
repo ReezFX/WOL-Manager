@@ -379,6 +379,11 @@ body:not(.dark-theme) .modal-content pre {
   border: 1px solid #343a40;
 }
 
+/* Fix for cards with bg-light class in dark mode */
+.dark-theme .bg-light {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
 
 .dark-theme .list-group-item {
   background-color: var(--bg-secondary);

@@ -1,11 +1,14 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, session
+from flask import Blueprint, render_template, redirect, url_for, flash, session, request, jsonify
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from sqlalchemy import desc, or_
 import logging
+import os
 
 from app.models import Host, Log
 from app import db_session
+from app.ping import ping_host, PingConfig
+from app.ping_cache import ping_cache
 
 class CSRFForm(FlaskForm):
     """Form with CSRF protection only"""
@@ -165,4 +168,168 @@ def page_not_found(e):
 def internal_server_error(e):
     """Custom 500 page."""
     return render_template('500.html'), 500
+
+
+@main.route('/api/ping_hosts', methods=['POST'])
+def ping_hosts_api():
+    """
+    API endpoint to check the status of hosts via ICMP ping.
+    
+    POST: JSON with a list of host IDs
+    Returns: JSON with host status results
+    """
+    # Check if the user is authenticated
+    if not current_user.is_authenticated and not session.get('authenticated'):
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    # Parse host IDs from request
+    try:
+        data = request.get_json()
+        if not data or not isinstance(data.get('host_ids'), list):
+            return jsonify({'error': 'Invalid request format. Expected {"host_ids": [...]}'}), 400
+        
+        host_ids = data['host_ids']
+        if not host_ids:
+            return jsonify({'error': 'No host IDs provided'}), 400
+    except Exception as e:
+        logging.error(f"Error parsing ping request: {str(e)}")
+        return jsonify({'error': f'Invalid request format: {str(e)}'}), 400
+    
+    # Get the current user (either from Flask-Login or custom session)
+    if not current_user.is_authenticated and session.get('authenticated'):
+        # Use the user ID from session
+        user_id = session.get('user_id')
+        is_admin = session.get('is_admin', False)
+    else:
+        # Use Flask-Login's current_user
+        user_id = current_user.id
+        is_admin = current_user.is_admin
+    
+    # Fetch hosts from database
+    try:
+        if is_admin:
+            # Admin can check any host
+            hosts = db_session.query(Host).filter(Host.id.in_(host_ids)).all()
+        else:
+            # Regular users can only check hosts they have access to
+            from sqlalchemy.sql import text
+            
+            # Get the user's roles
+            if hasattr(current_user, 'roles'):
+                user_role_ids = [role.id for role in current_user.roles]
+            else:
+                # Custom session authentication might not have roles
+                user_role_ids = []
+            
+            # Get hosts created by the user first
+            hosts_by_creator = db_session.query(Host).filter(
+                Host.id.in_(host_ids),
+                Host.created_by == user_id
+            ).all()
+            
+            # Get IDs of hosts already found by creator
+            found_host_ids = [host.id for host in hosts_by_creator]
+            
+            # Find remaining hosts where user has access via roles
+            remaining_host_ids = [hid for hid in host_ids if hid not in found_host_ids]
+            hosts_by_role = []
+            
+            if remaining_host_ids and user_role_ids:
+                # For the remaining hosts, check role-based access
+                for host_id in remaining_host_ids:
+                    host = db_session.query(Host).filter_by(id=host_id).first()
+                    if host and host.visible_to_roles:
+                        # Convert host role IDs to strings for comparison
+                        host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
+                        # Check if any user role matches host roles
+                        for role_id in user_role_ids:
+                            if str(role_id) in host_role_ids:
+                                hosts_by_role.append(host)
+                                break
+            
+            # Combine hosts from both queries
+            hosts = hosts_by_creator + hosts_by_role
+        
+        if not hosts:
+            return jsonify({'error': 'No accessible hosts found with the provided IDs'}), 404
+            
+    except Exception as e:
+        logging.error(f"Error fetching hosts for ping check: {str(e)}")
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+    
+    # Configure ping settings - improved for reliability
+    ping_config = PingConfig(timeout=1.5, retries=2, interval=0.5, max_socket_errors=3)
+    
+    # Perform ping checks
+    results = {}
+    for host in hosts:
+        # Use IP if available, otherwise try to use hostname/MAC
+        target = host.ip if host.ip else host.name
+        
+        try:
+            # Check cache first
+            # Ensure host ID is consistently a string - log exactly what format we're using
+            host_id_str = str(host.id).strip()
+            logging.debug(f"Checking cache for host ID '{host_id_str}' (original: {host.id}, type: {type(host.id)})")
+            
+            cache_entry = ping_cache.get(host_id_str)
+            
+            if cache_entry:
+                # Use cached result
+                results[host.id] = {
+                    'id': host.id,
+                    'name': host.name,
+                    'ip': host.ip,
+                    'mac_address': host.mac_address,
+                    'is_online': cache_entry['is_online'],
+                    'response_time': cache_entry['response_time'],
+                    'error': cache_entry['error'],
+                    'cached': True
+                }
+                # Log that we're using a cached result
+                if cache_entry['is_online']:
+                    logging.debug(f"Using cached ONLINE status for host {host.id} ({host.name})")
+                else:
+                    logging.debug(f"Using cached OFFLINE status for host {host.id} ({host.name})")
+            else:
+                # No cache hit, perform the ping
+                ping_result = ping_host(target, ping_config)
+                
+                # Update the cache with the new result
+                # Ensure consistent string form of host ID
+                host_id_str = str(host.id).strip()
+                logging.debug(f"Updating cache for host ID '{host_id_str}' (original: {host.id})")
+                
+                ping_cache.update(
+                    host_id_str,
+                    ping_result.is_alive,
+                    ping_result.response_time,
+                    ping_result.error
+                )
+                
+                # Format the result
+                results[host.id] = {
+                    'id': host.id,
+                    'name': host.name,
+                    'ip': host.ip,
+                    'mac_address': host.mac_address,
+                    'is_online': ping_result.is_alive,
+                    'response_time': ping_result.response_time,
+                    'error': ping_result.error,
+                    'cached': False
+                }
+        except Exception as e:
+            logging.error(f"Error pinging host {host.id} ({target}): {str(e)}")
+            results[host.id] = {
+                'id': host.id,
+                'name': host.name,
+                'ip': host.ip,
+                'mac_address': host.mac_address,
+                'is_online': False,
+                'response_time': None,
+                'error': str(e)
+            }
+    
+    return jsonify({'hosts': results})
+
 

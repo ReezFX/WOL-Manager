@@ -5,7 +5,22 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.2] - 2023-11-22
+## [1.1.3] - 2025-03-11
+
+### Fixed
+- Session handling improvements
+  - Resolved intermittent session expiration issues
+  - Fixed inconsistent session timeout behavior
+  - Improved error handling for expired sessions
+  - Enhanced session management for multi-worker environments
+
+### Security
+- Enhanced session security measures
+  - Implemented stronger session validation checks
+  - Improved handling of session expiration to prevent unauthorized access
+  - Added proper session cleanup for timed-out sessions
+  - Enhanced protection against session fixation attacks
+## [1.1.2] - 2025-03-11
 
 ### Fixed
 - Port consistency improvements

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     {% block head %}{% endblock %}
 </head>
 <body class="light-theme" data-bs-theme="light">
@@ -111,7 +112,7 @@
     <!-- Footer -->
     <footer class="footer mt-auto py-3 theme-footer" id="main-footer">
         <div class="container text-center">
-            <span class="footer-text">&copy; {{ now.year }} Wake-on-LAN Manager. All rights reserved. | v1.1.2</span>
+            <span class="footer-text">&copy; {{ now.year }} Wake-on-LAN Manager. All rights reserved. | v1.1.3</span>
         </div>
     </footer>
 
@@ -120,6 +121,7 @@
     
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ping.js') }}"></script>
     
     <!-- Scripts Block -->
     {% block scripts %}{% endblock %}

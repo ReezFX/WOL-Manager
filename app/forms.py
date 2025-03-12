@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, HiddenField, SelectMultipleField, IntegerField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, HiddenField, SelectMultipleField, IntegerField, SelectField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Regexp, Optional, NumberRange
 
 class LoginForm(FlaskForm):
@@ -96,5 +96,13 @@ class AppSettingsForm(FlaskForm):
         ],
         description='Maximum number of concurrent sessions per user. Use 0 for unlimited sessions.')
     
+    logging_profile = SelectField('Logging Profile',
+        choices=[
+            ('LOW', 'Low (Default)'), 
+            ('MEDIUM', 'Medium'), 
+            ('HIGH', 'High')
+        ],
+        validators=[DataRequired()],
+        description='Controls the amount of information that is logged: Low - only essential logs (auth, WOL, and basic system); Medium - adds important operational logs and warnings; High - detailed debugging including cache operations and system details.')
+    
     submit = SubmitField('Save Settings')
-

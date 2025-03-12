@@ -193,9 +193,28 @@ class AppSettings(Base):
     password_expiration_days = Column(Integer, default=90, nullable=False)
     session_timeout_minutes = Column(Integer, default=1440, nullable=False)  # Default 1 day (24 hours * 60 minutes)
     max_concurrent_sessions = Column(Integer, default=0, nullable=False)  # 0 means unlimited
+    log_level = Column(String(10), default='INFO', nullable=False)  # Default log level set to INFO
+    logging_profile = Column(String(10), default='LOW', nullable=False)  # Default logging profile set to LOW
     
     def __repr__(self):
         return f'<AppSettings id={self.id}>'
+        
+    @validates('log_level')
+    def validate_log_level(self, key, log_level):
+        """Validate log_level to ensure it's a valid LogLevel enum value."""
+        try:
+            return LogLevel(log_level).value
+        except ValueError:
+            valid_levels = ', '.join([level.value for level in LogLevel])
+            raise ValueError(f"Invalid log level. Must be one of: {valid_levels}")
+            
+    @validates('logging_profile')
+    def validate_logging_profile(self, key, profile):
+        """Validate logging_profile to ensure it's a valid profile value."""
+        valid_profiles = ['LOW', 'MEDIUM', 'HIGH']
+        if profile not in valid_profiles:
+            raise ValueError(f"Invalid logging profile. Must be one of: {', '.join(valid_profiles)}")
+        return profile
     
     @classmethod
     def get_settings(cls, db_session):
@@ -205,7 +224,16 @@ class AppSettings(Base):
         """
         settings = db_session.query(cls).first()
         if not settings:
-            settings = cls()
+            settings = cls(
+                min_password_length=8,
+                require_special_characters=False,
+                require_numbers=False,
+                password_expiration_days=90,
+                session_timeout_minutes=1440,
+                max_concurrent_sessions=0,
+                log_level='INFO',
+                logging_profile='LOW'
+            )
             db_session.add(settings)
             db_session.commit()
         return settings

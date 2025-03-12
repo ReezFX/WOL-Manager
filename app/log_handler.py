@@ -5,15 +5,108 @@ import os
 import queue
 import threading
 import time
-from flask import current_app, has_request_context, request, session
+import enum
+import sys
+from flask import current_app, has_request_context, request, session, g
 from flask_login import current_user
 from datetime import datetime
 from contextlib import contextmanager
-import sys
-
-from app.models import SystemLog, db_session
+from app.models import SystemLog, db_session, AppSettings
 
 
+class LoggingProfile(enum.Enum):
+    """
+    Defines different logging profiles to control the verbosity and types of logs
+    that are recorded in the database.
+    
+    Profiles:
+    - LOW: Only essential logs (auth, WOL operations, critical system events)
+    - MEDIUM: Adds important operational logs, warnings, and errors
+    - HIGH: All logs including detailed debugging information
+    """
+    LOW = "LOW"         # Minimal logging - auth, WOL operations, critical errors
+    MEDIUM = "MEDIUM"   # Standard logging - adds important operational logs
+    HIGH = "HIGH"       # Verbose logging - includes all debug information
+    
+    @classmethod
+    def get_current_profile(cls):
+        """
+        Get the current logging profile from application settings.
+        Defaults to LOW if not configured.
+        """
+        # Try to get profile from g object (if already loaded in this request)
+        if hasattr(g, 'logging_profile'):
+            return g.logging_profile
+        
+        # If not in request context or not loaded yet, load from database
+        try:
+            if current_app:
+                # Get from app config if available (for faster access)
+                profile = current_app.config.get('LOGGING_PROFILE')
+                if profile and isinstance(profile, LoggingProfile):
+                    return profile
+                
+                # Otherwise load from database
+                with db_session() as session:
+                    settings = AppSettings.get_settings(session)
+                    profile_name = getattr(settings, 'logging_profile', cls.LOW.value)
+                    profile = cls(profile_name)
+                    
+                    # Cache in app config for subsequent access
+                    current_app.config['LOGGING_PROFILE'] = profile
+                    
+                    # If in request context, store in g for this request
+                    if has_request_context():
+                        g.logging_profile = profile
+                        
+                    return profile
+        except Exception as e:
+            sys.stderr.write(f"Error loading logging profile: {str(e)}\n")
+            
+        # Default to LOW if we couldn't determine the profile
+        return cls.LOW
+    
+    def should_log_module(self, module_name):
+        """
+        Determines if logs from the given module should be recorded
+        based on the current logging profile.
+        
+        Args:
+            module_name (str): The name of the module generating the log
+            
+        Returns:
+            bool: True if the log should be recorded, False otherwise
+        """
+        # Always log authentication and WOL operations in all profiles
+        if any(x in module_name.lower() for x in ['auth', 'wol', 'login', 'security']):
+            return True
+            
+        # System-critical modules that should always be logged
+        if any(x in module_name.lower() for x in ['error', 'exception', 'crash']):
+            return True
+            
+        # In LOW profile, filter out non-essential logs
+        if self == LoggingProfile.LOW:
+            # Skip cache, database queries, and debug logs
+            if any(x in module_name.lower() for x in ['cache', 'redis', 'query', 'debug', 'sql']):
+                return False
+                
+            # Skip detailed HTTP request logs
+            if any(x in module_name.lower() for x in ['request', 'http']):
+                return False
+                
+        # In MEDIUM profile, filter out only detailed diagnostic logs
+        elif self == LoggingProfile.MEDIUM:
+            # Skip detailed cache operations
+            if 'cache.detail' in module_name.lower():
+                return False
+                
+            # Skip SQL query details
+            if 'sql.query' in module_name.lower():
+                return False
+                
+        # HIGH profile logs everything
+        return True
 class DatabaseLogHandler(logging.Handler):
     """
     Custom logging handler that writes log messages to the database.
@@ -68,6 +161,14 @@ class DatabaseLogHandler(logging.Handler):
         try:
             # Skip if we're in DB initialization or migration to avoid circular dependencies
             if getattr(record, 'name', '').startswith(('sqlalchemy', 'alembic', 'migrate')):
+                return
+                
+            # Get the current logging profile and check if this module should be logged
+            module_name = getattr(record, 'name', '')
+            current_profile = LoggingProfile.get_current_profile()
+            
+            # Skip logging if the current profile doesn't want logs from this module
+            if not current_profile.should_log_module(module_name):
                 return
             
             # Get user_id if available from the current request context

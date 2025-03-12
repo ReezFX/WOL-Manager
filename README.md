@@ -319,6 +319,10 @@ Records of wake attempts:
 - Input validation for all form fields
 - Comprehensive authentication logging of login attempts, failures, and logouts
 - Enhanced session and cookie security for external access deployments
+- Automatic session expiration with configurable timeout periods
+- Protection against session hijacking through secure session management
+- Session validation on critical operations to ensure continued authentication
+- Proper cleanup of expired sessions to prevent unauthorized access
 
 ## Troubleshooting
 
@@ -390,6 +394,20 @@ If the Wake-on-LAN functionality is not working when running the application in 
      ```
 
 ## Release Notes
+
+### Version 1.1.3 (2025-03-11)
+- Enhanced session security and improved session expiration handling
+- Fixed inconsistent session timeout behavior
+- Implemented stronger session validation checks
+- Added proper session cleanup for timed-out sessions
+- Enhanced protection against session fixation attacks
+
+### Version 1.1.2 (2025-03-11)
+- Fixed port consistency issues between Dockerfile, entrypoint.sh, and application settings
+- Improved Wake-on-LAN functionality with Docker host network mode
+- Fixed UDP port 9 access for proper magic packet delivery
+- Enhanced broadcast packet handling for local networks
+- Added configuration for compatibility with buildx-built images
 
 ### Version 1.1.1 (2025-03-10)
 - Added authentication logging functionality for improved security auditing

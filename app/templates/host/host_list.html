@@ -27,14 +27,18 @@
                     </thead>
                     <tbody>
                         {% for host in hosts %}
-                        <tr>
+                        <tr data-host-id="{{ host.id }}">
                             <td>{{ host.name }}</td>
                             <td><code>{{ host.mac_address }}</code></td>
                             <td>{{ host.ip }}</td>
                             <td>
-                                <span class="badge {% if host.status == 'online' %}badge-success{% else %}badge-secondary{% endif %}">
-                                    {{ host.status|default('unknown') }}
-                                </span>
+                                {% if host.status == 'online' %}
+                                    <span class="badge status-badge badge-success" data-status="online">Online</span>
+                                {% elif host.status == 'offline' %}
+                                    <span class="badge status-badge badge-danger" data-status="offline">Offline</span>
+                                {% else %}
+                                    <span class="badge status-badge badge-secondary" data-status="unknown">Unknown</span>
+                                {% endif %}
                             </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
@@ -128,30 +132,12 @@
 </div>
 
 {% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/ping.js') }}"></script>
 <script>
-    // Add JavaScript for any interactive behavior (e.g., status updates, confirmation on delete)
     document.addEventListener('DOMContentLoaded', function() {
-        // Optional enhancement: Implement AJAX status check for hosts
-        // This example assumes you'll implement an endpoint for checking status later
-        
-        /* Example:
-        function checkHostStatus() {
-            const hosts = document.querySelectorAll('[data-host-id]');
-            hosts.forEach(host => {
-                const hostId = host.dataset.hostId;
-                fetch(`/host/${hostId}/status`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const statusBadge = host.querySelector('.status-badge');
-                        statusBadge.textContent = data.status;
-                        statusBadge.className = `badge ${data.status === 'online' ? 'badge-success' : 'badge-secondary'}`;
-                    });
-            });
-        }
-        
-        // Refresh status every 30 seconds
-        setInterval(checkHostStatus, 30000);
-        */
+        // Initialize automatic host status checks for the hosts list page
+        initHostStatusChecks();
     });
 </script>
 {% endblock %}

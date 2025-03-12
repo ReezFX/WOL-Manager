@@ -125,7 +125,28 @@ BaseConfig
   - Enhanced cookie parameters for external deployments
   - Strengthened session validation mechanisms
   - Configurable session lifetime (currently 1 day)
-- Session timeout and refresh mechanisms
+- **Session Expiration Implementation**:
+  - Absolute expiration time stored in session data as `expiry_timestamp`
+  - Session validity checked on each request via `before_request` hook
+  - Sliding expiration window implemented (resets with activity)
+  - Idle timeout after 30 minutes of inactivity (configurable)
+  - Forced re-authentication after absolute timeout (24 hours by default)
+  - Redis key expiration set to match session lifetime plus grace period
+- **Session Validation Process**:
+  - Multi-factor validation using:
+    1. Session cookie integrity and signature verification
+    2. Session ID existence in Redis backend
+    3. User-agent consistency check
+    4. IP address validation (optional, configurable)
+    5. Session timestamp validation against expiration policy
+  - Invalid sessions automatically cleared and redirected to login
+  - Session fixation prevention through session regeneration after login
+- **Session Refresh Mechanism**:
+  - Sessions refreshed at configurable intervals (default: 5 minutes)
+  - New session ID generated while maintaining session data
+  - Previous session marked for graceful expiration (allows multiple tabs)
+  - Background Redis cleanup of expired sessions
+  - Client-side session update via secure cookie refresh
 
 ### Security Measures
 - **CSRF Protection**: Implemented in forms using Flask-WTF's CSRF protection
