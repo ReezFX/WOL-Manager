@@ -395,6 +395,12 @@ If the Wake-on-LAN functionality is not working when running the application in 
 
 ## Release Notes
 
+### Version 1.1.4 (2025-03-12)
+- Added Logging Profiles feature in admin settings
+- Enhanced logging configuration management with multiple profile support
+- Improved ICMP ping reliability for host status checks
+- Fixed color contrast issues in dark theme for logging profile details
+
 ### Version 1.1.3 (2025-03-11)
 - Enhanced session security and improved session expiration handling
 - Fixed inconsistent session timeout behavior

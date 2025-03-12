@@ -241,6 +241,7 @@ BaseConfig
 
 - `app/__init__.py`: Application factory and extension initialization
 - `app/models.py`: Database models and relationships
+- `app/log_handler.py`: Custom logging handlers and configurations
 - `app/auth.py`: Authentication blueprint and logic
 - `app/auth_logger.py`: Authentication event logging system
 - `app/host.py`: Host management operations

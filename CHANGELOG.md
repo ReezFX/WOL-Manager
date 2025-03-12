@@ -5,6 +5,20 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2025-03-12
+
+### Added
+- Logging Profiles feature in admin settings
+  - Configurable logging levels and handlers through admin interface
+  - Multiple logging profile support for different environments
+  - Enhanced logging configuration management
+
+### Fixed
+- ICMP ping improvements
+  - Enhanced reliability of host status checks
+  - Fixed color contrast issues in dark theme for logging profile details
+  - Improved error handling for ping operations
+
 ## [1.1.3] - 2025-03-11
 
 ### Fixed
