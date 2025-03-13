@@ -5,6 +5,30 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.5] - 2025-03-13
+
+### Security
+- Upgraded pip packages to latest compatible versions to patch security vulnerabilities
+  - Updated Flask to 3.1.0 and related dependencies
+  - Upgraded cryptography package to 44.0.2
+  - Updated SQLAlchemy to 2.0.39 and Flask-SQLAlchemy to 3.1.1
+  - Enhanced overall application security posture with latest security patches
+  - Implemented more secure version constraints in requirements.txt
+
+### Fixed
+- Improved host status checking mechanism in ping.js
+  - Reduced online stability period from 30 to 15 seconds for faster status updates
+  - Enhanced offline detection logic to prevent false status indicators
+  - Improved error handling and status smoothing algorithm
+  - Added more robust detection of Bootstrap version for proper styling
+
+### Changed
+- Removed legacy logging components
+  - Cleaned up outdated logging configuration
+  - Streamlined logging implementation for better performance
+  - Removed unused logging code paths
+  - Enhanced log clarity by eliminating redundant information
+
 ## [1.1.4] - 2025-03-12
 
 ### Added

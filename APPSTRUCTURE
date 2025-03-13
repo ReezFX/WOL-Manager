@@ -1,3 +1,87 @@
+# Application Structure
+
+## Overview
+The WOL-Manager application is a Flask-based web application designed to manage and send Wake-on-LAN (WoL) packets to networked devices. This document outlines the structure of the application, its components, and how they interact.
+
+## Directory Structure
+- `/app`: Main application package
+  - `__init__.py`: Application factory and configuration
+  - `auth.py`: Authentication related routes and functions
+  - `models.py`: Database models
+  - `config.py`: Configuration classes
+  - `main.py`: Main routes
+  - `wol.py`: Wake-on-LAN functionality
+  - `host.py`: Host management
+  - `admin.py`: Admin panel functionality
+  - `/templates`: HTML templates
+  - `/static`: Static files (CSS, JS, images)
+
+## Components
+
+### Database Models
+The application uses SQLAlchemy ORM with models for:
+- User: Stores user information and credentials
+- Host: Stores host details including MAC addresses
+- Role: Defines user roles (admin, user)
+- Permission: Defines granular permissions for users
+
+### Authentication System
+- Flask-Login for session management
+- Bcrypt for password hashing
+- CSRF protection using Flask-WTF
+- Role-based access control
+- Permission-based authorization
+
+### Wake-on-LAN System
+- Custom implementation to send magic packets
+- MAC address validation
+- Network broadcast functionality
+
+### Admin Interface
+- User management
+- Host visibility control
+- Role assignment
+- Permission management
+
+## Security Measures
+
+### Authentication Security
+- Bcrypt password hashing
+- Strong session protection
+- CSRF token validation
+- Session cookie security (HttpOnly, SameSite)
+- Login attempt logging
+- Secure password reset flow
+
+### Dependency Management and Security
+- Regular updates of Python dependencies through requirements.txt
+- Security patches applied promptly to address known vulnerabilities
+- Automated vulnerability scanning for package dependencies
+- Version pinning to ensure compatibility and prevent unexpected changes
+- Security updates prioritized over feature updates
+- Separate development and production dependency management
+- Documentation of security-related changes in CHANGELOG.md
+- Periodic review of dependency licenses for compliance
+- Containerized deployment to isolate the application environment
+- Minimal dependency approach to reduce attack surface
+
+### Data Security
+- Input validation for all user inputs
+- Parameterized queries to prevent SQL injection
+- CSRF protection for all state-changing operations
+- Role-based access to hosts and administrative functions
+- Proper error handling to prevent information leakage
+
+### Network Security
+- Restricted access to Wake-on-LAN functionality based on user permissions
+- Host visibility restricted by role assignment
+- Secure defaults for network operations
+
+## Configuration
+- Environment-based configuration (development, testing, production)
+- External configuration through environment variables
+- Secure defaults with explicit overrides
+
 # WOL-MANAGER APPLICATION STRUCTURE
 
 ## 1. Application Architecture Overview
@@ -157,6 +241,7 @@ BaseConfig
 - **Rate Limiting**: Implemented for WOL routes to prevent abuse
 - **Input Validation**: WTForms validation on all user inputs
 - **Permission Checks**: Authorization checks before sensitive operations
+- **Dependency Management**: Regular updates of package dependencies, prompt application of security patches, vulnerability scanning of dependencies, version pinning to ensure compatibility, prioritizing security updates over feature updates, and maintaining separate development and production dependency environments
 
 ### Docker Architecture
 - **Multi-container Setup**:

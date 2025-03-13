@@ -394,6 +394,11 @@ If the Wake-on-LAN functionality is not working when running the application in 
 
 ## Release Notes
 
+### Version 1.1.5 (2025-03-13)
+- Upgraded pip packages to latest compatible versions to patch security vulnerabilities
+- Enhanced dependency management with updated requirements
+- Improved application security through third-party library updates
+
 ### Version 1.1.4 (2025-03-12)
 - Improved ICMP ping reliability for host status checks
 - Fixed color contrast issues in dark theme
