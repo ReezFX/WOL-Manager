@@ -141,5 +141,5 @@ PORT="8008"
 echo "Starting Gunicorn on ${HOST}:${PORT} with 4 workers"
 
 # Execute gunicorn with binding to all interfaces
-exec gunicorn --bind ${HOST}:${PORT} --workers 4 --timeout 120 wsgi:app
+exec gunicorn --bind ${HOST}:${PORT} --workers 1 --timeout 120 wsgi:app
 
