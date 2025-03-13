@@ -3,12 +3,16 @@ import os
 import click
 import sys
 import logging
+import shutil
+import datetime
 from flask.cli import FlaskGroup
+from logging.handlers import RotatingFileHandler
 from flask_migrate import Migrate
 from sqlalchemy import text
 from app import create_app, db_session
 from app.models import User, Role, Permission, Base
 from app.auth import hash_password
+from app.logging_config import LOG_DIR, APP_LOG, ERROR_LOG, ACCESS_LOG, LOG_PROFILES, ensure_log_directory
 
 app = create_app(os.getenv('FLASK_ENV') or 'development')
 
@@ -297,6 +301,259 @@ def db_check():
         click.echo(f"⚠ Unexpected error during database check: {str(e)}", err=True)
         
     click.echo("Database check completed.")
+
+
+@app.cli.group()
+def logs():
+    """Log management commands."""
+    pass
+
+
+@logs.command("view")
+@click.option('--log-type', type=click.Choice(['app', 'error', 'access', 'all']), default='app',
+              help='Type of log to view')
+@click.option('--lines', '-n', default=50, help='Number of lines to display')
+@click.option('--follow', '-f', is_flag=True, help='Follow the log (show new entries as they are added)')
+def logs_view(log_type, lines, follow):
+    """View application logs."""
+    ensure_log_directory()
+    
+    # Map log type to file paths
+    log_files = {
+        'app': os.path.join(LOG_DIR, APP_LOG),
+        'error': os.path.join(LOG_DIR, ERROR_LOG),
+        'access': os.path.join(LOG_DIR, ACCESS_LOG)
+    }
+    
+    if log_type == 'all':
+        files_to_view = list(log_files.values())
+    else:
+        files_to_view = [log_files[log_type]]
+    
+    for log_file in files_to_view:
+        if not os.path.exists(log_file):
+            click.echo(f"Log file does not exist: {log_file}")
+            continue
+            
+        click.echo(f"\n=== {os.path.basename(log_file)} ===")
+        
+        # Use the 'tail' command for efficient viewing of large log files
+        try:
+            if follow:
+                # Execute tail with follow option
+                import subprocess
+                cmd = ['tail', f'-n{lines}', '-f', log_file]
+                click.echo(f"Press Ctrl+C to exit follow mode\n")
+                try:
+                    subprocess.run(cmd)
+                except KeyboardInterrupt:
+                    pass
+            else:
+                # Read the last n lines from the file
+                with open(log_file, 'r') as f:
+                    # Simple implementation of tail
+                    lines_list = f.readlines()
+                    for line in lines_list[-lines:]:
+                        click.echo(line.rstrip())
+        except Exception as e:
+            click.echo(f"Error reading log file: {str(e)}", err=True)
+
+
+@logs.command("rotate")
+@click.option('--log-type', type=click.Choice(['app', 'error', 'access', 'all']), default='all',
+              help='Type of log to rotate')
+def logs_rotate(log_type):
+    """Force log rotation."""
+    ensure_log_directory()
+    
+    # Map log type to file paths
+    log_files = {
+        'app': os.path.join(LOG_DIR, APP_LOG),
+        'error': os.path.join(LOG_DIR, ERROR_LOG),
+        'access': os.path.join(LOG_DIR, ACCESS_LOG)
+    }
+    
+    if log_type == 'all':
+        files_to_rotate = list(log_files.values())
+    else:
+        files_to_rotate = [log_files[log_type]]
+    
+    for log_file in files_to_rotate:
+        if not os.path.exists(log_file):
+            click.echo(f"Log file does not exist: {log_file}")
+            continue
+        
+        try:
+            # Get the handler for this log file
+            for handler in logging.getLogger().handlers + logging.getLogger('app').handlers:
+                if isinstance(handler, RotatingFileHandler) and handler.baseFilename == log_file:
+                    handler.doRollover()
+                    click.echo(f"Rotated log file: {log_file}")
+                    break
+            else:
+                # Fallback: manually rotate the file
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                backup_file = f"{log_file}.{timestamp}"
+                shutil.copy2(log_file, backup_file)
+                # Clear the original file
+                open(log_file, 'w').close()
+                click.echo(f"Manually rotated log file: {log_file} → {backup_file}")
+        except Exception as e:
+            click.echo(f"Error rotating log file {log_file}: {str(e)}", err=True)
+
+
+@logs.command("clear")
+@click.option('--log-type', type=click.Choice(['app', 'error', 'access', 'all']), default=None,
+              help='Type of log to clear')
+@click.option('--force', is_flag=True, help='Force clearing without confirmation')
+def logs_clear(log_type, force):
+    """Clear log files."""
+    ensure_log_directory()
+    
+    if not log_type:
+        click.echo("Please specify a log type to clear using --log-type option.")
+        return
+    
+    # Map log type to file paths
+    log_files = {
+        'app': os.path.join(LOG_DIR, APP_LOG),
+        'error': os.path.join(LOG_DIR, ERROR_LOG),
+        'access': os.path.join(LOG_DIR, ACCESS_LOG)
+    }
+    
+    if log_type == 'all':
+        files_to_clear = list(log_files.values())
+    else:
+        files_to_clear = [log_files[log_type]]
+    
+    # Confirm with the user unless --force is used
+    if not force:
+        file_list = "\n  ".join([os.path.basename(f) for f in files_to_clear])
+        click.echo(f"This will clear the following log files:\n  {file_list}")
+        if not click.confirm('Are you sure you want to continue?'):
+            click.echo("Operation cancelled.")
+            return
+    
+    # Create backups before clearing
+    backups_created = []
+    
+    for log_file in files_to_clear:
+        if not os.path.exists(log_file):
+            click.echo(f"Log file does not exist: {log_file}")
+            continue
+        
+        try:
+            # Create a backup
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_file = f"{log_file}.bak.{timestamp}"
+            shutil.copy2(log_file, backup_file)
+            backups_created.append((log_file, backup_file))
+            
+            # Clear the log file
+            open(log_file, 'w').close()
+            os.chmod(log_file, 0o640)  # Set proper permissions
+            click.echo(f"Cleared log file: {log_file}")
+        except Exception as e:
+            click.echo(f"Error clearing log file {log_file}: {str(e)}", err=True)
+    
+    if backups_created:
+        click.echo("\nBackups created:")
+        for original, backup in backups_created:
+            click.echo(f"  {os.path.basename(original)} → {os.path.basename(backup)}")
+
+
+@logs.command("set-level")
+@click.option('--profile', type=click.Choice(['LOW', 'MEDIUM', 'HIGH', 'DEBUG']), required=True,
+              help='Logging profile to set')
+def logs_set_level(profile):
+    """Change the logging level at runtime."""
+    if profile not in LOG_PROFILES:
+        click.echo(f"Invalid logging profile: {profile}", err=True)
+        return
+    
+    try:
+        # Get the configuration for the selected profile
+        config = LOG_PROFILES[profile]
+        
+        # Update root logger
+        root_logger = logging.getLogger()
+        root_logger.setLevel(config['root']['level'])
+        
+        # Update app loggers
+        for logger_name, logger_config in config['loggers'].items():
+            logger = logging.getLogger(logger_name)
+            logger.setLevel(logger_config['level'])
+        
+        # Update handler levels
+        for handler_name, handler_config in config['handlers'].items():
+            if handler_name == 'app_file':
+                for handler in root_logger.handlers + logging.getLogger('app').handlers:
+                    if isinstance(handler, RotatingFileHandler) and os.path.basename(handler.baseFilename) == APP_LOG:
+                        handler.setLevel(handler_config['level'])
+            elif handler_name == 'error_file':
+                for handler in root_logger.handlers + logging.getLogger('app').handlers:
+                    if isinstance(handler, RotatingFileHandler) and os.path.basename(handler.baseFilename) == ERROR_LOG:
+                        handler.setLevel(handler_config['level'])
+            elif handler_name == 'access_file':
+                for handler in logging.getLogger('app.access').handlers:
+                    if isinstance(handler, RotatingFileHandler) and os.path.basename(handler.baseFilename) == ACCESS_LOG:
+                        handler.setLevel(handler_config['level'])
+        
+        # Set the environment variable for future processes
+        os.environ['LOG_PROFILE'] = profile
+        
+        click.echo(f"Logging level changed to {profile} profile.")
+        
+        # Log the level change
+        app_logger = logging.getLogger('app')
+        app_logger.info(f"Logging level changed to {profile} profile via CLI command.")
+        
+    except Exception as e:
+        click.echo(f"Error changing logging level: {str(e)}", err=True)
+
+
+@logs.command("status")
+def logs_status():
+    """Display current logging configuration and status."""
+    ensure_log_directory()
+    
+    # Map log type to file paths
+    log_files = {
+        'app': os.path.join(LOG_DIR, APP_LOG),
+        'error': os.path.join(LOG_DIR, ERROR_LOG),
+        'access': os.path.join(LOG_DIR, ACCESS_LOG)
+    }
+    
+    # Get current profile
+    current_profile = os.environ.get('LOG_PROFILE', 'MEDIUM')
+    
+    click.echo(f"Current logging profile: {current_profile}")
+    click.echo(f"Log directory: {LOG_DIR}")
+    
+    # Display log files info
+    click.echo("\nLog files:")
+    for log_type, log_file in log_files.items():
+        if os.path.exists(log_file):
+            size = os.path.getsize(log_file)
+            size_str = f"{size / 1024:.2f} KB" if size < 1024 * 1024 else f"{size / (1024 * 1024):.2f} MB"
+            mtime = os.path.getmtime(log_file)
+            mtime_str = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+            click.echo(f"  {log_type}: {size_str}, last modified: {mtime_str}")
+            
+            # Check for rotated log files
+            rotated_logs = [f for f in os.listdir(LOG_DIR) if f.startswith(os.path.basename(log_file) + '.')]
+            if rotated_logs:
+                click.echo(f"    Rotated logs: {len(rotated_logs)}")
+        else:
+            click.echo(f"  {log_type}: Not created yet")
+    
+    # Display logger levels
+    click.echo("\nCurrent log levels:")
+    click.echo(f"  Root: {logging.getLogger().level}")
+    click.echo(f"  App: {logging.getLogger('app').level}")
+    click.echo(f"  Access: {logging.getLogger('app.access').level}")
+
+
 if __name__ == '__main__':
     # Create a Flask CLI group with the Flask app
     cli = FlaskGroup(create_app=lambda: app)

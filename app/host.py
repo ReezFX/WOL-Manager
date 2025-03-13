@@ -6,7 +6,10 @@ from app.models import Host, Role, Permission
 from app.forms import HostForm
 from flask_wtf import FlaskForm
 import re
-import logging
+from app.logging_config import get_logger
+
+# Create module-level logger
+logger = get_logger('app.host')
 
 host = Blueprint('host', __name__, url_prefix='/hosts')
 
@@ -33,8 +36,8 @@ def list_hosts():
             # Get all the role IDs of the current user
             user_role_ids = [role.id for role in current_user.roles]
             user_role_ids_str = [str(role_id) for role_id in user_role_ids]
-            logging.info(f"User {current_user.id} roles (int): {user_role_ids}")
-            logging.info(f"User {current_user.id} roles (str): {user_role_ids_str}")
+            logger.info(f"User {current_user.id} roles (int): {user_role_ids}")
+            logger.info(f"User {current_user.id} roles (str): {user_role_ids_str}")
             
             # Filter to hosts created by the user OR where user's role is in visible_to_roles
             if not current_user.has_permission('view_all_hosts'):
@@ -51,27 +54,27 @@ def list_hosts():
                     # Find hosts where user's role exists in visible_to_roles
                     for host in all_hosts:
                         if host.visible_to_roles:
-                            logging.info(f"Host {host.id} ({host.name}) visible_to_roles (raw): {host.visible_to_roles}")
+                            logger.info(f"Host {host.id} ({host.name}) visible_to_roles (raw): {host.visible_to_roles}")
                             # Convert all role IDs to strings for consistent comparison
                             host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
-                            logging.info(f"Host {host.id} ({host.name}) visible_to_roles (processed): {host_role_ids}")
+                            logger.info(f"Host {host.id} ({host.name}) visible_to_roles (processed): {host_role_ids}")
                             
                             # Check if any of the user's role IDs (converted to string) are in the host's visible_to_roles
                             visible_to_this_user = False
                             for role_id in user_role_ids:
                                 role_id_str = str(role_id)
                                 is_visible = role_id_str in host_role_ids
-                                logging.info(f"Checking if role {role_id} (str: {role_id_str}) is in host {host.id} visible_to_roles: {is_visible}")
+                                logger.info(f"Checking if role {role_id} (str: {role_id_str}) is in host {host.id} visible_to_roles: {is_visible}")
                                 if is_visible:
                                     visible_to_this_user = True
                             
                             if visible_to_this_user:
                                 visible_to_user_hosts.append(host.id)
-                                logging.info(f"Host {host.id} ({host.name}) IS visible to user {current_user.id}")
+                                logger.info(f"Host {host.id} ({host.name}) IS visible to user {current_user.id}")
                             else:
-                                logging.info(f"Host {host.id} ({host.name}) is NOT visible to user {current_user.id}")
+                                logger.info(f"Host {host.id} ({host.name}) is NOT visible to user {current_user.id}")
                     
-                    logging.info(f"Summary: Hosts visible to user {current_user.id} based on roles: {visible_to_user_hosts}")
+                    logger.info(f"Summary: Hosts visible to user {current_user.id} based on roles: {visible_to_user_hosts}")
                     
                     # Build query with OR condition
                     if visible_to_user_hosts:
@@ -84,7 +87,7 @@ def list_hosts():
                         query = query.filter(created_by_filter)
                         
                 except Exception as e:
-                    logging.error(f"Error filtering hosts by visible_to_roles: {str(e)}")
+                    logger.error(f"Error filtering hosts by visible_to_roles: {str(e)}")
                     # Fallback to just showing hosts created by the user
                     query = query.filter(created_by_filter)
                     flash(f"Limited visibility due to an error: {str(e)}", "warning")
@@ -97,9 +100,9 @@ def list_hosts():
             total = query.count()
             query = query.limit(per_page).offset((page - 1) * per_page)
             hosts = query.all()
-            logging.debug(f"Found {total} hosts for user {current_user.id}, showing page {page}")
+            logger.debug(f"Found {total} hosts for user {current_user.id}, showing page {page}")
         except Exception as e:
-            logging.error(f"Error applying pagination: {str(e)}")
+            logger.error(f"Error applying pagination: {str(e)}")
             total = 0
             hosts = []
             flash(f"An error occurred while retrieving hosts: {str(e)}", "danger")
@@ -172,7 +175,7 @@ def list_hosts():
         csrf_form = CSRFForm()
         return render_template('host/host_list.html', hosts=hosts, pagination=pagination, csrf_form=csrf_form)
     except Exception as e:
-        logging.error(f"Unexpected error in list_hosts: {str(e)}")
+        logger.error(f"Unexpected error in list_hosts: {str(e)}")
         flash(f"An unexpected error occurred: {str(e)}", "danger")
         csrf_form = CSRFForm()
         return render_template('host/host_list.html', hosts=[], pagination=Pagination(1, per_page, 0), csrf_form=csrf_form)

@@ -1,6 +1,8 @@
 import os
 import redis
 import pathlib
+import logging
+import logging.config
 from datetime import timedelta
 from flask import Flask, request, flash, redirect, url_for
 from sqlalchemy import create_engine
@@ -12,6 +14,7 @@ from flask_session import Session
 
 from app.config import config
 from app.models import Base, User, db_session
+from app.logging_config import configure_logging
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -32,6 +35,13 @@ def create_app(config_name=None):
     # Determine config based on environment variable or default to 'development'
     if config_name is None:
         config_name = os.environ.get('FLASK_CONFIG', 'default')
+    
+    # Ensure the logging directory exists
+    logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'logs')
+    os.makedirs(logs_dir, mode=0o755, exist_ok=True)
+    
+    # Configure logging before app creation
+    configure_logging()
     
     # Create and configure the app
     app = Flask(__name__)
@@ -80,7 +90,7 @@ def create_app(config_name=None):
     os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
     
     # Log session configuration
-    print(f"Session config: TYPE={app.config['SESSION_TYPE']}, DOMAIN={app.config['SESSION_COOKIE_DOMAIN']}, PATH={app.config['SESSION_COOKIE_PATH']}")
+    logging.info(f"Session config: TYPE={app.config['SESSION_TYPE']}, DOMAIN={app.config['SESSION_COOKIE_DOMAIN']}, PATH={app.config['SESSION_COOKIE_PATH']}")
     # Initialize Flask-Session
     Session(app)
     

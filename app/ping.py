@@ -12,6 +12,10 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
+from app.logging_config import get_logger
+
+# Initialize module-level logger
+logger = get_logger('app.ping')
 
 
 @dataclass
@@ -45,11 +49,12 @@ def resolve_hostname(hostname: str) -> Optional[str]:
     """
     try:
         # If it's already an IP address, this will still work
-        return socket.gethostbyname(hostname)
+        ip = socket.gethostbyname(hostname)
+        logger.debug(f"Resolved hostname '{hostname}' to IP '{ip}'")
+        return ip
     except socket.gaierror as e:
+        logger.warning(f"Failed to resolve hostname '{hostname}': {str(e)}")
         return None
-
-
 def ping_host(host: str, config: PingConfig = PingConfig()) -> PingResult:
     """
     Ping a single host to check if it's up.
@@ -61,16 +66,15 @@ def ping_host(host: str, config: PingConfig = PingConfig()) -> PingResult:
     Returns:
         PingResult object containing the ping results
     """
-    
     ip_address = resolve_hostname(host)
     if not ip_address:
+        logger.info(f"Ping failed for host '{host}': Unable to resolve hostname")
         return PingResult(
             host=host,
             ip_address=None,
             is_alive=False,
             error="Failed to resolve hostname"
         )
-    
     # Track socket errors to allow some retries for socket-related issues
     socket_errors = 0
     last_error = None
@@ -94,9 +98,9 @@ def ping_host(host: str, config: PingConfig = PingConfig()) -> PingResult:
             try:
                 data, addr = sock.recvfrom(1024)
                 response_time = (time.time() - start_time) * 1000  # in milliseconds
-                
                 # Verify response
                 if verify_icmp_response(data, packet_id):
+                    logger.debug(f"Host '{host}' ({ip_address}) is alive, response time: {response_time:.2f}ms")
                     return PingResult(
                         host=host,
                         ip_address=ip_address,
@@ -117,7 +121,7 @@ def ping_host(host: str, config: PingConfig = PingConfig()) -> PingResult:
             # Track socket errors but don't immediately fail
             socket_errors += 1
             last_error = str(e)
-            
+            logger.warning(f"Socket error when pinging '{host}' ({ip_address}): {last_error}")
             if socket_errors < config.max_socket_errors and attempt < config.retries:
                 # Exponential backoff for retries - longer wait after each failure
                 backoff_time = config.interval * (2 ** attempt)
@@ -125,20 +129,21 @@ def ping_host(host: str, config: PingConfig = PingConfig()) -> PingResult:
                 continue
             # Too many socket errors, return failure
             if socket_errors >= config.max_socket_errors:
+                logger.error(f"Ping failed for '{host}' ({ip_address}) after {socket_errors} socket errors: {last_error}")
                 return PingResult(
+                    host=host,
                     ip_address=ip_address,
                     is_alive=False,
                     error=f"Multiple socket errors ({socket_errors}): {last_error}"
                 )
-    
     # If we get here, all attempts failed
+    logger.info(f"Host '{host}' ({ip_address}) did not respond to ping after {config.retries+1} attempts")
     return PingResult(
         host=host,
         ip_address=ip_address,
         is_alive=False,
         error="Host did not respond to ping requests"
     )
-
 
 def create_icmp_packet(packet_id: int, seq_number: int) -> bytes:
     """Create an ICMP echo request packet."""
@@ -170,7 +175,7 @@ def verify_icmp_response(data: bytes, packet_id: int) -> bool:
         # ICMP header starts at byte 20 in the IP packet
         icmp_header = data[20:28]
         type, code, checksum, received_id, sequence = struct.unpack('!BBHHH', icmp_header)
-        
+        logger.debug(f"ICMP response received: type={type}, code={code}, id={received_id} (expected id={packet_id})")
         
         # Only accept echo reply (type 0) as the standard response
         if type == 0:
@@ -180,12 +185,13 @@ def verify_icmp_response(data: bytes, packet_id: int) -> bool:
             else:
                 return False
         # Other response types are not valid
+        logger.debug(f"Received unexpected ICMP type {type}, expected echo reply (type 0)")
         
         # Any response type other than echo reply (0) with matching ID is invalid
         return False
     except Exception as e:
+        logger.warning(f"Error verifying ICMP response: {str(e)}")
         return False
-
 
 def calculate_checksum(data: bytes) -> int:
     """Calculate the checksum for an ICMP packet."""
@@ -203,7 +209,6 @@ def calculate_checksum(data: bytes) -> int:
     # Take one's complement
     return ~checksum & 0xffff
 
-
 def ping_hosts(hosts: List[str], config: PingConfig = PingConfig()) -> Dict[str, PingResult]:
     """
     Ping multiple hosts concurrently and return their status.
@@ -215,6 +220,7 @@ def ping_hosts(hosts: List[str], config: PingConfig = PingConfig()) -> Dict[str,
     Returns:
         Dictionary mapping each host to its PingResult
     """
+    logger.info(f"Pinging {len(hosts)} hosts concurrently")
     results = {}
     
     # Use a thread pool to ping hosts concurrently
@@ -226,13 +232,13 @@ def ping_hosts(hosts: List[str], config: PingConfig = PingConfig()) -> Dict[str,
                 result = future.result()
                 results[host] = result
             except Exception as e:
+                logger.error(f"Unexpected error while pinging '{host}': {str(e)}")
                 results[host] = PingResult(
                     host=host,
                     ip_address=None,
                     is_alive=False,
                     error=str(e)
                 )
-    
     return results
 
 
@@ -252,8 +258,8 @@ def ping_hosts_with_timeout(hosts: List[str],
     Returns:
         Dictionary mapping each host to its PingResult
     """
+    logger.debug(f"Starting ping operation for {len(hosts)} hosts with timeout={timeout}s, retries={retries}")
     config = PingConfig(timeout=timeout, retries=retries, interval=interval)
     return ping_hosts(hosts, config)
-
 
 

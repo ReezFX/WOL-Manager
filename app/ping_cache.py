@@ -13,6 +13,10 @@ import redis
 import socket
 import traceback
 from typing import Dict, Optional, List, Any
+from app.logging_config import get_logger
+
+# Initialize module-level logger
+logger = get_logger('app.ping_cache')
 
 
 # Default cache expiration time in seconds
@@ -81,7 +85,8 @@ class PingCache:
             # Test connection
             ping_result = self.redis.ping()
             
-            
+            logger.info(f"Redis connection successful: {redis_url}")
+            logger.debug(f"Redis server info: {connection_info.get('redis_version', 'unknown')} on {connection_info.get('os', 'unknown')}")
                 
         except redis.ConnectionError as e:
             self.redis = None
@@ -90,6 +95,8 @@ class PingCache:
             
             # Track error
             self._redis_errors += 1
+            logger.warning(f"Redis connection failed, using local cache fallback: {str(e)}")
+            logger.debug(f"Redis connection error details: {traceback.format_exc()}")
     
     def _get_redis_info(self) -> Optional[Dict]:
         """Get Redis server information for debugging purposes"""
@@ -98,17 +105,30 @@ class PingCache:
                 return self.redis.info()
             return None
         except Exception as e:
+            logger.debug(f"Error getting Redis info: {str(e)}")
             return None
             
     def _track_operation(self, op_type: str, host_id: str, details: Dict) -> None:
         """Track a cache operation for debugging purposes"""
-        # Empty method as logging functionality is removed
-        pass
+        if op_type == "error":
+            logger.error(f"Cache {op_type} for host {host_id}: {details.get('error', 'Unknown error')}")
+        elif "slow_operation" in details and details["slow_operation"]:
+            logger.warning(f"Slow cache {op_type} for host {host_id}: {details.get('op_time_ms', 0):.2f}ms")
+        elif DEBUG_VERBOSE:
+            logger.debug(f"Cache {op_type} for host {host_id}: {details}")
     
     def _log_operation_summary(self) -> None:
         """Log a summary of recent cache operations"""
-        # Empty method as logging functionality is removed
-        pass
+        current_time = time.time()
+        if current_time - self._last_stats_time > CACHE_STATS_INTERVAL:
+            hits_ratio = 0
+            total_ops = self._cache_hits + self._cache_misses
+            if total_ops > 0:
+                hits_ratio = (self._cache_hits / total_ops) * 100
+                
+            logger.info(f"Cache stats: {self._cache_hits} hits, {self._cache_misses} misses "
+                       f"({hits_ratio:.1f}% hit ratio), {self._redis_errors} Redis errors")
+            self._last_stats_time = current_time
     
     def _get_key(self, host_id: str) -> str:
         """
@@ -191,12 +211,15 @@ class PingCache:
                     "data_size": len(json_data)
                 })
                 
+                logger.debug(f"Cache update: host={host_id}, online={is_online}, response_time={response_time}ms, expiry={expiry}s")
                 
+                
+                # Track this host's status change if any
                 # Track this host's status change if any
                 self._track_host_status_change(host_id, is_online)
                 if op_time > SLOW_OPERATION_THRESHOLD:
                     update_details["slow_operation"] = True
-                    
+                    logger.warning(f"Slow cache update for host {host_id}: {op_time:.2f}ms (threshold: {SLOW_OPERATION_THRESHOLD}ms)")
                 # Verify the key was set correctly
                 try:
                     ttl = self.redis.ttl(key)
@@ -219,6 +242,9 @@ class PingCache:
                     "op_time_ms": op_time
                 })
                 
+                logger.error(f"Redis error during cache update for host {host_id}: {str(e)}")
+                logger.debug(f"Redis error details: {traceback.format_exc()}")
+                
                 
                 # Fallback to local cache
                 if hasattr(self, '_local_cache'):
@@ -229,6 +255,7 @@ class PingCache:
             # Use local cache if Redis is not available
             self._local_cache[host_id] = data
             op_time = (time.time() - op_start) * 1000  # ms
+            logger.debug(f"Local cache update: host={host_id}, online={is_online}, response_time={response_time}ms")
             
             update_details.update({
                 "status": "success",
@@ -284,6 +311,8 @@ class PingCache:
                         "response_time": entry.get('response_time')
                     })
                     
+                    logger.debug(f"Cache hit: host={host_id}, online={entry['is_online']}, age={age:.1f}s")
+                    
                     # Increment hit counter
                     self._cache_hits += 1
                     
@@ -317,6 +346,8 @@ class PingCache:
                         "reason": "key_not_found"
                     })
                     
+                    logger.debug(f"Cache miss: host={host_id}, key not found")
+                    
                     
                     # Track timing metrics for cache misses
                     self._add_timing_metric("miss", op_time)
@@ -335,6 +366,9 @@ class PingCache:
                     "stack": traceback.format_exc(),
                     "op_time_ms": op_time
                 })
+                
+                logger.error(f"Redis error during cache get for host {host_id}: {str(e)}")
+                logger.debug(f"Redis error details: {traceback.format_exc()}")
                 
                 
                 
@@ -437,21 +471,25 @@ class PingCache:
     
     def clear(self) -> None:
         """Clear all cached ping results"""
+        logger.info("Clearing ping cache")
         if self.redis:
             try:
                 # Delete all keys with this prefix
                 keys = self.redis.keys(f"{self.prefix}*")
                 if keys:
                     self.redis.delete(*keys)
-                # Redis ping cache cleared
+                    logger.info(f"Redis ping cache cleared: {len(keys)} keys removed")
+                else:
+                    logger.info("Redis ping cache was already empty")
             except Exception as e:
                 # Error clearing Redis cache
-                pass
+                logger.error(f"Error clearing Redis cache: {str(e)}")
                 
         # Clear local cache as well
         if hasattr(self, '_local_cache'):
+            entry_count = len(self._local_cache)
             self._local_cache.clear()
-            # Local ping cache cleared
+            logger.info(f"Local ping cache cleared: {entry_count} entries removed")
     
     def _track_host_status_change(self, host_id: str, is_online: bool) -> None:
         """
@@ -461,8 +499,20 @@ class PingCache:
             host_id: ID of the host
             is_online: Whether the host is online
         """
-        # Empty method as logging functionality is removed
-        pass
+        prev_status = self._host_status.get(host_id)
+        if prev_status is not None and prev_status != is_online:
+            status_str = "online" if is_online else "offline"
+            prev_status_str = "online" if prev_status else "offline"
+            logger.info(f"Host {host_id} status change: {prev_status_str} -> {status_str}")
+            
+            # Record the status change
+            self._status_changes.append({
+                "host_id": host_id,
+                "timestamp": time.time(),
+                "from": prev_status,
+                "to": is_online
+            })
+
     def _add_timing_metric(self, operation_type: str, time_ms: float) -> None:
         """
         Add a timing metric for performance tracking.

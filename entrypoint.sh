@@ -15,8 +15,8 @@ mkdir -p /app/instance/flask_session
 chmod 770 /app/instance/flask_session
 
 # Create logs directory with proper permissions
-mkdir -p /app/logs
-chmod 770 /app/logs
+mkdir -p /app/instance/logs
+chmod 770 /app/instance/logs
 
 # Start Redis server in the background
 echo "Starting Redis server in the background..."
@@ -107,7 +107,7 @@ fi
 chmod +x check_admin.py
 
 # Ensure proper permissions on database file
-chown -R nobody:nogroup /app/instance /app/instance/flask_session /app/logs || echo "Failed to set permissions on instance directory, continuing..."
+chown -R nobody:nogroup /app/instance /app/instance/flask_session /app/instance/logs || echo "Failed to set permissions on instance directory, continuing..."
 
 # Start the application
 echo "Starting the application in production mode..."

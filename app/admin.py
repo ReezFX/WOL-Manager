@@ -12,6 +12,10 @@ from app import db_session
 from app.forms import UserForm, AppSettingsForm
 from app.auth import hash_password, admin_required
 from sqlalchemy import desc
+from app.logging_config import get_logger
+
+# Initialize module logger
+logger = get_logger('app.admin')
 
 # Simple form for CSRF protection on action forms
 class CSRFForm(FlaskForm):
@@ -43,6 +47,7 @@ admin = Blueprint('admin', __name__, url_prefix='/admin')
 @admin_required
 def list_users():
     """Admin page to list all users"""
+    logger.info("Admin accessing user list page: %s", current_user.username)
     users = db_session.query(User).all()
     form = UserForm()
     # Create a CSRF form for the promote/demote/delete actions
@@ -63,6 +68,7 @@ def add_user():
         # Check if username already exists
         existing_user = db_session.query(User).filter_by(username=username).first()
         if existing_user:
+            logger.warning("Attempted to create duplicate user: %s by admin: %s", username, current_user.username)
             flash(f'Username {username} is already taken.', 'danger')
         else:
             try:
@@ -80,15 +86,19 @@ def add_user():
                 if user_role:
                     new_user.roles.append(user_role)
                     db_session.commit()
+                    logger.info("New user created: %s by admin: %s", username, current_user.username)
                 else:
-                    flash(f'Warning: Could not assign role "user" - role not found.', 'warning')
+                    logger.warning("Could not assign role 'user' - role not found for new user: %s", username)
+                    flash(f'Warning: Could not assign role \"user\" - role not found.', 'warning')
                 
                 flash(f'User {username} has been created successfully.', 'success')
                 return redirect(url_for('admin.list_users'))
             except SQLAlchemyError as e:
                 db_session.rollback()
+                logger.error("Database error creating user %s: %s", username, str(e))
                 flash(f'Error creating user: {str(e)}', 'danger')
             except ValueError as e:
+                logger.error("Value error creating user %s: %s", username, str(e))
                 flash(str(e), 'danger')
     else:
         for field, errors in form.errors.items():
@@ -107,8 +117,10 @@ def promote_user(user_id):
     if form.validate_on_submit():
         user = db_session.query(User).get(user_id)
         if user is None:
+            logger.warning("Attempted to promote non-existent user ID: %s by admin: %s", user_id, current_user.username)
             flash(f'User with ID {user_id} not found.', 'danger')
         elif user.id == current_user.id:
+            logger.warning("Admin %s attempted to promote themselves", current_user.username)
             flash('You cannot change your own role.', 'danger')
         else:
             # Update legacy role column
@@ -120,6 +132,7 @@ def promote_user(user_id):
                 user.roles.append(admin_role)
             
             db_session.commit()
+            logger.info("User %s (ID: %s) promoted to admin by %s", user.username, user_id, current_user.username)
             flash(f'User {user.username} promoted to admin.', 'success')
     else:
         flash('CSRF token validation failed. Please try again.', 'danger')
@@ -135,8 +148,10 @@ def demote_user(user_id):
     if form.validate_on_submit():
         user = db_session.query(User).get(user_id)
         if user is None:
+            logger.warning("Attempted to demote non-existent user ID: %s by admin: %s", user_id, current_user.username)
             flash(f'User with ID {user_id} not found.', 'danger')
         elif user.id == current_user.id:
+            logger.warning("Admin %s attempted to demote themselves", current_user.username)
             flash('You cannot change your own role.', 'danger')
         else:
             # Update legacy role column
@@ -153,6 +168,7 @@ def demote_user(user_id):
                 user.roles.append(user_role)
                 
             db_session.commit()
+            logger.info("User %s (ID: %s) demoted to regular user by %s", user.username, user_id, current_user.username)
             flash(f'User {user.username} demoted to regular user.', 'success')
     else:
         flash('CSRF token validation failed. Please try again.', 'danger')
@@ -168,11 +184,13 @@ def delete_user(user_id):
     if form.validate_on_submit():
         # Prevent self-deletion
         if user_id == current_user.id:
+            logger.warning("Admin %s attempted to delete their own account", current_user.username)
             flash('You cannot delete your own account.', 'danger')
             return redirect(url_for('admin.list_users'))
         
         user = db_session.query(User).get(user_id)
         if user is None:
+            logger.warning("Attempted to delete non-existent user ID: %s by admin: %s", user_id, current_user.username)
             flash(f'User with ID {user_id} not found.', 'danger')
         else:
             try:
@@ -180,6 +198,8 @@ def delete_user(user_id):
                 host_count = db_session.query(User).join(User.hosts).filter(User.id == user_id).count()
                 if host_count > 0:
                     host_message = f"This user has {host_count} host(s) that will also be deleted."
+                    logger.warning("Deleting user %s with %d associated hosts by admin %s", 
+                                 user.username, host_count, current_user.username)
                     flash(f"Warning: {host_message}", 'warning')
                 
                 # Store username for the success message
@@ -188,9 +208,11 @@ def delete_user(user_id):
                 # Perform the deletion - cascade will handle related records
                 db_session.delete(user)
                 db_session.commit()
+                logger.info("User %s (ID: %s) deleted by admin %s", username, user_id, current_user.username)
                 flash(f'User {username} has been deleted successfully.', 'success')
             except SQLAlchemyError as e:
                 db_session.rollback()
+                logger.error("Database error deleting user ID %s: %s", user_id, str(e))
                 flash(f'Error deleting user: {str(e)}', 'danger')
     else:
         flash('CSRF token validation failed. Please try again.', 'danger')
@@ -204,6 +226,8 @@ def edit_permissions(user_id):
     """Edit granular permissions for a user"""
     user = db_session.query(User).get(user_id)
     if user is None:
+        logger.warning("Attempted to edit permissions for non-existent user ID: %s by admin: %s", 
+                     user_id, current_user.username)
         flash(f'User with ID {user_id} not found.', 'danger')
         return redirect(url_for('admin.list_users'))
     
@@ -225,6 +249,8 @@ def edit_permissions(user_id):
     
     if form.validate_on_submit():
         try:
+            logger.info("Updating permissions for user %s (ID: %s) by admin %s", 
+                      user.username, user_id, current_user.username)
             # Create a permissions dictionary based on the form data
             updated_permissions = {}
             
@@ -238,12 +264,13 @@ def edit_permissions(user_id):
             # Update the user's permissions
             user.permissions = updated_permissions
             db_session.commit()
-            
+            logger.info("Permissions updated successfully for user %s (ID: %s) by admin %s", 
+                      user.username, user_id, current_user.username)
             flash(f'Permissions for {user.username} have been updated successfully.', 'success')
             return redirect(url_for('admin.list_users'))
-            
         except SQLAlchemyError as e:
             db_session.rollback()
+            logger.error("Database error updating permissions for user ID %s: %s", user_id, str(e))
             flash(f'Error updating permissions: {str(e)}', 'danger')
     
     return render_template(
@@ -259,6 +286,7 @@ def edit_permissions(user_id):
 @admin_required
 def settings():
     """Admin page to manage application settings"""
+    logger.info("Admin %s accessing application settings page", current_user.username)
     form = AppSettingsForm()
     
     # Get current settings
@@ -275,7 +303,7 @@ def settings():
     
     if form.validate_on_submit():
         try:
-            # Update settings with form data
+            logger.info("Admin %s updating application settings", current_user.username)
             current_settings.min_password_length = form.min_password_length.data
             current_settings.require_special_characters = form.require_special_characters.data
             current_settings.require_numbers = form.require_numbers.data

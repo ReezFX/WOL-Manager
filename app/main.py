@@ -8,6 +8,10 @@ from app.models import Host
 from app import db_session
 from app.ping import ping_host, PingConfig
 from app.ping_cache import ping_cache
+from app.logging_config import get_logger
+
+# Initialize module logger
+logger = get_logger('app.main')
 
 class CSRFForm(FlaskForm):
     """Form with CSRF protection only"""
@@ -33,6 +37,7 @@ def dashboard():
     """
     # Check if the user is authenticated (either via Flask-Login or custom session)
     if not current_user.is_authenticated and not session.get('authenticated'):
+        logger.warning('Unauthorized access attempt to dashboard')
         flash('Please log in to access this page.', 'warning')
         return redirect(url_for('auth.login', next='/dashboard'))
     
@@ -68,12 +73,12 @@ def dashboard():
     else:
         # Use Flask-Login's current_user
         user = current_user
-    # Get hosts based on user role
+    
+    logger.info(f'Dashboard accessed by user: {user.username} (id: {user.id})')
     # Get hosts based on user role
     if user.is_admin:
         hosts = db_session.query(Host).all()
     else:
-        # Get all the role IDs of the current user
         # Get all the role IDs of the current user
         user_role_ids = [role.id for role in user.roles]
         user_role_ids_str = [str(role_id) for role_id in user_role_ids]
@@ -111,10 +116,11 @@ def dashboard():
             else:
                 # If no visible hosts found, just filter by created_by
                 hosts = db_session.query(Host).filter(created_by_filter).all()
-                
         except Exception as e:
             # Fallback to just showing hosts created by the user
             hosts = db_session.query(Host).filter(created_by_filter).all()
+            error_msg = f"Error in host retrieval for dashboard: {str(e)}"
+            logger.error(error_msg)
             flash(f"Limited dashboard visibility due to an error: {str(e)}", "warning")
     
     # Logs functionality has been removed
@@ -149,12 +155,14 @@ def profile():
 @main.errorhandler(404)
 def page_not_found(e):
     """Custom 404 page."""
+    logger.warning(f'404 error: {request.path} - Referrer: {request.referrer}')
     return render_template('404.html'), 404
 
 
 @main.errorhandler(500)
 def internal_server_error(e):
     """Custom 500 page."""
+    logger.error(f'500 error: {str(e)} - URL: {request.path}')
     return render_template('500.html'), 500
 
 
@@ -168,6 +176,7 @@ def ping_hosts_api():
     """
     # Check if the user is authenticated
     if not current_user.is_authenticated and not session.get('authenticated'):
+        logger.warning(f'Unauthorized API access attempt from IP: {request.remote_addr}')
         return jsonify({'error': 'Authentication required'}), 401
     
     # Parse host IDs from request
@@ -178,10 +187,13 @@ def ping_hosts_api():
         
         host_ids = data['host_ids']
         if not host_ids:
+            logger.warning(f'API ping request with no host IDs from user unknown')
             return jsonify({'error': 'No host IDs provided'}), 400
+        
+        logger.info(f'API ping request received for {len(host_ids)} hosts')
     except Exception as e:
+        logger.error(f'Invalid ping request format: {str(e)}')
         return jsonify({'error': f'Invalid request format: {str(e)}'}), 400
-    
     # Get the current user (either from Flask-Login or custom session)
     if not current_user.is_authenticated and session.get('authenticated'):
         # Use the user ID from session
@@ -191,6 +203,12 @@ def ping_hosts_api():
         # Use Flask-Login's current_user
         user_id = current_user.id
         is_admin = current_user.is_admin
+    
+    # Update log messages with user ID now that it's defined
+    if not host_ids:
+        logger.warning(f'API ping request with no host IDs from user {user_id}')
+    else:
+        logger.info(f'API ping request received for {len(host_ids)} hosts from user {user_id}')
     
     # Fetch hosts from database
     try:
@@ -238,9 +256,12 @@ def ping_hosts_api():
             hosts = hosts_by_creator + hosts_by_role
         
         if not hosts:
+            logger.warning(f'User {user_id} attempted to ping hosts they cannot access: {host_ids}')
             return jsonify({'error': 'No accessible hosts found with the provided IDs'}), 404
             
     except Exception as e:
+        error_msg = f'Database error in ping_hosts_api: {str(e)}'
+        logger.error(error_msg)
         return jsonify({'error': f'Database error: {str(e)}'}), 500
     
     # Configure ping settings - improved for reliability
@@ -272,7 +293,7 @@ def ping_hosts_api():
                     'cached': True
                 }
                 # Log that we're using a cached result
-                # Using a cached result
+                logger.debug(f'Using cached ping result for host {host.name} (ID: {host.id})')
             else:
                 # No cache hit, perform the ping
                 ping_result = ping_host(target, ping_config)
@@ -299,7 +320,9 @@ def ping_hosts_api():
                     'error': ping_result.error,
                     'cached': False
                 }
+                logger.debug(f'Performed ping for host {host.name} (ID: {host.id}): {"online" if ping_result.is_alive else "offline"}')
         except Exception as e:
+            logger.error(f'Error pinging host {host.name} (ID: {host.id}): {str(e)}')
             results[host.id] = {
                 'id': host.id,
                 'name': host.name,
@@ -310,6 +333,7 @@ def ping_hosts_api():
                 'error': str(e)
             }
     
+    logger.info(f'Completed ping requests for {len(results)} hosts')
     return jsonify({'hosts': results})
 
 

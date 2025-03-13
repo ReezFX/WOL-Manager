@@ -168,6 +168,65 @@ By default, the application uses SQLite:
 
 To change database settings, modify `app/config.py`.
 
+### Logging Configuration
+The application uses a flexible logging system with multiple profiles to suit different environments and debugging needs.
+
+#### Logging Profiles
+Four logging profiles are available:
+- `LOW`: Basic operational logging (errors and warnings only)
+- `MEDIUM`: Standard logging level (errors, warnings, and important info messages)
+- `HIGH`: Detailed logging (errors, warnings, info, and some debug messages)
+- `DEBUG`: Comprehensive logging with full debug information (development use only)
+
+#### Setting the Logging Profile
+You can set the logging profile using the `LOG_LEVEL` environment variable:
+```bash
+# For Docker deployments:
+docker run -d -e LOG_LEVEL=MEDIUM [...other options] officialreez/wol-manager-web:latest
+
+# For manual deployments:
+export LOG_LEVEL=MEDIUM
+python manage.py run
+```
+
+#### Log File Storage
+Logs are stored in the following locations:
+- Docker deployment: `/app/logs/`
+- Manual installation: `./logs/` relative to the application directory
+
+The logging system organizes files by type:
+- `app.log`: General application logs
+- `access.log`: HTTP request logs
+- `error.log`: Error-specific logs
+- `security.log`: Authentication and security-related events
+
+#### Viewing Logs
+You can view logs using the CLI management commands:
+```bash
+# View the latest application logs
+python manage.py show-logs app
+
+# View the latest error logs
+python manage.py show-logs error
+
+# View a specific number of log entries
+python manage.py show-logs app --lines 50
+```
+
+#### Log Rotation and Management
+Logs are automatically rotated based on the following policy:
+- Maximum file size: 10MB
+- Backup count: 5 files per log type
+- Rotation occurs automatically when size limit is reached
+
+You can manually trigger log rotation with:
+```bash
+python manage.py rotate-logs
+```
+
+#### Developer Guidelines
+For more detailed information about logging best practices and implementation details, refer to the [developer logging guidelines](docs/logging_guidelines.md).
+
 ## Usage
 
 ### Initial Login

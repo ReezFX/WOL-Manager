@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 import logging
 import sys
 import traceback
+from app.logging_config import get_logger
 from werkzeug.security import check_password_hash
 from functools import wraps
 import bcrypt
@@ -18,6 +19,9 @@ from flask_wtf.csrf import validate_csrf, ValidationError as CSRFValidationError
 
 # Create the auth blueprint
 auth = Blueprint('auth', __name__)
+
+# Configure module-level logger
+logger = get_logger('app.auth')
 
 # Custom decorator for admin access
 # Custom decorator for admin access
@@ -44,14 +48,14 @@ def validate_csrf_token(token=None):
         token = request.form.get('csrf_token')
     
     if not token:
-        current_app.logger.warning('CSRF validation failed: No token provided')
+        logger.warning('CSRF validation failed: No token provided')
         return False
     
     try:
         validate_csrf(token)
         return True
     except CSRFValidationError as e:
-        current_app.logger.warning(f'CSRF validation failed: {str(e)}')
+        logger.warning(f'CSRF validation failed: {str(e)}')
         return False
 
 def hash_password(password):
@@ -83,55 +87,39 @@ class ChangePasswordForm(FlaskForm):
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    print("==== LOGIN ROUTE STARTED ====")
-    current_app.logger.debug("==== LOGIN ROUTE STARTED ====")
+    logger.debug("==== LOGIN ROUTE STARTED ====")
     
     # Debug request details
-    print(f"Request method: {request.method}")
-    print(f"Request headers: {dict(request.headers)}")
-    print(f"Request cookies: {request.cookies}")
-    print(f"Request form data: {request.form}")
-    print(f"Request args: {request.args}")
-    
-    current_app.logger.debug(f"Request method: {request.method}")
-    current_app.logger.debug(f"Request headers: {dict(request.headers)}")
-    current_app.logger.debug(f"Request cookies: {request.cookies}")
-    current_app.logger.debug(f"Request form data: {request.form}")
-    current_app.logger.debug(f"Request args: {request.args}")
+    logger.debug(f"Request method: {request.method}")
+    logger.debug(f"Request headers: {dict(request.headers)}")
+    logger.debug(f"Request cookies: {request.cookies}")
+    logger.debug(f"Request form data: {request.form}")
+    logger.debug(f"Request args: {request.args}")
     
     # If user is already logged in, redirect to index page
     if current_user.is_authenticated:
-        print("User already authenticated, redirecting to index")
-        current_app.logger.debug("User already authenticated, redirecting to index")
+        logger.debug("User already authenticated, redirecting to index")
         return redirect(url_for('main.index'))
     
     # Create login form
     form = LoginForm()
-    print(f"Created login form, CSRF enabled: {current_app.config.get('WTF_CSRF_ENABLED', True)}")
-    current_app.logger.debug(f"Created login form, CSRF enabled: {current_app.config.get('WTF_CSRF_ENABLED', True)}")
+    logger.debug(f"Created login form, CSRF enabled: {current_app.config.get('WTF_CSRF_ENABLED', True)}")
     
     # Debug session info
-    print(f"Session cookie name: {current_app.config.get('SESSION_COOKIE_NAME')}")
-    print(f"Session cookie domain: {current_app.config.get('SESSION_COOKIE_DOMAIN')}")
-    print(f"Session cookie path: {current_app.config.get('SESSION_COOKIE_PATH')}")
-    print(f"Session cookie secure: {current_app.config.get('SESSION_COOKIE_SECURE')}")
-    print(f"Session cookie samesite: {current_app.config.get('SESSION_COOKIE_SAMESITE')}")
-    
-    current_app.logger.debug(f"Session cookie name: {current_app.config.get('SESSION_COOKIE_NAME')}")
-    current_app.logger.debug(f"Session cookie domain: {current_app.config.get('SESSION_COOKIE_DOMAIN')}")
-    current_app.logger.debug(f"Session cookie path: {current_app.config.get('SESSION_COOKIE_PATH')}")
-    current_app.logger.debug(f"Session cookie secure: {current_app.config.get('SESSION_COOKIE_SECURE')}")
-    current_app.logger.debug(f"Session cookie samesite: {current_app.config.get('SESSION_COOKIE_SAMESITE')}")
+    logger.debug(f"Session cookie name: {current_app.config.get('SESSION_COOKIE_NAME')}")
+    logger.debug(f"Session cookie domain: {current_app.config.get('SESSION_COOKIE_DOMAIN')}")
+    logger.debug(f"Session cookie path: {current_app.config.get('SESSION_COOKIE_PATH')}")
+    logger.debug(f"Session cookie secure: {current_app.config.get('SESSION_COOKIE_SECURE')}")
+    logger.debug(f"Session cookie samesite: {current_app.config.get('SESSION_COOKIE_SAMESITE')}")
     
     # Handle POST request
     if request.method == 'POST':
-        print("Processing POST request for login")
-        current_app.logger.debug("Processing POST request for login")
+        logger.debug("Processing POST request for login")
         
         # Validate CSRF token for login form
         if not validate_csrf_token():
             flash('Form submission expired or invalid. Please try again.', 'danger')
-            current_app.logger.warning(f"Login attempt failed: CSRF validation failed for user '{request.form.get('username', '')}'")
+            logger.warning(f"Login attempt failed: CSRF validation failed for user '{request.form.get('username', '')}'")
             return render_template('auth/login.html', form=form)
         
         try:
@@ -140,66 +128,53 @@ def login():
             password = request.form.get('password')
             remember = request.form.get('remember', False, type=bool)
             
-            print(f"Form data extracted - Username: {username}, Remember: {remember}, Password: {'*****' if password else 'None'}")
-            current_app.logger.debug(f"Form data extracted - Username: {username}, Remember: {remember}, Password: {'*****' if password else 'None'}")
+            logger.debug(f"Form data extracted - Username: {username}, Remember: {remember}, Password: {'*****' if password else 'None'}")
             
             # Basic validation that required fields are present
             if not username or not password:
-                print("Validation failed: Username or password missing")
-                current_app.logger.debug("Validation failed: Username or password missing")
+                logger.debug("Validation failed: Username or password missing")
                 flash('Username and password are required.', 'danger')
                 return render_template('auth/login.html', form=form)
             
-            print(f"Looking up user with username: {username}")
-            current_app.logger.debug(f"Looking up user with username: {username}")
+            logger.debug(f"Looking up user with username: {username}")
             
             # Find user by username
             user = db_session.query(User).filter_by(username=username).first()
             
-            print(f"User lookup result: {'Found' if user else 'Not found'}")
-            current_app.logger.debug(f"User lookup result: {'Found' if user else 'Not found'}")
+            logger.debug(f"User lookup result: {'Found' if user else 'Not found'}")
             
             if user:
-                print(f"Found user: ID={user.id}, Username={user.username}, Is_admin={user.is_admin}")
-                current_app.logger.debug(f"Found user: ID={user.id}, Username={user.username}, Is_admin={user.is_admin}")
+                logger.debug(f"Found user: ID={user.id}, Username={user.username}, Is_admin={user.is_admin}")
             
             # Check if user exists and password is correct
             password_correct = False
             if user:
-                print("Verifying password...")
-                current_app.logger.debug("Verifying password...")
+                logger.debug("Verifying password...")
                 try:
                     password_correct = check_password(user.password_hash, password)
-                    print(f"Password verification result: {'Correct' if password_correct else 'Incorrect'}")
-                    current_app.logger.debug(f"Password verification result: {'Correct' if password_correct else 'Incorrect'}")
+                    logger.debug(f"Password verification result: {'Correct' if password_correct else 'Incorrect'}")
                 except Exception as e:
-                    print(f"Password verification error: {str(e)}")
-                    current_app.logger.debug(f"Password verification error: {str(e)}")
-                    traceback.print_exc()
+                    logger.error(f"Password verification error: {str(e)}", exc_info=True)
             
             # Validation
             if user and password_correct:
-                print("Login successful, calling login_user()")
-                current_app.logger.debug("Login successful, calling login_user()")
+                logger.debug("Login successful, calling login_user()")
                 
                 # Standardize on Flask-Login
                 login_user(user, remember=remember)
                 session.permanent = True
                 
                 # Log successful login
-                current_app.logger.info(f"User '{user.username}' logged in successfully")
+                logger.info(f"User '{user.username}' logged in successfully")
                 flash('Login successful!', 'success')
                 
                 return redirect(request.args.get('next') or url_for('main.index'))
             else:
                 # Log failed login attempt
                 failure_reason = "Invalid password" if user else "User not found"
-                failure_reason = "Invalid password" if user else "User not found"
-                current_app.logger.warning(f"Failed login attempt: {failure_reason} for username '{username}'")
+                logger.warning(f"Failed login attempt: {failure_reason} for username '{username}'")
         except Exception as e:
-            print(f"Unexpected error during login processing: {str(e)}")
-            current_app.logger.debug(f"Unexpected error during login processing: {str(e)}")
-            traceback.print_exc()
+            logger.error(f"Unexpected error during login processing: {str(e)}", exc_info=True)
             flash('An unexpected error occurred during login.', 'danger')
     
     # For GET requests, just render the login form
@@ -209,7 +184,7 @@ def login():
 @login_required
 def logout():
     # Log the logout event before actually logging out
-    current_app.logger.info(f"User '{current_user.username}' logged out")
+    logger.info(f"User '{current_user.username}' logged out")
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))
@@ -233,7 +208,7 @@ def change_password():
         # Verify current password
         if not check_password(current_user.password_hash, form.current_password.data):
             # Log failed password change attempt
-            current_app.logger.warning(f"Failed password change attempt for user '{current_user.username}': incorrect current password")
+            logger.warning(f"Failed password change attempt for user '{current_user.username}': incorrect current password")
             flash('Current password is incorrect.', 'danger')
         else:
             try:
