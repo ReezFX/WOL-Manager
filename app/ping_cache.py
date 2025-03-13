@@ -22,7 +22,7 @@ DEFAULT_CACHE_PREFIX = "ping_cache:"
 # Maximum number of hosts to track in detailed debug output
 MAX_DEBUG_HOSTS = 10
 # Debug flag to enable super verbose logging
-DEBUG_VERBOSE = True
+DEBUG_VERBOSE = False
 # Enable cache statistics logging interval (in seconds)
 CACHE_STATS_INTERVAL = 60
 # Threshold for slow cache operations (in ms)
@@ -82,14 +82,6 @@ class PingCache:
             ping_result = self.redis.ping()
             
             
-            # Track detailed Redis info for debugging
-            self._track_operation("init", "connection", {
-                "status": "success",
-                "redis_info": connection_info,
-                "expiry_seconds": expiry_seconds,
-                "worker_id": self._worker_id,
-                "hostname": self._hostname
-            })
                 
         except redis.ConnectionError as e:
             self.redis = None
@@ -98,14 +90,6 @@ class PingCache:
             
             # Track error
             self._redis_errors += 1
-            self._track_operation("init", "connection", {
-                "status": "error",
-                "error": str(e),
-                "error_type": type(e).__name__,
-                "stack": traceback.format_exc(),
-                "worker_id": self._worker_id,
-                "hostname": self._hostname
-            })
     
     def _get_redis_info(self) -> Optional[Dict]:
         """Get Redis server information for debugging purposes"""
@@ -118,52 +102,13 @@ class PingCache:
             
     def _track_operation(self, op_type: str, host_id: str, details: Dict) -> None:
         """Track a cache operation for debugging purposes"""
-        if not DEBUG_VERBOSE:
-            return
-            
-        timestamp = time.time()
-        operation = {
-            "timestamp": timestamp,
-            "op_type": op_type,
-            "host_id": host_id,
-            "details": details,
-            "worker_id": self._worker_id
-        }
-        
-        # Keep a rolling log of recent operations
-        self._recent_operations.append(operation)
-        if len(self._recent_operations) > self._max_recent_operations:
-            self._recent_operations.pop(0)
-            
-        # Log summary of operations every 50 operations for the first 1000
-        if len(self._recent_operations) % 50 == 0 and len(self._recent_operations) <= 1000:
-            self._log_operation_summary()
+        # Empty method as logging functionality is removed
+        pass
     
     def _log_operation_summary(self) -> None:
         """Log a summary of recent cache operations"""
-        if not self._recent_operations:
-            return
-            
-        # Count operations by type
-        op_counts = {}
-        host_counts = {}
-        
-        for op in self._recent_operations:
-            op_type = op["op_type"]
-            host_id = op["host_id"]
-            
-            op_counts[op_type] = op_counts.get(op_type, 0) + 1
-            host_counts[host_id] = host_counts.get(host_id, 0) + 1
-        
-        # Log summary
-        
-        # Log Redis info
-        if self.redis:
-            try:
-                redis_info = self._get_redis_info()
-                # No need to log Redis info, just get it for debugging
-            except Exception as e:
-                pass
+        # Empty method as logging functionality is removed
+        pass
     
     def _get_key(self, host_id: str) -> str:
         """
@@ -182,17 +127,15 @@ class PingCache:
         # Remove any potential whitespace
         normalized_id = host_id_str.strip()
         
+        
         # Create the final key
         key = f"{self.prefix}{normalized_id}"
         
-        if DEBUG_VERBOSE:
-            pass  # No need to log key creation
         return key
-
-    def update(self, host_id: str, is_online: bool, response_time: Optional[float] = None, 
+        
+    def update(self, host_id: str, is_online: bool, response_time: Optional[float] = None,
                error: Optional[str] = None) -> None:
-        """
-        Update the cache with a ping result.
+        """Update the cache with a ping result.
         
         Args:
             host_id: ID of the host
@@ -215,9 +158,6 @@ class PingCache:
         # to prevent rapid flipping between states
         expiry = self.expiry_seconds if is_online else 3
         
-        # Log reasoning for expiration time
-        if is_online:
-            pass  # No need to log reasoning for online hosts
         
         # Debug info for update operation
         op_start = time.time()
@@ -254,12 +194,9 @@ class PingCache:
                 
                 # Track this host's status change if any
                 self._track_host_status_change(host_id, is_online)
-                
-                # Track operation time for performance metrics
-                self._add_timing_metric("update", op_time)
                 if op_time > SLOW_OPERATION_THRESHOLD:
-                    pass  # No need to log slow operations
-                
+                    update_details["slow_operation"] = True
+                    
                 # Verify the key was set correctly
                 try:
                     ttl = self.redis.ttl(key)
@@ -300,8 +237,6 @@ class PingCache:
             })
             
         
-        # Track this operation for debugging
-        self._track_operation("update", host_id, update_details)
     
     def get(self, host_id: str) -> Optional[Dict]:
         """
@@ -313,11 +248,6 @@ class PingCache:
         Returns:
             Dict with ping status or None if not cached or expired
         """
-        # Check if it's time to log cache statistics
-        current_time = time.time()
-        if current_time - self._last_stats_time > CACHE_STATS_INTERVAL:
-            self._log_cache_statistics()
-            self._last_stats_time = current_time
             
         # Debug info for get operation
         op_start = time.time()
@@ -364,25 +294,19 @@ class PingCache:
                         
                         # Warn if TTL is lower than expected
                         expected_ttl = self.expiry_seconds if entry['is_online'] else 3
-                        if ttl < expected_ttl * 0.5:  # Less than half the expected TTL
-                            pass  # No need to log low TTL warning
-                    except Exception as ttl_err:
-                        get_details["ttl_error"] = str(ttl_err)
+                        if ttl < 0 or ttl < expected_ttl / 2:
+                            get_details["ttl_warning"] = f"TTL ({ttl}) lower than expected ({expected_ttl})"
+                    except:
+                        pass
                     
                     # Log the cache hit with detailed info
                     if entry['is_online']:
                         # Track timing metrics for cache hits
                         self._add_timing_metric("hit", op_time)
-                        if op_time > SLOW_OPERATION_THRESHOLD:
-                            pass  # No need to log slow operation warning
                     else:
                         # Track timing metrics for offline cache hits 
                         self._add_timing_metric("hit", op_time)
-                        if op_time > SLOW_OPERATION_THRESHOLD:
-                            pass  # No need to log slow operation warning
                     
-                    # Track this operation for debugging
-                    self._track_operation("get_hit", host_id, get_details)
                     
                     return entry
                 else:
@@ -398,11 +322,6 @@ class PingCache:
                     self._add_timing_metric("miss", op_time)
                     
                     # Check if this is a first-time request or if we've seen this host before
-                    if host_id in self._host_status:
-                        pass  # No need to log previously seen hosts
-                    
-                    # Track this operation for debugging
-                    self._track_operation("get_miss", host_id, get_details)
                     return None
                 
             except Exception as e:
@@ -418,8 +337,6 @@ class PingCache:
                 })
                 
                 
-                # Track error operation
-                self._track_operation("get_error", host_id, get_details)
                 
                 # Fallback to local cache
                 return self._get_from_local_cache(host_id)
@@ -433,20 +350,22 @@ class PingCache:
             })
             
             
-            # Track this operation
-            self._track_operation("get_local", host_id, get_details)
             
             return self._get_from_local_cache(host_id)
     
     def _get_from_local_cache(self, host_id: str) -> Optional[Dict]:
-        """
-        Get cached ping result from local cache.
+        """Get cached ping result from local cache.
+        
+        This method attempts to retrieve ping results for a specific host from the local
+        in-memory cache. It handles cache hits, misses, and expiration logic differently
+        based on whether the host was previously found to be online or offline.
         
         Args:
-            host_id: ID of the host
+            host_id: ID of the host to lookup in the cache
             
         Returns:
-            Dict with ping status or None if not cached or expired
+            Dict with ping status information if the host is found in cache and not expired,
+            or None if the host is not in cache or the entry has expired
         """
         op_start = time.time()
         local_details = {
@@ -465,7 +384,6 @@ class PingCache:
                 "op_time_ms": op_time
             })
             
-            self._track_operation("local_miss", host_id, local_details)
             return None
         
         entry = self._local_cache[host_id]
@@ -486,8 +404,6 @@ class PingCache:
                 "expiry": self.expiry_seconds,
                 "remaining_seconds": self.expiry_seconds - age
             })
-            
-            self._track_operation("local_hit", host_id, local_details)
             return entry
         
         # If the entry is a failed ping, we don't cache it for as long
@@ -504,7 +420,6 @@ class PingCache:
             })
             
             # Local cache hit for offline host
-            self._track_operation("local_hit_offline", host_id, local_details)
             return entry
             
         # Entry expired
@@ -518,7 +433,6 @@ class PingCache:
         })
         
         # Local cache expired for host
-        self._track_operation("local_expired", host_id, local_details)
         return None
     
     def clear(self) -> None:
@@ -547,36 +461,8 @@ class PingCache:
             host_id: ID of the host
             is_online: Whether the host is online
         """
-        if not DEBUG_VERBOSE:
-            return
-            
-        # Get previous status
-        prev_status = self._host_status.get(host_id, {}).get('status')
-        
-        # Update current status
-        self._host_status[host_id] = {
-            'status': 'online' if is_online else 'offline',
-            'last_update': time.time(),
-            'worker_id': self._worker_id
-        }
-        
-        # If status changed, record it
-        current_status = 'online' if is_online else 'offline'
-        if prev_status is not None and prev_status != current_status:
-            change = {
-                'host_id': host_id,
-                'timestamp': time.time(),
-                'from': prev_status,
-                'to': current_status,
-                'worker_id': self._worker_id
-            }
-            
-            self._status_changes.append(change)
-            if len(self._status_changes) > self._max_status_changes:
-                self._status_changes.pop(0)
-                
-                
-                # Host status changed notification
+        # Empty method as logging functionality is removed
+        pass
     def _add_timing_metric(self, operation_type: str, time_ms: float) -> None:
         """
         Add a timing metric for performance tracking.
@@ -585,30 +471,13 @@ class PingCache:
             operation_type: Type of operation (get, update, hit, miss)
             time_ms: Time in milliseconds
         """
-        if operation_type in self._operation_times:
-            self._operation_times[operation_type].append(time_ms)
-            
-            # Keep list size manageable
-            if len(self._operation_times[operation_type]) > self._max_metrics_samples:
-                self._operation_times[operation_type].pop(0)
+        # Empty method as logging functionality is removed
+        pass
     
     def _log_cache_statistics(self) -> None:
         """Gather detailed cache statistics periodically"""
-        # No need to log cache statistics after removing logger
-        
-        # Overall hit/miss ratio
-        total_requests = self._cache_hits + self._cache_misses
-        hit_ratio = (self._cache_hits / total_requests * 100) if total_requests > 0 else 0
-        
-        # Calculate statistics but don't log them
-        
-        # Performance metrics
-        for op_type, times in self._operation_times.items():
-            if times:
-                avg_time = sum(times) / len(times)
-                max_time = max(times)
-                min_time = min(times)
-                # Store metrics for potential future use
+        # Empty method as logging functionality is removed
+        pass
 # Create a global singleton instance of the cache
 ping_cache = PingCache(DEFAULT_CACHE_EXPIRY)
 

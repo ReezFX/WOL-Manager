@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, redirect, url_for, flash, session,
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from sqlalchemy import desc, or_
-import logging
 import os
 
 from app.models import Host
@@ -78,7 +77,6 @@ def dashboard():
         # Get all the role IDs of the current user
         user_role_ids = [role.id for role in user.roles]
         user_role_ids_str = [str(role_id) for role_id in user_role_ids]
-        logging.info(f"Dashboard: User {user.id} roles (str): {user_role_ids_str}")
         # Start with hosts created by the current user
         created_by_filter = (Host.created_by == user.id)
         
@@ -100,7 +98,6 @@ def dashboard():
                         role_id_str = str(role_id)
                         if role_id_str in host_role_ids:
                             visible_to_user_hosts.append(host.id)
-                            logging.info(f"Dashboard: Host {host.id} ({host.name}) IS visible to user {user.id}")
                             break
             
             # Query hosts created by user OR visible to user based on roles
@@ -116,14 +113,12 @@ def dashboard():
                 hosts = db_session.query(Host).filter(created_by_filter).all()
                 
         except Exception as e:
-            logging.error(f"Error filtering dashboard hosts by visible_to_roles: {str(e)}")
             # Fallback to just showing hosts created by the user
             hosts = db_session.query(Host).filter(created_by_filter).all()
             flash(f"Limited dashboard visibility due to an error: {str(e)}", "warning")
     
     # Logs functionality has been removed
     recent_logs = []
-    logging.info("Log functionality has been removed - displaying empty log list")
     
     # Count statistics
     host_count = len(hosts)
@@ -185,7 +180,6 @@ def ping_hosts_api():
         if not host_ids:
             return jsonify({'error': 'No host IDs provided'}), 400
     except Exception as e:
-        logging.error(f"Error parsing ping request: {str(e)}")
         return jsonify({'error': f'Invalid request format: {str(e)}'}), 400
     
     # Get the current user (either from Flask-Login or custom session)
@@ -247,7 +241,6 @@ def ping_hosts_api():
             return jsonify({'error': 'No accessible hosts found with the provided IDs'}), 404
             
     except Exception as e:
-        logging.error(f"Error fetching hosts for ping check: {str(e)}")
         return jsonify({'error': f'Database error: {str(e)}'}), 500
     
     # Configure ping settings - improved for reliability
@@ -263,7 +256,6 @@ def ping_hosts_api():
             # Check cache first
             # Ensure host ID is consistently a string - log exactly what format we're using
             host_id_str = str(host.id).strip()
-            logging.debug(f"Checking cache for host ID '{host_id_str}' (original: {host.id}, type: {type(host.id)})")
             
             cache_entry = ping_cache.get(host_id_str)
             
@@ -280,10 +272,7 @@ def ping_hosts_api():
                     'cached': True
                 }
                 # Log that we're using a cached result
-                if cache_entry['is_online']:
-                    logging.debug(f"Using cached ONLINE status for host {host.id} ({host.name})")
-                else:
-                    logging.debug(f"Using cached OFFLINE status for host {host.id} ({host.name})")
+                # Using a cached result
             else:
                 # No cache hit, perform the ping
                 ping_result = ping_host(target, ping_config)
@@ -291,7 +280,6 @@ def ping_hosts_api():
                 # Update the cache with the new result
                 # Ensure consistent string form of host ID
                 host_id_str = str(host.id).strip()
-                logging.debug(f"Updating cache for host ID '{host_id_str}' (original: {host.id})")
                 
                 ping_cache.update(
                     host_id_str,
@@ -312,7 +300,6 @@ def ping_hosts_api():
                     'cached': False
                 }
         except Exception as e:
-            logging.error(f"Error pinging host {host.id} ({target}): {str(e)}")
             results[host.id] = {
                 'id': host.id,
                 'name': host.name,

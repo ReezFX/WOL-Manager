@@ -48,7 +48,7 @@ echo "Verifying critical tables exist..."
 python -c "
 import sqlite3
 from app import create_app
-from app.models import Base, SystemLog, AuthLog
+from app.models import Base
 from sqlalchemy import inspect, create_engine
 
 app = create_app()
@@ -62,15 +62,7 @@ with app.app_context():
     existing_tables = inspector.get_table_names()
     print(f'Existing tables: {existing_tables}')
     
-    # Check SystemLog table
-    if 'system_logs' not in existing_tables:
-        print('SystemLog table not found, creating...')
-        SystemLog.__table__.create(engine, checkfirst=True)
-    
-    # Check AuthLog table
-    if 'auth_logs' not in existing_tables:
-        print('AuthLog table not found, creating...')
-        AuthLog.__table__.create(engine, checkfirst=True)
+    # Logging tables have been removed from the models
     
     print('Table verification complete.')
 " || echo "Table verification failed, please check database configuration."
@@ -138,8 +130,12 @@ export SESSION_COOKIE_DOMAIN="${SESSION_COOKIE_DOMAIN}"
 # Explicitly set host to 0.0.0.0 to ensure binding to all interfaces
 HOST="0.0.0.0"
 PORT="8008"
-echo "Starting Gunicorn on ${HOST}:${PORT} with 4 workers"
+echo "Starting Gunicorn on ${HOST}:${PORT} with 1 worker"
 
-# Execute gunicorn with binding to all interfaces
-exec gunicorn --bind ${HOST}:${PORT} --workers 1 --timeout 120 wsgi:app
+# Set Python optimization environment variables to reduce memory usage
+export PYTHONOPTIMIZE=1
+export PYTHONDONTWRITEBYTECODE=1
+
+# Execute gunicorn with binding to all interfaces and memory optimization flags
+exec gunicorn --bind ${HOST}:${PORT} --workers 1 --timeout 120 --preload --max-requests 1000 --max-requests-jitter 50 --threads 2 --worker-class sync wsgi:app
 

@@ -1,26 +1,22 @@
 import socket
-import struct
-import time
+import re
 from datetime import datetime, timedelta
 from collections import defaultdict
+from functools import lru_cache
 from flask import Blueprint, request, flash, redirect, url_for, render_template
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
-import logging
 
-from app.models import Host, Role
+from app.models import Host
 from app import db_session
-from sqlalchemy import desc
 
 # Create blueprint
 wol = Blueprint('wol', __name__, url_prefix='/wol')
 
-
 class CSRFForm(FlaskForm):
-    """
-    A simple form that provides CSRF protection.
-    """
+    """A simple form that provides CSRF protection."""
     pass
+
 
 # Rate limiting storage - in a production app, this would use Redis or similar
 # Format: {user_id: [(timestamp1), (timestamp2), ...]}
@@ -30,13 +26,12 @@ MAX_ATTEMPTS = 10
 # Time window for rate limiting (in seconds)
 TIME_WINDOW = 60 * 5  # 5 minutes
 
-
 def send_magic_packet(mac_address, broadcast_ip='255.255.255.255', port=9):
     """
     Sends a magic packet to wake a host with the given MAC address.
     
     Args:
-        mac_address (str): MAC address of the target device (format: AA:BB:CC:DD:EE:FF)
+        mac_address (str): MAC address of the target device
         broadcast_ip (str): Broadcast IP address (default: 255.255.255.255)
         port (int): UDP port to send the packet (default: 9)
         
@@ -54,25 +49,19 @@ def send_magic_packet(mac_address, broadcast_ip='255.255.255.255', port=9):
         # Convert MAC address to bytes
         mac_bytes = bytes.fromhex(mac_clean)
         
-        # Create the magic packet
-        # FF FF FF FF FF FF followed by MAC repeated 16 times
+        # Create the magic packet (FF FF FF FF FF FF followed by MAC repeated 16 times)
         packet = b'\xff' * 6 + mac_bytes * 16
         
         # Create a UDP socket
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            # Allow broadcast packets
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            
-            # Send the packet
             sock.sendto(packet, (broadcast_ip, port))
             
         return True
-    except Exception as e:
-        # Log the error
-        print(f"Error sending magic packet: {e}")
+    except ValueError:
         return False
-
-
+    except Exception:
+        return False
 def check_rate_limit(user_id):
     """
     Check if a user has exceeded the rate limit for wake attempts.
@@ -85,18 +74,52 @@ def check_rate_limit(user_id):
     """
     global wake_attempts
     
-    # Get the current time
     now = datetime.now()
+    cutoff_time = now - timedelta(seconds=TIME_WINDOW)
     
-    # Remove attempts outside the time window
-    wake_attempts[user_id] = [ts for ts in wake_attempts[user_id] if ts > now - timedelta(seconds=TIME_WINDOW)]
+    # Efficiently remove attempts outside the time window and count recent attempts
+    recent_attempts = [ts for ts in wake_attempts[user_id] if ts > cutoff_time]
+    wake_attempts[user_id] = recent_attempts
     
     # Check if the user has exceeded the maximum number of attempts
-    if len(wake_attempts[user_id]) >= MAX_ATTEMPTS:
+    if len(recent_attempts) >= MAX_ATTEMPTS:
         return True
     
     # Add the current attempt
     wake_attempts[user_id].append(now)
+    return False
+def check_host_permission(host, user):
+    """
+    Check if a user has permission to access or wake a host.
+    
+    Args:
+        host (Host): The host to check
+        user: The current user
+        
+    Returns:
+        bool: True if user has permission, False otherwise
+    """
+    # 1. User is the creator of the host
+    if host.created_by == user.id:
+        return True
+    
+    # 2. User has the 'send_wol' permission
+    if user.has_permission('send_wol'):
+        return True
+    
+    # 3. User is an admin
+    if user.is_admin:
+        return True
+    
+    # 4. Host is visible to the user's roles
+    if host.visible_to_roles:
+        user_role_ids = {str(role.id) for role in user.roles}  # Using set for O(1) lookups
+        host_visible_roles = {str(role_id) for role_id in host.visible_to_roles}
+        
+        # Check if any of the user's roles are in the host's visible_to_roles
+        if user_role_ids.intersection(host_visible_roles):
+            return True
+    
     return False
 
 
@@ -118,48 +141,17 @@ def wake_host(host_id):
         return redirect(url_for('host.list_hosts'))
     
     # Get the host
-    # Get the host
     host = db_session.query(Host).get(host_id)
     if not host:
         flash('Host not found.', 'danger')
         return redirect(url_for('host.list_hosts'))
-    # Check if the user has permission to wake this host
-    # Check if the user has permission to wake this host
-    has_permission = False
     
-    # 1. User is the creator of the host
-    if host.created_by == current_user.id:
-        has_permission = True
-    # 2. User has the 'send_wol' permission
-    elif current_user.has_permission('send_wol'):
-        has_permission = True
-    # 3. User is an admin
-    elif current_user.is_admin:
-        has_permission = True
-    # 4. Host is visible to the user's roles
-    elif host.visible_to_roles:
-        # Get the user's role IDs
-        user_role_ids = [str(role.id) for role in current_user.roles]
-        # Get the host's visible_to_roles (ensuring they're strings)
-        host_visible_roles = [str(role_id) for role_id in host.visible_to_roles]
-        # Check if any of the user's roles are in the host's visible_to_roles
-        for role_id in user_role_ids:
-            if role_id in host_visible_roles:
-                has_permission = True
-                break
-    
-    if not has_permission:
+    # Check if the user has permission to wake this host
+    if not check_host_permission(host, current_user):
         flash('You do not have permission to wake this host.', 'danger')
         return redirect(url_for('host.list_hosts'))
-    
     # Attempt to wake the host
     success = send_magic_packet(host.mac_address)
-    
-    # Log the wake attempt
-    logger = logging.getLogger(__name__)
-    logger.info(
-        f"Wake attempt: user_id={current_user.id}, host_id={host_id}, host={host.name}, mac={host.mac_address}, success={success}"
-    )
     
     # Show a success or error message
     if success:
@@ -277,10 +269,6 @@ def test_wol():
         # Attempt to wake the host
         success = send_magic_packet(mac_address, broadcast)
         
-        # Log the test wake attempt
-        logger = logging.getLogger(__name__)
-        logger.info(f"Test wake attempt: user={current_user.username}, mac={mac_address}, broadcast={broadcast}, success={success}")
-        
         # Show a success or error message
         if success:
             flash(f'Wake-on-LAN packet sent to {mac_address}.', 'success')
@@ -300,7 +288,7 @@ def is_valid_mac(mac_address):
     Returns:
         bool: True if valid, False otherwise
     """
-    import re
+    # re is already imported at the top of the file
     # Regular expression for MAC address validation
     # Matches formats: AA:BB:CC:DD:EE:FF, AA-BB-CC-DD-EE-FF, AABBCCDDEEFF
     pattern = r'^([0-9A-Fa-f]{2}[:-]?){5}([0-9A-Fa-f]{2})$'
