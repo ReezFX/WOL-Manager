@@ -1,10 +1,4 @@
 services:
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"  # Expose Redis port for web service in host network mode
-    restart: unless-stopped
-
   web:
     build: .
     network_mode: "host"  # Use host network mode to allow WoL packets to reach physical network
@@ -13,12 +7,10 @@ services:
     volumes:
       - db_data:/app/instance
       - ./detect_ip.sh:/app/detect_ip.sh
-    depends_on:
-      - redis
     environment:
       - FLASK_APP=wsgi.py
       - FLASK_CONFIG=development
-      - FLASK_DEBUG=0
+      - FLASK_DEBUG=1
       - SECRET_KEY=dev-key-change-in-production
       - WTF_CSRF_SECRET_KEY=csrf-secret-key-change-in-production
       - REDIS_URL=redis://localhost:6379/0  # Updated to use localhost since we're in host network mode

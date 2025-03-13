@@ -1,5 +1,4 @@
 from datetime import datetime
-import enum
 import re
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, Table
 from sqlalchemy.ext.declarative import declarative_base
@@ -86,7 +85,6 @@ class User(Base, UserMixin):
     
     # Relationships
     hosts = relationship('Host', back_populates='created_by_user', cascade="all, delete-orphan")
-    logs = relationship('Log', back_populates='user', cascade="all, delete-orphan")
     roles = relationship('Role', secondary=user_roles, back_populates='users')
     
     def __repr__(self):
@@ -136,7 +134,6 @@ class Host(Base):
     
     # Relationships
     created_by_user = relationship('User', back_populates='hosts')
-    logs = relationship('Log', back_populates='host', cascade="all, delete-orphan")
     
     def __repr__(self):
         return f'<Host {self.name} ({self.mac_address})>'
@@ -164,24 +161,6 @@ class Host(Base):
                     raise ValueError("IP address octets must be between 0 and 255")
         return ip
     
-class Log(Base):
-    __tablename__ = 'logs'
-    
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    host_id = Column(Integer, ForeignKey('hosts.id'), nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
-    success = Column(Boolean, default=True)
-    message = Column(Text, nullable=True)  # Optional additional information
-    
-    # Relationships
-    user = relationship('User', back_populates='logs')
-    host = relationship('Host', back_populates='logs')
-    
-    def __repr__(self):
-        status = "Success" if self.success else "Failed"
-        status = "Success" if self.success else "Failed"
-        return f'<Log {status} - {self.user.username} -> {self.host.name} at {self.timestamp}>'
 
 class AppSettings(Base):
     __tablename__ = 'app_settings'
@@ -193,28 +172,10 @@ class AppSettings(Base):
     password_expiration_days = Column(Integer, default=90, nullable=False)
     session_timeout_minutes = Column(Integer, default=1440, nullable=False)  # Default 1 day (24 hours * 60 minutes)
     max_concurrent_sessions = Column(Integer, default=0, nullable=False)  # 0 means unlimited
-    log_level = Column(String(10), default='INFO', nullable=False)  # Default log level set to INFO
-    logging_profile = Column(String(10), default='LOW', nullable=False)  # Default logging profile set to LOW
     
     def __repr__(self):
         return f'<AppSettings id={self.id}>'
         
-    @validates('log_level')
-    def validate_log_level(self, key, log_level):
-        """Validate log_level to ensure it's a valid LogLevel enum value."""
-        try:
-            return LogLevel(log_level).value
-        except ValueError:
-            valid_levels = ', '.join([level.value for level in LogLevel])
-            raise ValueError(f"Invalid log level. Must be one of: {valid_levels}")
-            
-    @validates('logging_profile')
-    def validate_logging_profile(self, key, profile):
-        """Validate logging_profile to ensure it's a valid profile value."""
-        valid_profiles = ['LOW', 'MEDIUM', 'HIGH']
-        if profile not in valid_profiles:
-            raise ValueError(f"Invalid logging profile. Must be one of: {', '.join(valid_profiles)}")
-        return profile
     
     @classmethod
     def get_settings(cls, db_session):
@@ -230,65 +191,10 @@ class AppSettings(Base):
                 require_numbers=False,
                 password_expiration_days=90,
                 session_timeout_minutes=1440,
-                max_concurrent_sessions=0,
-                log_level='INFO',
-                logging_profile='LOW'
+                max_concurrent_sessions=0
             )
             db_session.add(settings)
             db_session.commit()
         return settings
 
 
-class LogLevel(enum.Enum):
-    DEBUG = 'DEBUG'
-    INFO = 'INFO'
-    WARNING = 'WARNING'
-    ERROR = 'ERROR'
-    CRITICAL = 'CRITICAL'
-
-class SystemLog(Base):
-    __tablename__ = 'system_logs'
-    
-    id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
-    log_level = Column(String(10), nullable=False, index=True)  # Using string to store enum value
-    source_module = Column(String(100), nullable=False)
-    message = Column(Text, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # Optional user reference
-    log_metadata = Column(JSONType, nullable=True)  # Additional data in JSON format
-    
-    # Relationship
-    user = relationship('User', backref='system_logs')
-    
-    @validates('log_level')
-    def validate_log_level(self, key, log_level):
-        """Validate log_level to ensure it's a valid LogLevel enum value."""
-        try:
-            return LogLevel(log_level).value
-        except ValueError:
-            valid_levels = ', '.join([level.value for level in LogLevel])
-            raise ValueError(f"Invalid log level. Must be one of: {valid_levels}")
-    
-    def __repr__(self):
-        user_info = f"User:{self.user_id}" if self.user_id else "No User"
-        metadata_preview = str(self.log_metadata)[:30] + "..." if self.log_metadata else "No metadata"
-        return f'<SystemLog [{self.log_level}] {self.timestamp} | {self.source_module} | {user_info} | {self.message[:50]} | {metadata_preview}>'
-
-class AuthLog(Base):
-    __tablename__ = 'auth_logs'
-    
-    id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # Nullable for failed login attempts
-    event_type = Column(String(50), nullable=False, index=True)  # login, logout, password_change, etc.
-    ip_address = Column(String(45), nullable=True)  # Support IPv6 addresses
-    user_agent = Column(Text, nullable=True)
-    success = Column(Boolean, default=True)
-    details = Column(JSONType, nullable=True)  # Additional details as JSON
-    
-    # Relationship
-    user = relationship('User', backref='auth_logs')
-    
-    def __repr__(self):
-        status = "Success" if self.success else "Failed"
-        return f'<AuthLog [{status}] {self.event_type} at {self.timestamp} - User ID: {self.user_id}>'

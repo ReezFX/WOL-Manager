@@ -1,9 +1,6 @@
 import os
-import logging
 import redis
-from logging.handlers import RotatingFileHandler
 import pathlib
-import stat
 from datetime import timedelta
 from flask import Flask, request, flash, redirect, url_for
 from sqlalchemy import create_engine
@@ -15,7 +12,6 @@ from flask_session import Session
 
 from app.config import config
 from app.models import Base, User, db_session
-from app.log_handler import DatabaseLogHandler
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -110,58 +106,9 @@ def create_app(config_name=None):
     # CSRF error handler
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
-        app.logger.warning(f'CSRF error: {e} - URL: {request.url}, Referrer: {request.referrer}, Remote Addr: {request.remote_addr}')
         flash('Your form session expired. Please try again.', 'warning')
         return redirect(url_for('main.index'))
     
-    # Set up logging
-    log_level = logging.DEBUG if app.debug else logging.INFO
-    app.logger.setLevel(log_level)
-    
-    # Create logs directory if it doesn't exist
-    log_dir = pathlib.Path(app.root_path).parent / 'logs'
-    log_dir.mkdir(exist_ok=True)
-    
-    # Configure file handler
-    log_file = log_dir / 'wol_manager.log'
-    file_handler = RotatingFileHandler(log_file, maxBytes=10485760, backupCount=10)
-    file_handler.setLevel(log_level)
-    
-    # Configure log format
-    log_format = logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-    )
-    file_handler.setFormatter(log_format)
-    
-    # Set file permissions (owner read/write, group read, others no access)
-    os.chmod(log_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)  # 0o640
-    
-    # Configure database handler
-    db_handler = DatabaseLogHandler(db_session=db_session)
-    db_handler.setLevel(log_level)
-    db_handler.setFormatter(log_format)
-    
-    # Add handlers
-    app.logger.addHandler(file_handler)
-    app.logger.addHandler(db_handler)
-    
-    # Set up additional debug logging for authentication
-    auth_logger = logging.getLogger('auth')
-    auth_logger.setLevel(logging.DEBUG)
-    auth_logger.addHandler(file_handler)
-    auth_logger.addHandler(db_handler)
-    
-    # Configure console handler for development
-    if app.debug:
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.DEBUG)
-        console_handler.setFormatter(log_format)
-        app.logger.addHandler(console_handler)
-    
-    # Log application startup
-    app.logger.info(f'WOL Manager starting in {config_name} mode with file and database logging')
-    app.logger.info(f'Security settings: CSRF protection enabled, SESSION_COOKIE_SAMESITE=Lax, SESSION_COOKIE_SECURE=False')
-    app.logger.info(f'Session settings: TYPE={app.config["SESSION_TYPE"]}, DOMAIN={app.config["SESSION_COOKIE_DOMAIN"]}, PATH={app.config["SESSION_COOKIE_PATH"]}')
     
     # Initialize Flask-Migrate
     migrate = Migrate(app, Base.metadata)
@@ -196,9 +143,6 @@ def create_app(config_name=None):
             response.headers['Strict-Transport-Security'] = 'max-age=31536000'
         return response
     
-    # Logs blueprint for viewing system and auth logs
-    from app.logs import logs as logs_blueprint
-    app.register_blueprint(logs_blueprint, url_prefix='/logs')
     
     # Add context processor for templates
     @app.context_processor

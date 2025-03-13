@@ -18,6 +18,15 @@ chmod 770 /app/instance/flask_session
 mkdir -p /app/logs
 chmod 770 /app/logs
 
+# Start Redis server in the background
+echo "Starting Redis server in the background..."
+redis-server --daemonize yes
+echo "Redis server started"
+
+# Set Redis URL environment variable
+export REDIS_URL="redis://localhost:6379/0"
+echo "REDIS_URL set to $REDIS_URL"
+
 # Database initialization and migration process
 echo "Starting database initialization and migration process..."
 

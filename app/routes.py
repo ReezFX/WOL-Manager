@@ -3,7 +3,6 @@ import io
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, current_app, flash, Response, send_file
 from flask_login import login_required, current_user
-import logging
 import os
 import re
 import subprocess
@@ -12,9 +11,6 @@ import json
 
 # Create logs blueprint
 logs = Blueprint('logs', __name__)
-
-# Setup logger
-logger = logging.getLogger(__name__)
 
 def get_system_logs(search_term='', log_level='', start_date=None, end_date=None, use_db=False):
     """
@@ -25,91 +21,9 @@ def get_system_logs(search_term='', log_level='', start_date=None, end_date=None
         log_level: Optional log level to filter by
         start_date: Optional start date for filtering
         end_date: Optional end date for filtering
-        use_db: Whether to use database logs instead of journalctl
+        use_db: Whether to use database logs instead of journalctl (no longer supported)
     """
-    # If use_db is True, get logs from database with proper handling
-    if use_db:
-        try:
-            from app.models import SystemLog, db_session
-            from sqlalchemy.exc import OperationalError, DatabaseError
-            from sqlalchemy import or_, and_, text
-
-            # Maximum retry attempts for database locks
-            max_retries = 3
-            retry_delay = 0.5  # seconds
-            logs = []
-
-            for attempt in range(max_retries):
-                try:
-                    # Create a new session for each query to avoid locks
-                    with db_session() as session:
-                        # Start with a base query
-                        query = session.query(SystemLog)
-
-                        # Apply filters
-                        if log_level:
-                            query = query.filter(SystemLog.log_level == log_level)
-                        
-                        if start_date:
-                            try:
-                                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
-                                query = query.filter(SystemLog.timestamp >= start_datetime)
-                            except ValueError:
-                                logger.warning(f"Invalid start date format: {start_date}")
-                        
-                        if end_date:
-                            try:
-                                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
-                                # Add one day to include the entire end date
-                                end_datetime = end_datetime.replace(hour=23, minute=59, second=59)
-                                query = query.filter(SystemLog.timestamp <= end_datetime)
-                            except ValueError:
-                                logger.warning(f"Invalid end date format: {end_date}")
-                        
-                        if search_term:
-                            # Search in message and properly in log_metadata
-                            search_filter = or_(
-                                SystemLog.message.ilike(f"%{search_term}%"),
-                                text("log_metadata::text ILIKE :search").params(search=f"%{search_term}%")
-                            )
-                            query = query.filter(search_filter)
-
-                        # Order by timestamp descending (newest first)
-                        query = query.order_by(SystemLog.timestamp.desc())
-
-                        # Execute query with a timeout to prevent long-running queries
-                        system_logs = query.all()
-                        
-                        # Process results
-                        for log in system_logs:
-                            log_dict = {
-                                'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                                'level': log.log_level,
-                                'message': log.message,
-                                'module': log.source_module,
-                                'metadata': log.log_metadata  # Using the correct field name
-                            }
-                            logs.append(log_dict)
-
-                        # If successful, break out of retry loop
-                        break
-                        
-                except (OperationalError, DatabaseError) as db_error:
-                    if "database is locked" in str(db_error).lower() and attempt < max_retries - 1:
-                        logger.warning(f"Database lock detected, retrying ({attempt+1}/{max_retries})...")
-                        time.sleep(retry_delay * (2 ** attempt))  # Exponential backoff
-                    else:
-                        logger.error(f"Database error in get_system_logs: {str(db_error)}")
-                        if attempt == max_retries - 1:
-                            logger.error(f"Failed to query system logs after {max_retries} attempts")
-                        raise
-            
-            return logs
-        except Exception as e:
-            logger.error(f"Exception in get_system_logs (database): {str(e)}")
-            return []
-    
-    # Default: use journalctl
+    # Database logging no longer supported, use journalctl
     try:
         logs = []
         journalctl_cmd = ['journalctl', '-r']  # Reverse order to show newest first
@@ -127,13 +41,9 @@ def get_system_logs(search_term='', log_level='', start_date=None, end_date=None
         # Execute the command
         process = subprocess.Popen(journalctl_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         output, error = process.communicate()
+        output, error = process.communicate()
         
-        if process.returncode != 0:
-            logger.error(f"Error retrieving system logs: {error}")
-            return []
-            
         # Process the output
-        for line in output.splitlines():
             if search_term and search_term.lower() not in line.lower():
                 continue
                 
@@ -141,7 +51,6 @@ def get_system_logs(search_term='', log_level='', start_date=None, end_date=None
             
         return logs
     except Exception as e:
-        logger.error(f"Exception in get_system_logs: {str(e)}")
         return []
 
 def get_auth_logs(search_term='', start_date=None, end_date=None):
@@ -153,7 +62,6 @@ def get_auth_logs(search_term='', start_date=None, end_date=None):
         auth_log_path = '/var/log/auth.log'
         
         if not os.path.exists(auth_log_path):
-            logger.warning(f"Auth log file not found at {auth_log_path}")
             return []
             
         with open(auth_log_path, 'r') as f:
@@ -179,13 +87,12 @@ def get_auth_logs(search_term='', start_date=None, end_date=None):
                             if end_date and log_date > datetime.strptime(end_date, '%Y-%m-%d'):
                                 continue
                     except Exception as date_error:
-                        logger.warning(f"Date parsing error: {str(date_error)}")
+                        pass
                 
                 logs.append(line)
                 
         return logs
     except Exception as e:
-        logger.error(f"Exception in get_auth_logs: {str(e)}")
         return []
 
 def get_wol_logs(search_term='', start_date=None, end_date=None):
@@ -197,7 +104,6 @@ def get_wol_logs(search_term='', start_date=None, end_date=None):
         wol_log_path = current_app.config.get('WOL_LOG_PATH', '/var/log/wol.log')
         
         if not os.path.exists(wol_log_path):
-            logger.warning(f"WOL log file not found at {wol_log_path}")
             return []
             
         with open(wol_log_path, 'r') as f:
@@ -219,13 +125,12 @@ def get_wol_logs(search_term='', start_date=None, end_date=None):
                             if end_date and log_date > datetime.strptime(end_date, '%Y-%m-%d'):
                                 continue
                     except Exception as date_error:
-                        logger.warning(f"Date parsing error: {str(date_error)}")
+                        pass
                 
                 logs.append(line)
                 
         return logs
     except Exception as e:
-        logger.error(f"Exception in get_wol_logs: {str(e)}")
         return []
 def metadata_to_dict(metadata):
     """
@@ -254,7 +159,14 @@ def metadata_to_dict(metadata):
             'schema': getattr(metadata, 'schema', None),
             'columns': [col.name for col in getattr(metadata, 'columns', []) if hasattr(col, 'name')]
         }
-    # If it's a SQLAlchemy MetaData object or has a __dict__ attribute
+    # If it's a SQLAlchemy MetaData object
+    elif hasattr(metadata, 'tables') and str(metadata.__class__.__name__) == 'MetaData':
+        # For SQLAlchemy MetaData objects, extract table names
+        result = {
+            'type': 'SQLAlchemy MetaData',
+            'tables': [table_name for table_name in metadata.tables.keys()]
+        }
+    # If it has a __dict__ attribute
     elif hasattr(metadata, '__dict__'):
         result = {key: value for key, value in metadata.__dict__.items() 
                  if not key.startswith('_')}
@@ -334,16 +246,12 @@ def generate_csv(data, header_row):
                     
                 writer.writerow(csv_row)
             except Exception as e:
-                logger.warning(f"Error writing row to CSV: {str(e)}")
                 # Try a simple string conversion as fallback
                 writer.writerow([str(row)])
                 continue
         
         output.seek(0)
         return output
-    except Exception as e:
-        logger.error(f"Error generating CSV: {str(e)}")
-        raise
 
 @logs.route('/')
 @login_required
@@ -368,7 +276,6 @@ def index():
                               start_date=start_date, 
                               end_date=end_date)
     except Exception as e:
-        logger.error(f"Error in logs index route: {str(e)}")
         flash(f"Error retrieving logs: {str(e)}", "danger")
         return redirect(url_for('main.dashboard'))
 
@@ -395,7 +302,6 @@ def system_logs():
                               start_date=start_date,
                               end_date=end_date)
     except Exception as e:
-        logger.error(f"Error in system logs route: {str(e)}")
         flash(f"Error retrieving system logs: {str(e)}", "danger")
         return redirect(url_for('logs.index'))
 
@@ -420,7 +326,6 @@ def auth_logs():
                               start_date=start_date,
                               end_date=end_date)
     except Exception as e:
-        logger.error(f"Error in auth logs route: {str(e)}")
         flash(f"Error retrieving authentication logs: {str(e)}", "danger")
         return redirect(url_for('logs.index'))
 
@@ -445,7 +350,6 @@ def wol_logs():
                               start_date=start_date,
                               end_date=end_date)
     except Exception as e:
-        logger.error(f"Error in WOL logs route: {str(e)}")
         flash(f"Error retrieving WOL logs: {str(e)}", "danger")
         return redirect(url_for('logs.index'))
 
@@ -562,7 +466,6 @@ def combined_logs():
                               start_date=start_date,
                               end_date=end_date)
     except Exception as e:
-        logger.error(f"Error in combined logs route: {str(e)}")
         flash(f"Error retrieving combined logs: {str(e)}", "danger")
         return redirect(url_for('logs.index'))
 
@@ -600,9 +503,8 @@ def export_system_logs():
                 }
             }
             safe_metadata = metadata_to_dict(metadata)
-            logger.info(f"User {current_user.username} exported system logs", extra={'metadata': safe_metadata})
         except Exception as e:
-            logger.warning(f"Failed to log metadata for system logs export: {str(e)}")
+            pass
         
         return Response(
             output.getvalue(),
@@ -610,7 +512,6 @@ def export_system_logs():
             headers={"Content-Disposition": f"attachment;filename={filename}"}
         )
     except Exception as e:
-        logger.error(f"Error exporting system logs: {str(e)}")
         flash(f"Error exporting system logs: {str(e)}", "danger")
         return redirect(url_for('logs.system_logs'))
 
@@ -646,9 +547,8 @@ def export_auth_logs():
                 }
             }
             safe_metadata = metadata_to_dict(metadata)
-            logger.info(f"User {current_user.username} exported auth logs", extra={'metadata': safe_metadata})
         except Exception as e:
-            logger.warning(f"Failed to log metadata for auth logs export: {str(e)}")
+            pass
         
         return Response(
             output.getvalue(),
@@ -656,7 +556,6 @@ def export_auth_logs():
             headers={"Content-Disposition": f"attachment;filename={filename}"}
         )
     except Exception as e:
-        logger.error(f"Error exporting auth logs: {str(e)}")
         flash(f"Error exporting auth logs: {str(e)}", "danger")
         return redirect(url_for('logs.auth_logs'))
 
@@ -692,9 +591,8 @@ def export_wol_logs():
                 }
             }
             safe_metadata = metadata_to_dict(metadata)
-            logger.info(f"User {current_user.username} exported WOL logs", extra={'metadata': safe_metadata})
         except Exception as e:
-            logger.warning(f"Failed to log metadata for WOL logs export: {str(e)}")
+            pass
         
         return Response(
             output.getvalue(),
@@ -702,7 +600,6 @@ def export_wol_logs():
             headers={"Content-Disposition": f"attachment;filename={filename}"}
         )
     except Exception as e:
-        logger.error(f"Error exporting WOL logs: {str(e)}")
         flash(f"Error exporting WOL logs: {str(e)}", "danger")
         return redirect(url_for('logs.wol_logs'))
 
@@ -711,13 +608,372 @@ def export_wol_logs():
 def export_combined_logs():
     """
     Export combined logs to CSV or JSON
+    
+    This function combines system, authentication, and WOL logs into a single export file.
+    It handles all database operations safely and provides proper error handling.
     """
-    # Start by getting all parameters to avoid using undeclared variables
+    try:
+        # Get all request parameters
+        search_term = request.args.get('search', '')
+        log_level = request.args.get('level', '')
+        start_date = request.args.get('start_date', '')
+        end_date = request.args.get('end_date', '')
+        export_format = request.args.get('format', 'csv').lower()
+        
+        # Create timestamp for filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        # Get the username before any database operations to avoid detached instance errors
+        username = current_user.username if hasattr(current_user, 'username') else 'unknown'
+        
+        # Log the export attempt with safe metadata
+        log_metadata = {
+            'export_type': 'combined_logs',
+            'format': export_format,
+            'filters': {
+                'search': search_term,
+                'level': log_level,
+                'start_date': start_date,
+                'end_date': end_date
+            }
+        }
+        
+        try:
+            # Safely convert metadata for potential use
+            safe_metadata = metadata_to_dict(log_metadata)
+        except Exception as e:
+            # If metadata conversion fails, continue silently
+            pass
+        
+        # Initialize container for all logs
+        combined_logs = []
+        
+        # 1. Get system logs directly from the database using direct column access
+        try:
+            from app.models import SystemLog, db_session
+            from sqlalchemy import select, text
+            
+            with db_session() as session:
+                # Build query with explicit column selection to avoid metadata issues
+                query = select(
+                    SystemLog.id,
+                    SystemLog.timestamp,
+                    SystemLog.log_level,
+                    SystemLog.message,
+                    SystemLog.source_module
+                )
+                
+                # Add filters
+                if log_level:
+                    query = query.where(SystemLog.log_level == log_level)
+                
+                if start_date:
+                    try:
+                        start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                        query = query.where(SystemLog.timestamp >= start_datetime)
+                    except ValueError:
+                        pass
+                if end_date:
+                    try:
+                        end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                        end_datetime = end_datetime.replace(hour=23, minute=59, second=59)
+                        query = query.where(SystemLog.timestamp <= end_datetime)
+                    except ValueError as e:
+                        pass
+                
+                if search_term:
+                    # Use text instead of direct reference for message search to avoid metadata issues
+                    search_condition = text("message ILIKE :search")
+                    query = query.where(search_condition.bindparams(search=f"%{search_term}%"))
+                
+                # Execute the query with timeout
+                system_log_rows = session.execute(query).fetchall()
+                
+                for row in system_log_rows:
+                    # Create a simplified dict with just text data, no complex objects
+                    log_entry = {
+                        'id': str(row[0]),  # Convert ID to string to ensure serialization
+                        'timestamp': row[1].strftime('%Y-%m-%d %H:%M:%S') if row[1] else '',
+                        'level': row[2],
+                        'message': row[3],
+                        'source': row[4]
+                    }
+                    combined_logs.append({'type': 'system', 'content': log_entry})
+        except Exception as e:
+            pass
+            # Continue with other logs even if this fails
+        
+        # 2. Get auth log file entries directly
+        try:
+            auth_log_path = '/var/log/auth.log'
+            if os.path.exists(auth_log_path):
+                with open(auth_log_path, 'r', errors='replace') as f:
+                    for line in f:
+                        if search_term and search_term.lower() not in line.lower():
+                            continue
+                        
+                        # Simple date filtering
+                        if start_date or end_date:
+                            # Extract date from log line (assuming format: "Month Day HH:MM:SS")
+                            date_match = re.search(r'^(\w+\s+\d+\s+\d+:\d+:\d+)', line)
+                            if date_match:
+                                try:
+                                    log_date = datetime.strptime(date_match.group(0), '%b %d %H:%M:%S')
+                                    # Add current year since auth logs typically don't include year
+                                    current_year = datetime.now().year
+                                    log_date = log_date.replace(year=current_year)
+                                    
+                                    # Apply date filters
+                                    if start_date and log_date < datetime.strptime(start_date, '%Y-%m-%d'):
+                                        continue
+                                    if end_date and log_date > datetime.strptime(end_date + ' 23:59:59', '%Y-%m-%d %H:%M:%S'):
+                                        continue
+                                except Exception:
+                                    pass
+                        combined_logs.append({'type': 'auth', 'content': line.strip()})
+        except Exception as e:
+            # Continue with other logs even if this fails
+            pass
+        
+        # 3. Get WOL log file entries
+        try:
+            wol_log_path = current_app.config.get('WOL_LOG_PATH', '/var/log/wol.log')
+            if os.path.exists(wol_log_path):
+                with open(wol_log_path, 'r', errors='replace') as f:
+                    for line in f:
+                        if search_term and search_term.lower() not in line.lower():
+                            continue
+                        
+                        # Simple date filtering
+                        if start_date or end_date:
+                            # Extract date from WOL log (assuming ISO format date)
+                            date_match = re.search(r'(\d{4}-\d{2}-\d{2})', line)
+                            if date_match:
+                                try:
+                                    log_date = datetime.strptime(date_match.group(0), '%Y-%m-%d')
+                                    
+                                    # Apply date filters
+                                    if start_date and log_date < datetime.strptime(start_date, '%Y-%m-%d'):
+                                        continue
+                                    if end_date and log_date > datetime.strptime(end_date, '%Y-%m-%d'):
+                                        continue
+                                except Exception:
+                                    pass
+                        
+                        combined_logs.append({'type': 'wol', 'content': line.strip()})
+        except Exception:
+            # Continue with other logs even if this fails
+            pass
+        
+        # 4. Generate export file based on requested format
+        if export_format == 'json':
+            # JSON export
+            try:
+                filename = f"combined_logs_{timestamp}.json"
+                
+                # Format the logs for JSON export
+                json_data = []
+                for log in combined_logs:
+                    if isinstance(log['content'], dict):
+                        # System logs are already dictionaries
+                        json_data.append({
+                            'type': log['type'],
+                            'timestamp': log['content'].get('timestamp', ''),
+                            'level': log['content'].get('level', ''),
+                            'message': log['content'].get('message', ''),
+                            'source': log['content'].get('source', '')
+                        })
+                    else:
+                        # Text logs (auth and WOL)
+                        json_data.append({
+                            'type': log['type'],
+                            'content': log['content']
+                        })
+                
+                # Create a JSON string, handling serialization issues
+                json_str = json.dumps(json_data, indent=2, default=str)
+                
+                
+                return Response(
+                    json_str,
+                    mimetype="application/json",
+                    headers={"Content-Disposition": f"attachment;filename={filename}"}
+                )
+            except Exception as e:
+                flash(f"JSON export error: {str(e)}", "danger")
+                return redirect(url_for('logs.combined_logs'))
+        else:
+            # CSV export
+            try:
+                filename = f"combined_logs_{timestamp}.csv"
+                
+                # Create CSV file
+                output = io.StringIO()
+                writer = csv.writer(output)
+                
+                # Write header row
+                writer.writerow(['Log Type', 'Timestamp', 'Level', 'Message', 'Source'])
+                
+                # Write data rows
+                for log in combined_logs:
+                    if isinstance(log['content'], dict):
+                        # Format system logs (dictionaries)
+                        writer.writerow([
+                            log['type'],
+                            log['content'].get('timestamp', ''),
+                            log['content'].get('level', ''),
+                            log['content'].get('message', ''),
+                            log['content'].get('source', '')
+                        ])
+                    else:
+                        # Format text logs (auth and WOL)
+                        writer.writerow([
+                            log['type'],
+                            '',  # Timestamp column empty for raw log entries
+                            '',  # Level column empty for raw log entries
+                            log['content'],
+                            ''   # Source column empty for raw log entries
+                        ])
+                
+                
+                return Response(
+                    output.getvalue(),
+                    mimetype="text/csv",
+                    headers={"Content-Disposition": f"attachment;filename={filename}"}
+                )
+            except Exception as e:
+                flash(f"CSV export error: {str(e)}", "danger")
+                return redirect(url_for('logs.combined_logs'))
+    
+    except Exception as e:
+        error_msg = f"Combined logs export error: {str(e)}"
+        flash(error_msg, "danger")
+        return redirect(url_for('logs.combined_logs'))
+
+@logs.route('/combined/export_simple')
+@login_required
+def export_simplified_logs():
+    """
+    Alternative export function that uses a simplified approach to avoid serialization issues
+    """
+    # Parameters
     search_term = request.args.get('search', '')
     log_level = request.args.get('level', '')
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
     export_format = request.args.get('format', 'csv').lower()
     
-
+    # Create timestamp filename suffix
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    
+    try:
+        # Empty array to store all log entries
+        combined_logs = []
+        
+        # Get system logs directly from DB
+        try:
+            from app.models import SystemLog, db_session
+            
+            with db_session() as session:
+                # Base query
+                query = session.query(
+                    SystemLog.id,
+                    SystemLog.timestamp,
+                    SystemLog.log_level,
+                    SystemLog.message,
+                    SystemLog.source_module
+                )
+                
+                # Add filters
+                if log_level:
+                    query = query.filter(SystemLog.log_level == log_level)
+                
+                if start_date:
+                    try:
+                        start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                        query = query.filter(SystemLog.timestamp >= start_datetime)
+                    except:
+                        pass
+                
+                if end_date:
+                    try:
+                        end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                        end_datetime = end_datetime.replace(hour=23, minute=59, second=59)
+                        query = query.filter(SystemLog.timestamp <= end_datetime)
+                    except:
+                        pass
+                
+                if search_term:
+                    query = query.filter(SystemLog.message.ilike(f"%{search_term}%"))
+                
+                # Execute the query
+                results = query.all()
+                
+                # Process results (using named tuple to avoid SQLAlchemy objects)
+                for row in results:
+                    log_entry = {
+                        'id': row[0],
+                        'timestamp': row[1].strftime('%Y-%m-%d %H:%M:%S'),
+                        'level': row[2],
+                        'message': row[3],
+                        'source': row[4]
+                    }
+                    combined_logs.append({'type': 'system', 'content': log_entry})
+        except Exception:
+            pass
+        
+        # Export based on format
+        if export_format == 'json':
+            # JSON export
+            filename = f"simple_logs_{timestamp}.json"
+            
+            # Create a safe JSON string
+            json_str = json.dumps([
+                {'type': log['type'], 'content': log['content']} 
+                for log in combined_logs
+            ], indent=2, default=str)
+            
+            # Return response
+            return Response(
+                json_str,
+                mimetype="application/json",
+                headers={"Content-Disposition": f"attachment;filename={filename}"}
+            )
+        else:
+            # CSV export
+            filename = f"simple_logs_{timestamp}.csv"
+            
+            # Create CSV
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            # Write header
+            writer.writerow(['Log Type', 'Timestamp', 'Level', 'Message', 'Source'])
+            
+            # Write rows
+            for log in combined_logs:
+                content = log['content']
+                if isinstance(content, dict):
+                    writer.writerow([
+                        log['type'],
+                        content.get('timestamp', ''),
+                        content.get('level', ''),
+                        content.get('message', ''),
+                        content.get('source', '')
+                    ])
+                else:
+                    writer.writerow([log['type'], '', '', str(content), ''])
+            
+            # Return response
+            return Response(
+                output.getvalue(),
+                mimetype="text/csv",
+                headers={"Content-Disposition": f"attachment;filename={filename}"}
+            )
+    
+    except Exception as e:
+        error_msg = f"Error in simplified export: {str(e)}"
+        flash(error_msg, "danger")
+        return redirect(url_for('logs.combined_logs'))
 

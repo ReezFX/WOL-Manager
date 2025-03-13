@@ -23,12 +23,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Only run on dashboard or hosts pages
     const currentPath = window.location.pathname;
     if (currentPath === '/dashboard' || currentPath === '/hosts' || currentPath === '/hosts/') {
-        console.log('Host status checker initialized on ' + currentPath);
         initHostStatusChecks();
         
         // Add debug info to help with troubleshooting
         const hostElements = document.querySelectorAll('[data-host-id]');
-        console.log(`Found ${hostElements.length} host elements on the page`);
     }
 });
 
@@ -41,7 +39,6 @@ function initHostStatusChecks() {
     // Then run every 15 seconds
     setInterval(checkHostStatus, 15000);
     
-    console.log(`Host status checker configured with offline threshold of ${OFFLINE_THRESHOLD} checks and online stability period of ${ONLINE_STABILITY_PERIOD/1000} seconds`);
 }
 
 /**
@@ -144,7 +141,6 @@ function smoothHostStatuses(rawStatuses) {
             
             // If this is a change from offline to online, log it
             if (!hostStatusCache[hostId].lastKnownStatus) {
-                console.log(`Host ${hostId} is back online`);
                 hostStatusCache[hostId].lastStatusChangeTime = now;
             }
         } else {
@@ -158,11 +154,9 @@ function smoothHostStatuses(rawStatuses) {
                 if (hostStatusCache[hostId].offlineCount >= OFFLINE_THRESHOLD * 2) {
                     // Host has failed too many consecutive checks, override stability period
                     smoothedStatus.is_online = false;
-                    console.log(`Host ${hostId} has failed ${hostStatusCache[hostId].offlineCount} consecutive checks, overriding stability period and showing as offline`);
                     
                     // Update the last known status
                     if (hostStatusCache[hostId].lastKnownStatus) {
-                        console.log(`Host ${hostId} is now offline (multiple consecutive failures)`);
                         hostStatusCache[hostId].lastKnownStatus = false;
                         hostStatusCache[hostId].lastStatusChangeTime = now;
                     }
@@ -171,11 +165,9 @@ function smoothHostStatuses(rawStatuses) {
                 else if (timeSinceLastOnline > MAX_OFFLINE_DETECTION_TIME) {
                     // It's been too long since the last successful ping, show as offline
                     smoothedStatus.is_online = false;
-                    console.log(`Host ${hostId} hasn't been reachable for ${Math.round(timeSinceLastOnline/1000)}s (exceeds max ${MAX_OFFLINE_DETECTION_TIME/1000}s), showing as offline`);
                     
                     // Update the last known status
                     if (hostStatusCache[hostId].lastKnownStatus) {
-                        console.log(`Host ${hostId} is now offline (exceeded maximum offline detection time)`);
                         hostStatusCache[hostId].lastKnownStatus = false;
                         hostStatusCache[hostId].lastStatusChangeTime = now;
                     }
@@ -185,7 +177,6 @@ function smoothHostStatuses(rawStatuses) {
                     smoothedStatus.is_online = true;
                     smoothedStatus.response_time = hostStatusCache[hostId].lastResponseTime;
                     
-                    console.log(`Host ${hostId} appears offline but within stability period (${Math.round(timeSinceLastOnline/1000)}s < ${ONLINE_STABILITY_PERIOD/1000}s), showing as online`);
                     
                     // Still increment the offline counter for tracking purposes
                     hostStatusCache[hostId].offlineCount++;
@@ -202,11 +193,9 @@ function smoothHostStatuses(rawStatuses) {
                         smoothedStatus.is_online = hostStatusCache[hostId].lastKnownStatus;
                         smoothedStatus.response_time = hostStatusCache[hostId].lastResponseTime;
                         
-                        console.log(`Host ${hostId} appears offline but showing as ${smoothedStatus.is_online ? 'online' : 'offline'} (${hostStatusCache[hostId].offlineCount}/${OFFLINE_THRESHOLD})`);
                     } else {
                         // It's been too long since last successful ping, show as offline regardless
                         smoothedStatus.is_online = false;
-                        console.log(`Host ${hostId} hasn't been reachable for ${Math.round(timeSinceLastOnline/1000)}s (exceeds max ${MAX_OFFLINE_DETECTION_TIME/1000}s), showing as offline`);
                         
                         if (hostStatusCache[hostId].lastKnownStatus) {
                             hostStatusCache[hostId].lastKnownStatus = false;
@@ -217,7 +206,6 @@ function smoothHostStatuses(rawStatuses) {
                     // Threshold reached, show as offline
                     // Only log a state change if this is a new change
                     if (hostStatusCache[hostId].lastKnownStatus) {
-                        console.log(`Host ${hostId} is now offline (confirmed after ${hostStatusCache[hostId].offlineCount} checks)`);
                         hostStatusCache[hostId].lastStatusChangeTime = now;
                     }
                     

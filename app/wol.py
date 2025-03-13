@@ -6,8 +6,9 @@ from collections import defaultdict
 from flask import Blueprint, request, flash, redirect, url_for, render_template
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
+import logging
 
-from app.models import Host, Log, Role
+from app.models import Host, Role
 from app import db_session
 from sqlalchemy import desc
 
@@ -155,14 +156,10 @@ def wake_host(host_id):
     success = send_magic_packet(host.mac_address)
     
     # Log the wake attempt
-    log = Log(
-        user_id=current_user.id,
-        host_id=host_id,
-        timestamp=datetime.now(),
-        success=success
+    logger = logging.getLogger(__name__)
+    logger.info(
+        f"Wake attempt: user_id={current_user.id}, host_id={host_id}, host={host.name}, mac={host.mac_address}, success={success}"
     )
-    db_session.add(log)
-    db_session.commit()
     
     # Show a success or error message
     if success:
@@ -235,20 +232,9 @@ def view_logs():
     Returns:
         Rendered template with logs
     """
-    # Get logs (filtered by user if not admin)
-    if current_user.is_admin:
-        logs = db_session.query(Log).order_by(desc(Log.timestamp)).limit(100).all()
-    else:
-        logs = db_session.query(Log).filter_by(user_id=current_user.id).order_by(desc(Log.timestamp)).limit(50).all()
-    
-    # Get host information for each log
-    hosts = {}
-    for log in logs:
-        if log.host_id not in hosts:
-            host = db_session.query(Host).get(log.host_id)
-            hosts[log.host_id] = host.name if host else "Unknown Host"
-    
-    return render_template('wol/logs.html', logs=logs, hosts=hosts, title="Wake-on-LAN Logs")
+    # Logs functionality has been removed
+    message = "The logging functionality has been removed from the application."
+    return render_template('wol/logs.html', message=message, title="Wake-on-LAN Logs")
 
 
 @wol.route('/test', methods=['GET', 'POST'])
@@ -290,6 +276,10 @@ def test_wol():
         
         # Attempt to wake the host
         success = send_magic_packet(mac_address, broadcast)
+        
+        # Log the test wake attempt
+        logger = logging.getLogger(__name__)
+        logger.info(f"Test wake attempt: user={current_user.username}, mac={mac_address}, broadcast={broadcast}, success={success}")
         
         # Show a success or error message
         if success:

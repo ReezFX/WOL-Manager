@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from functools import wraps
 from sqlalchemy.exc import SQLAlchemyError
@@ -7,7 +7,7 @@ from flask_wtf import FlaskForm
 from wtforms import HiddenField, BooleanField, SubmitField, FormField, FieldList
 from wtforms.form import BaseForm
 
-from app.models import User, Permission, Role, AppSettings, Log, Host, AuthLog
+from app.models import User, Permission, Role, AppSettings, Host
 from app import db_session
 from app.forms import UserForm, AppSettingsForm
 from app.auth import hash_password, admin_required
@@ -271,8 +271,7 @@ def settings():
         form.require_numbers.data = current_settings.require_numbers
         form.password_expiration_days.data = current_settings.password_expiration_days
         form.session_timeout_minutes.data = current_settings.session_timeout_minutes
-        form.max_concurrent_sessions.data = current_settings.max_concurrent_sessions
-        form.logging_profile.data = current_settings.logging_profile
+        form.session_timeout_minutes.data = current_settings.session_timeout_minutes
     
     if form.validate_on_submit():
         try:
@@ -284,22 +283,9 @@ def settings():
             current_settings.session_timeout_minutes = form.session_timeout_minutes.data
             current_settings.max_concurrent_sessions = form.max_concurrent_sessions.data
             
-            # Check if logging profile is changing
-            logging_profile_changed = current_settings.logging_profile != form.logging_profile.data
-            current_settings.logging_profile = form.logging_profile.data
             
             db_session.commit()
             
-            # If logging profile changed, update application's logging configuration
-            if logging_profile_changed:
-                try:
-                    from app.log_handler import LoggingProfile
-                    # Update the app config with new profile
-                    if hasattr(current_app, 'config'):
-                        current_app.config['LOGGING_PROFILE'] = LoggingProfile(current_settings.logging_profile)
-                        flash(f'Logging profile updated to {current_settings.logging_profile}', 'success')
-                except Exception as e:
-                    flash(f'Settings saved but error updating logging profile: {str(e)}', 'warning')
             flash('Application settings have been updated successfully.', 'success')
             return redirect(url_for('admin.settings'))
         except SQLAlchemyError as e:

@@ -107,42 +107,6 @@
               </div>
             </div>
 
-            <div class="row mb-4">
-              <div class="col-md-12">
-                <h4>Logging Configuration</h4>
-                <hr>
-              </div>
-            </div>
-
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <div class="form-group">
-                  {{ form.logging_profile.label(class="form-label") }}
-                  {{ form.logging_profile(class="form-control") }}
-                  <small class="form-text text-muted">Select the level of detail for application logs.</small>
-                  {% if form.logging_profile.errors %}
-                    <div class="invalid-feedback d-block">
-                      {% for error in form.logging_profile.errors %}
-                        {{ error }}
-                      {% endfor %}
-                    </div>
-                  {% endif %}
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="card bg-light">
-                  <div class="card-body p-3">
-                    <h6 class="card-title">Logging Profile Details</h6>
-                    <ul class="mb-0">
-                      <li><strong>LOW</strong>: Basic logging of authentication, WOL operations, and critical system events only.</li>
-                      <li><strong>MEDIUM</strong>: Includes all LOW logs plus warnings, errors, and important operational events.</li>
-                      <li><strong>HIGH</strong>: Detailed debugging information including cache operations, database queries, and request data.</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div class="row mt-4">
               <div class="col-md-12">
                 <div class="float-end">

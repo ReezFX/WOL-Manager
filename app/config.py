@@ -30,7 +30,6 @@ class Config:
     
     # Pagination
     HOSTS_PER_PAGE = 10
-    LOGS_PER_PAGE = 25
     
     # Debug mode - should be False in production
     DEBUG = os.environ.get('FLASK_DEBUG', 'False') == 'True'
@@ -57,12 +56,6 @@ class ProductionConfig(Config):
     def init_app(cls, app):
         Config.init_app(app)
         
-        # Log to syslog if in production
-        import logging
-        from logging.handlers import SysLogHandler
-        syslog_handler = SysLogHandler()
-        syslog_handler.setLevel(logging.WARNING)
-        app.logger.addHandler(syslog_handler)
 
 # Choose configuration based on environment
 config = {

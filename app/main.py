@@ -5,7 +5,7 @@ from sqlalchemy import desc, or_
 import logging
 import os
 
-from app.models import Host, Log
+from app.models import Host
 from app import db_session
 from app.ping import ping_host, PingConfig
 from app.ping_cache import ping_cache
@@ -121,21 +121,14 @@ def dashboard():
             hosts = db_session.query(Host).filter(created_by_filter).all()
             flash(f"Limited dashboard visibility due to an error: {str(e)}", "warning")
     
-    # Get recent logs
-    if user.is_admin:
-        recent_logs = db_session.query(Log).order_by(desc(Log.timestamp)).limit(10).all()
-    else:
-        # For regular users, only show logs for their hosts
-        host_ids = [host.id for host in hosts]
-        recent_logs = db_session.query(Log)\
-            .filter(Log.host_id.in_(host_ids))\
-            .order_by(desc(Log.timestamp))\
-            .limit(10).all()
+    # Logs functionality has been removed
+    recent_logs = []
+    logging.info("Log functionality has been removed - displaying empty log list")
     
     # Count statistics
     host_count = len(hosts)
-    successful_wakes = db_session.query(Log)\
-        .filter_by(user_id=user.id, success=True).count()
+    # Logging functionality has been removed
+    successful_wakes = 0
     
     # Create CSRF form
     csrf_form = CSRFForm()
@@ -143,7 +136,7 @@ def dashboard():
     return render_template(
         'main/dashboard.html',
         hosts=hosts,
-        recent_logs=recent_logs,
+        recent_logs=recent_logs,  # Empty list as logging functionality has been removed
         host_count=host_count,
         successful_wakes=successful_wakes,
         csrf_form=csrf_form,
