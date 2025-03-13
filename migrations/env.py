@@ -77,6 +77,17 @@ config = context.config
 # This line sets up loggers basically.
 try:
     fileConfig(config.config_file_name)
+    
+    # Reset formatters for alembic and flask-migrate loggers to avoid %(user)s references
+    # which aren't available outside of request context
+    simple_formatter = logging.Formatter('%(levelname)s: %(message)s')
+    
+    # Configure alembic and flask_migrate loggers with simple formatter
+    for logger_name in ['alembic', 'alembic.env', 'flask_migrate']:
+        logger = logging.getLogger(logger_name)
+        for handler in logger.handlers:
+            handler.setFormatter(simple_formatter)
+            
 except Exception as e:
     # Handle missing formatters section in config file
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)

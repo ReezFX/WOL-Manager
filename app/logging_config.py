@@ -218,6 +218,9 @@ LOG_PROFILES = {
             'detailed': {
                 'format': '[%(asctime)s] %(levelname)s - %(user)s - %(remote_addr)s - %(url)s - %(method)s - %(module)s - %(message)s',
             },
+            'error': {
+                'format': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
+            },
         },
         # Handlers determine where log messages are sent and how they're processed
         'handlers': {
@@ -234,7 +237,7 @@ LOG_PROFILES = {
                 'filename': os.path.join(LOG_DIR, ERROR_LOG),
                 'maxBytes': MAX_BYTES,
                 'backupCount': BACKUP_COUNT,
-                'formatter': 'detailed',
+                'formatter': 'error',
                 'level': 'ERROR',
             },
             'access_file': {
@@ -277,6 +280,9 @@ LOG_PROFILES = {
             'detailed': {
                 'format': '[%(asctime)s] %(levelname)s - %(user)s - %(remote_addr)s - %(url)s - %(method)s - %(module)s - %(message)s',
             },
+            'error': {
+                'format': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
+            },
         },
         'handlers': {
             'app_file': {
@@ -292,7 +298,7 @@ LOG_PROFILES = {
                 'filename': os.path.join(LOG_DIR, ERROR_LOG),
                 'maxBytes': MAX_BYTES,
                 'backupCount': BACKUP_COUNT,
-                'formatter': 'detailed',
+                'formatter': 'error',
                 'level': 'ERROR',
             },
             'access_file': {
@@ -333,6 +339,9 @@ LOG_PROFILES = {
             'detailed': {
                 'format': '[%(asctime)s] %(levelname)s - %(user)s - %(remote_addr)s - %(url)s - %(method)s - %(module)s - %(message)s',
             },
+            'error': {
+                'format': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
+            },
         },
         'handlers': {
             'app_file': {
@@ -348,7 +357,7 @@ LOG_PROFILES = {
                 'filename': os.path.join(LOG_DIR, ERROR_LOG),
                 'maxBytes': MAX_BYTES,
                 'backupCount': BACKUP_COUNT,
-                'formatter': 'detailed',
+                'formatter': 'error',
                 'level': 'WARNING',
             },
             'access_file': {
@@ -389,6 +398,9 @@ LOG_PROFILES = {
             'detailed': {
                 'format': '[%(asctime)s] %(levelname)s - %(user)s - %(remote_addr)s - %(url)s - %(method)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',
             },
+            'error': {
+                'format': '[%(asctime)s] %(levelname)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',
+            },
         },
         'handlers': {
             'app_file': {
@@ -404,7 +416,7 @@ LOG_PROFILES = {
                 'filename': os.path.join(LOG_DIR, ERROR_LOG),
                 'maxBytes': MAX_BYTES,
                 'backupCount': BACKUP_COUNT,
-                'formatter': 'detailed',
+                'formatter': 'error',
                 'level': 'DEBUG',
             },
             'access_file': {
