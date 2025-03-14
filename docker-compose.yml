@@ -8,6 +8,8 @@ services:
       - db_data:/app/instance
       - ./detect_ip.sh:/app/detect_ip.sh
     environment:
+      - LOG_LEVEL=DEBUG
+      - LOG_PROFILE=DEBUG
       - FLASK_APP=wsgi.py
       - FLASK_CONFIG=development
       - FLASK_DEBUG=1

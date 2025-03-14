@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block head %}
+{{ super() }}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
+{% block title %}Logs{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow">
+        <div class="card-header bg-tertiary-theme">
+            <h4 class="mb-0">System Logs</h4>
+        </div>
+        <div class="card-body">
+            <!-- Filters -->
+            <form method="GET" action="{{ url_for('admin.view_logs') }}" id="log-filter-form" class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="log_type" class="form-label">Log Type</label>
+                        <select class="form-select" id="log_type" name="file">
+                            <option value="all" {% if log_type == 'all' %}selected{% endif %}>All Logs</option>
+                            <option value="app.log" {% if log_type == 'app.log' %}selected{% endif %}>Application Logs</option>
+                            <option value="error.log" {% if log_type == 'error.log' %}selected{% endif %}>Error Logs</option>
+                            <option value="access.log" {% if log_type == 'access.log' %}selected{% endif %}>Access Logs</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="log_level" class="form-label">Log Level</label>
+                        <select class="form-select" id="log_level" name="level">
+                            <option value="all" {% if log_level == 'all' %}selected{% endif %}>All Levels</option>
+                            <option value="debug" {% if log_level == 'debug' %}selected{% endif %}>DEBUG</option>
+                            <option value="info" {% if log_level == 'info' %}selected{% endif %}>INFO</option>
+                            <option value="warning" {% if log_level == 'warning' %}selected{% endif %}>WARNING</option>
+                            <option value="error" {% if log_level == 'error' %}selected{% endif %}>ERROR</option>
+                            <option value="critical" {% if log_level == 'critical' %}selected{% endif %}>CRITICAL</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-9">
+                        <label for="search_text" class="form-label">Search Text</label>
+                        <input type="text" class="form-control" id="search_text" name="search_text" placeholder="Enter search terms..." value="{{ search_text }}">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between mb-3">
+                <div>
+                    <a href="{{ url_for('admin.download_log', file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}" class="btn btn-outline-success">
+                        <i class="fas fa-download me-1"></i> Download
+                    </a>
+                </div>
+                <div>
+                    <span class="text-muted">Showing {{ pagination.total_entries }} entries</span>
+                </div>
+            </div>
+
+            <!-- Log Display Area -->
+            <div class="log-container mb-4">
+                <pre class="log-content p-3 bg-light-theme border rounded" style="max-height: 600px; overflow-y: auto;">{% if log_content %}{{ log_content }}{% else %}<span class="text-muted">No logs match the current filter criteria.</span>{% endif %}</pre>
+            </div>
+
+            <!-- Pagination -->
+            {% if pagination.total_pages > 1 %}
+            <nav aria-label="Log pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if pagination.current_page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.view_logs', page=pagination.prev_page, file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    
+                    {% for p in range(1, pagination.total_pages + 1) %}
+                        {% if p == pagination.current_page %}
+                            <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                        {% elif p <= 3 or p >= pagination.total_pages - 2 or (p >= pagination.current_page - 1 and p <= pagination.current_page + 1) %}
+                            <li class="page-item"><a class="page-link" href="{{ url_for('admin.view_logs', page=p, file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}">{{ p }}</a></li>
+                        {% elif p == 4 and pagination.current_page > 4 %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% elif p == pagination.total_pages - 3 and pagination.current_page < pagination.total_pages - 3 %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.view_logs', page=pagination.next_page, file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .log-content {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+    }
+    
+    .log-content-pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: monospace;
+        margin: 0;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+    
+    /* Dark theme compatibility */
+    [data-bs-theme="dark"] .bg-light-theme {
+        background-color: var(--bs-dark) !important;
+        color: var(--bs-light);
+    }
+    
+    [data-bs-theme="light"] .bg-light-theme {
+        background-color: var(--bs-light) !important;
+        color: var(--bs-dark);
+    }
+    
+    [data-bs-theme="dark"] .text-info {
+        color: #8be0ff !important;
+    }
+    
+    [data-bs-theme="dark"] .text-warning {
+        color: #ffe066 !important;
+    }
+</style>
+
+<script>
+    // Show alert function for error messages
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Remove alert after 5 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+    // Simple page initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // No additional initialization needed since we've removed the refresh functionality
+    });
+</script>
+{% endblock %}
+

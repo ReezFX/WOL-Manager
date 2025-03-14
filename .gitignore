@@ -70,3 +70,6 @@ logs/
 
 security_audit.txt
 webapp_logging_implementation.txt
+KNOWN ISSUES.txt
+Log Page Redesign Execution.md
+design-guidelines.md

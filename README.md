@@ -42,27 +42,7 @@ The easiest way to run WOL-Manager is using Docker. You have two options:
 
 #### Option 1: Using Pre-built Docker Image (Quickest)
 
-The official Docker image supports both arm64 and amd64 architectures.
-
-1. Pull the image from Docker Hub:
-   ```bash
-   docker pull officialreez/wol-manager-web:latest
-   ```
-
-2. Run the container with proper environment variables:
-   ```bash
-   
-   # Host network mode (required for Wake-on-LAN to work properly)
-   docker run -d --name wol-manager --network host -v wol_data:/app/instance -e FLASK_APP=wsgi.py -e FLASK_CONFIG=production -e FLASK_DEBUG=1 -e SECRET_KEY=dev-key-change-in-production --restart unless-stopped officialreez/wol-manager-web:latest
-   ```
-
-   **Important Environment Variables:**
-   - `FLASK_APP`: Set to `wsgi.py` (default)
-   - `FLASK_CONFIG`: Set to `production` for production deployments
-   - `SECRET_KEY`: **Required** - Set a secure, unique key for session encryption (change this from the example!)
-
-3. Access the application:
-   - Host network mode: `http://localhost:8008`
+#This option is suspenden until fixes are in place, until then please use the docker compose method.
 
 #### Option 2: Building from Source
 
@@ -81,29 +61,6 @@ The official Docker image supports both arm64 and amd64 architectures.
 3. Access the application:
    - Host network mode (if configured): `http://localhost:8008`
 
-#### Option 3: Building Multi-architecture Images (Advanced)
-
-If you need to build the image for multiple architectures (arm64/amd64):
-
-1. Set up Docker buildx:
-   ```bash
-   docker buildx create --name mybuilder --use
-   ```
-
-2. Build and push multi-architecture images:
-   ```bash
-   docker buildx build --platform linux/amd64,linux/arm64 \
-     -t yourusername/wol-manager-web:latest \
-     --push .
-   ```
-
-All Docker setups include:
-- Application container running internally on port 8008
-  - Standard mode: mapped to external port 8008
-  - Host network mode: accessed directly on port 8008
-- Persistent database storage using Docker volumes
-- Automatic database initialization
-- Cross-platform compatibility (arm64/amd64) - Docker images are built for both architectures and will automatically use the correct one for your system
 ### Manual Installation
 
 1. Clone the repository:
@@ -141,7 +98,7 @@ All Docker setups include:
 
 7. Run the application:
    ```bash
-   gunicorn --bind 0.0.0.0:8000 wsgi:app
+   gunicorn --bind 0.0.0.0:8008 wsgi:app
    ```
 
 ## Configuration

@@ -25,12 +25,8 @@
                             {% for perm in perms %}
                             <div class="col-md-6 mb-2">
                                 <div class="form-check">
-                                    <input type="checkbox" 
-                                           class="form-check-input" 
-                                           id="perm_{{ perm.id }}" 
-                                           name="perm_{{ perm.id }}" 
-                                           value="{{ perm.id }}"
-                                           {% if perm.name in user_permissions and user_permissions[perm.name] == True %} checked="checked" {% endif %}>
+                                    {% set field_name = 'perm_' + perm.id|string %}
+                                    {{ form[field_name](class="form-check-input", id="perm_" + perm.id|string) }}
                                     <label class="form-check-label" for="perm_{{ perm.id }}">
                                         <strong>{{ perm.name }}</strong>
                                         {% if perm.description %}

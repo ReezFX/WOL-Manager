@@ -14,7 +14,7 @@ from flask_session import Session
 
 from app.config import config
 from app.models import Base, User, db_session
-from app.logging_config import configure_logging
+from app.logging_config import configure_logging, LOG_DIR
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -46,6 +46,9 @@ def create_app(config_name=None):
     # Create and configure the app
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+    
+    # Add LOG_DIR to app config for access in admin.py
+    app.config['LOG_DIR'] = LOG_DIR
     
     # Configure session security for external access
     app.config.update(
