@@ -114,6 +114,10 @@ body:not(.dark-theme) .navbar.navbar-light {
   background-color: #212529;
 }
 
+/* Dark theme card header gradient */
+.dark-theme .card-header {
+  background: linear-gradient(135deg, var(--primary-color), #5e5ce6 35%, #3d85c6 65%, #0a4bb8 95%);
+}
 .navbar-brand {
   color: var(--text-primary);
 }
@@ -167,15 +171,21 @@ body:not(.dark-theme) .footer .footer-text {
 }
 
 .card-header {
-  background-color: var(--bg-tertiary);
+  background: linear-gradient(135deg, var(--primary-color), #2196f3);
   border-bottom: 1px solid var(--border-color);
-  color: var(--text-primary);
+  color: white;
+  transition: background var(--transition-speed), border-color var(--transition-speed);
 }
 
 /* Card header for admin pages that adapts to light/dark themes */
 .bg-tertiary-theme {
   background-color: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
+}
+
+/* Card header hover effect */
+.card-header:hover {
+  filter: brightness(1.1);
 }
 
 /* Button styling */
@@ -425,6 +435,11 @@ body:not(.dark-theme) .modal-content pre {
 /* Override specific Bootstrap colors in light mode */
 body:not(.dark-theme) .bg-dark {
   background-color: #212529 !important;
+}
+
+/* Light theme card header gradient */
+body:not(.dark-theme) .card-header {
+  background: linear-gradient(135deg, var(--primary-color), #64d2ff 30%, #5e5ce6 60%, #4da3ff 90%);
 }
 
 body:not(.dark-theme) .text-white {
