@@ -10,6 +10,7 @@ from app.logging_config import get_logger
 
 # Create module-level logger
 logger = get_logger('app.host')
+access_logger = get_logger('app.access')
 
 host = Blueprint('host', __name__, url_prefix='/hosts')
 
@@ -24,6 +25,8 @@ MAC_PATTERN = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
 @login_required
 def list_hosts():
     """List all hosts with pagination"""
+    # Log access to host list
+    access_logger.info(f"Host list accessed by user: {current_user.username} (id: {current_user.id})")
     try:
         page = request.args.get('page', 1, type=int)
         per_page = current_app.config.get('HOSTS_PER_PAGE', 10)
@@ -35,62 +38,51 @@ def list_hosts():
         if not current_user.is_admin:
             # Get all the role IDs of the current user
             user_role_ids = [role.id for role in current_user.roles]
-            user_role_ids_str = [str(role_id) for role_id in user_role_ids]
-            logger.info(f"User {current_user.id} roles (int): {user_role_ids}")
-            logger.info(f"User {current_user.id} roles (str): {user_role_ids_str}")
+            # Define filter for hosts created by the current user
+            created_by_filter = Host.created_by == current_user.id
             
-            # Filter to hosts created by the user OR where user's role is in visible_to_roles
-            if not current_user.has_permission('view_all_hosts'):
-                # Start with hosts created by the current user
-                created_by_filter = (Host.created_by == current_user.id)
-                
-                # We need a SQLite-compatible approach instead of PostgreSQL's ?| operator
+            try:
+                # Find hosts where user's role exists in visible_to_roles
+                all_hosts = query.all()
                 visible_to_user_hosts = []
-                
-                try:
-                    # Get all hosts to check visible_to_roles
-                    all_hosts = db_session.query(Host).all()
-                    
-                    # Find hosts where user's role exists in visible_to_roles
-                    for host in all_hosts:
-                        if host.visible_to_roles:
-                            logger.info(f"Host {host.id} ({host.name}) visible_to_roles (raw): {host.visible_to_roles}")
-                            # Convert all role IDs to strings for consistent comparison
-                            host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
-                            logger.info(f"Host {host.id} ({host.name}) visible_to_roles (processed): {host_role_ids}")
-                            
-                            # Check if any of the user's role IDs (converted to string) are in the host's visible_to_roles
-                            visible_to_this_user = False
-                            for role_id in user_role_ids:
-                                role_id_str = str(role_id)
-                                is_visible = role_id_str in host_role_ids
-                                logger.info(f"Checking if role {role_id} (str: {role_id_str}) is in host {host.id} visible_to_roles: {is_visible}")
-                                if is_visible:
-                                    visible_to_this_user = True
-                            
-                            if visible_to_this_user:
-                                visible_to_user_hosts.append(host.id)
-                                logger.info(f"Host {host.id} ({host.name}) IS visible to user {current_user.id}")
-                            else:
-                                logger.info(f"Host {host.id} ({host.name}) is NOT visible to user {current_user.id}")
-                    
-                    logger.info(f"Summary: Hosts visible to user {current_user.id} based on roles: {visible_to_user_hosts}")
-                    
-                    # Build query with OR condition
-                    if visible_to_user_hosts:
-                        query = query.filter(or_(
-                            created_by_filter,
-                            Host.id.in_(visible_to_user_hosts)
-                        ))
-                    else:
-                        # If no visible hosts found, just filter by created_by
-                        query = query.filter(created_by_filter)
+                for host in all_hosts:
+                    if host.visible_to_roles:
+                        logger.debug(f"Host {host.id} ({host.name}) visible_to_roles (raw): {host.visible_to_roles}")
+                        # Convert all role IDs to strings for consistent comparison
+                        host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
+                        logger.debug(f"Host {host.id} ({host.name}) visible_to_roles (processed): {host_role_ids}")
                         
-                except Exception as e:
-                    logger.error(f"Error filtering hosts by visible_to_roles: {str(e)}")
-                    # Fallback to just showing hosts created by the user
+                        # Check if any of the user's role IDs (converted to string) are in the host's visible_to_roles
+                        visible_to_this_user = False
+                        for role_id in user_role_ids:
+                            role_id_str = str(role_id)
+                            is_visible = role_id_str in host_role_ids
+                            logger.debug(f"Checking if role {role_id} (str: {role_id_str}) is in host {host.id} visible_to_roles: {is_visible}")
+                            if is_visible:
+                                visible_to_this_user = True
+                        
+                        if visible_to_this_user:
+                            visible_to_user_hosts.append(host.id)
+                            logger.debug(f"Host {host.id} ({host.name}) IS visible to user {current_user.id}")
+                        else:
+                            logger.debug(f"Host {host.id} ({host.name}) is NOT visible to user {current_user.id}")
+                
+                logger.debug(f"Summary: Hosts visible to user {current_user.id} based on roles: {visible_to_user_hosts}")
+                
+                # Build query with OR condition
+                if visible_to_user_hosts:
+                    query = query.filter(or_(
+                        created_by_filter,
+                        Host.id.in_(visible_to_user_hosts)
+                    ))
+                else:
+                    # If no visible hosts found, just filter by created_by
                     query = query.filter(created_by_filter)
-                    flash(f"Limited visibility due to an error: {str(e)}", "warning")
+            except Exception as e:
+                logger.error(f"Error filtering hosts by visible_to_roles: {str(e)}")
+                # Fallback to just showing hosts created by the user
+                query = query.filter(created_by_filter)
+                flash(f"Limited visibility due to an error: {str(e)}", "warning")
                     
         # Order by recently created first
         query = query.order_by(desc(Host.created_at))
@@ -186,6 +178,7 @@ def add_host():
     """Add a new host"""
     # Check if user has permission to add hosts
     if not current_user.has_permission('create_host'):
+        access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to add a host without permission")
         flash('You do not have permission to add hosts', 'danger')
         return redirect(url_for('host.list_hosts'))
         
@@ -209,7 +202,6 @@ def add_host():
             return render_template('host/host_form.html', form=form, title='Add Host', roles=roles)
         
         # Create new host
-        # Create new host
         # Convert role IDs to strings for consistent storage
         visible_roles = [str(role_id) for role_id in form.visible_to_roles.data]
         
@@ -224,8 +216,8 @@ def add_host():
         try:
             db_session.add(new_host)
             db_session.commit()
+            access_logger.info(f"Host '{form.name.data}' (MAC: {form.mac_address.data}) created by user: {current_user.username} (id: {current_user.id})")
             flash(f'Host {form.name.data} added successfully', 'success')
-            return redirect(url_for('host.list_hosts'))
         except Exception as e:
             db_session.rollback()
             flash(f'Error adding host: {str(e)}', 'danger')
@@ -254,6 +246,7 @@ def edit_host(host_id):
         visible_to_user = False
     
     if not (has_edit_perm or (is_owner and visible_to_user) or current_user.is_admin):
+        access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to edit host {host.id} ({host.name}) without permission")
         flash('You do not have permission to edit this host', 'danger')
         return redirect(url_for('host.list_hosts'))
     
@@ -300,6 +293,7 @@ def edit_host(host_id):
         
         try:
             db_session.commit()
+            access_logger.info(f"Host {host.id} '{form.name.data}' updated by user: {current_user.username} (id: {current_user.id})")
             flash(f'Host {form.name.data} updated successfully', 'success')
             return redirect(url_for('host.list_hosts'))
         except Exception as e:
@@ -330,12 +324,14 @@ def delete_host(host_id):
         visible_to_user = False
     
     if not (has_delete_perm or (is_owner and visible_to_user) or current_user.is_admin):
+        access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to delete host {host.id} ({host.name}) without permission")
         flash('You do not have permission to delete this host', 'danger')
         return redirect(url_for('host.list_hosts'))
     
     try:
         db_session.delete(host)
         db_session.commit()
+        access_logger.info(f"Host {host.id} '{host.name}' deleted by user: {current_user.username} (id: {current_user.id})")
         flash(f'Host {host.name} deleted successfully', 'success')
     except Exception as e:
         db_session.rollback()
@@ -361,8 +357,10 @@ def view_host(host_id):
                 (host.visible_to_roles and any(str(role_id) in [str(r) for r in host.visible_to_roles] for role_id in user_role_ids)))
     
     if not can_view:
+        access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to view host {host.id} ({host.name}) without permission")
         flash('You do not have permission to view this host', 'danger')
         return redirect(url_for('host.list_hosts'))
     
+    access_logger.info(f"Host {host.id} '{host.name}' viewed by user: {current_user.username} (id: {current_user.id})")
     return render_template('host/view.html', host=host)
 

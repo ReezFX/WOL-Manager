@@ -252,9 +252,14 @@ LOG_PROFILES = {
         # Loggers define the behavior for specific logger names
         'loggers': {
             'app': {
-                'handlers': ['app_file', 'error_file'],
+                'handlers': ['app_file'],
                 'level': 'WARNING',
-                'propagate': True,
+                'propagate': False,
+            },
+            'app.admin': {
+                'handlers': ['app_file'],
+                'level': 'WARNING',
+                'propagate': False,
             },
             'app.access': {
                 'handlers': ['access_file'],
@@ -264,7 +269,7 @@ LOG_PROFILES = {
         },
         # Root logger configuration (catch-all for loggers not explicitly defined)
         'root': {
-            'handlers': ['app_file', 'error_file'],
+            'handlers': ['app_file'],
             'level': 'WARNING',
         },
     },
@@ -312,9 +317,14 @@ LOG_PROFILES = {
         },
         'loggers': {
             'app': {
-                'handlers': ['app_file', 'error_file'],
+                'handlers': ['app_file'],
                 'level': 'INFO',
-                'propagate': True,
+                'propagate': False,
+            },
+            'app.admin': {
+                'handlers': ['app_file'],
+                'level': 'INFO',
+                'propagate': False,
             },
             'app.access': {
                 'handlers': ['access_file'],
@@ -323,7 +333,7 @@ LOG_PROFILES = {
             },
         },
         'root': {
-            'handlers': ['app_file', 'error_file'],
+            'handlers': ['app_file'],
             'level': 'INFO',
         },
     },
@@ -371,9 +381,14 @@ LOG_PROFILES = {
         },
         'loggers': {
             'app': {
-                'handlers': ['app_file', 'error_file'],
+                'handlers': ['app_file'],
                 'level': 'DEBUG',
-                'propagate': True,
+                'propagate': False,
+            },
+            'app.admin': {
+                'handlers': ['app_file'],
+                'level': 'DEBUG',
+                'propagate': False,
             },
             'app.access': {
                 'handlers': ['access_file'],
@@ -382,7 +397,7 @@ LOG_PROFILES = {
             },
         },
         'root': {
-            'handlers': ['app_file', 'error_file'],
+            'handlers': ['app_file'],
             'level': 'DEBUG',
         },
     },
@@ -435,9 +450,14 @@ LOG_PROFILES = {
         },
         'loggers': {
             'app': {
-                'handlers': ['app_file', 'error_file', 'console'],
+                'handlers': ['app_file', 'console'],
                 'level': 'DEBUG',
-                'propagate': True,
+                'propagate': False,
+            },
+            'app.admin': {
+                'handlers': ['app_file', 'console'],
+                'level': 'DEBUG',
+                'propagate': False,
             },
             'app.access': {
                 'handlers': ['access_file', 'console'],
@@ -446,7 +466,7 @@ LOG_PROFILES = {
             },
         },
         'root': {
-            'handlers': ['app_file', 'error_file', 'console'],
+            'handlers': ['app_file', 'console'],
             'level': 'DEBUG',
         },
     },
@@ -630,6 +650,10 @@ def get_logger(module_name):
         # For access logging, use the special logger:
         access_logger = get_logger('app.access')
         access_logger.info("User %s performed %s operation", username, operation)
+        
+        # For authentication logging, also use the app.access logger:
+        # auth_logger = get_logger('app.access')
+        # auth_logger.info("User %s authentication attempt: %s", username, result)
         
     Notes:
         - The module_name will be automatically prefixed with 'app.' if needed

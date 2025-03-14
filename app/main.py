@@ -12,6 +12,7 @@ from app.logging_config import get_logger
 
 # Initialize module logger
 logger = get_logger('app.main')
+access_logger = get_logger('app.access')
 
 class CSRFForm(FlaskForm):
     """Form with CSRF protection only"""
@@ -37,7 +38,7 @@ def dashboard():
     """
     # Check if the user is authenticated (either via Flask-Login or custom session)
     if not current_user.is_authenticated and not session.get('authenticated'):
-        logger.warning('Unauthorized access attempt to dashboard')
+        access_logger.warning('Unauthorized access attempt to dashboard')
         flash('Please log in to access this page.', 'warning')
         return redirect(url_for('auth.login', next='/dashboard'))
     
@@ -74,7 +75,7 @@ def dashboard():
         # Use Flask-Login's current_user
         user = current_user
     
-    logger.info(f'Dashboard accessed by user: {user.username} (id: {user.id})')
+    access_logger.info(f'Dashboard accessed by user: {user.username} (id: {user.id})')
     # Get hosts based on user role
     if user.is_admin:
         hosts = db_session.query(Host).all()
@@ -176,7 +177,7 @@ def ping_hosts_api():
     """
     # Check if the user is authenticated
     if not current_user.is_authenticated and not session.get('authenticated'):
-        logger.warning(f'Unauthorized API access attempt from IP: {request.remote_addr}')
+        access_logger.warning(f'Unauthorized API access attempt from IP: {request.remote_addr}')
         return jsonify({'error': 'Authentication required'}), 401
     
     # Parse host IDs from request
@@ -187,10 +188,10 @@ def ping_hosts_api():
         
         host_ids = data['host_ids']
         if not host_ids:
-            logger.warning(f'API ping request with no host IDs from user unknown')
+            access_logger.warning(f'API ping request with no host IDs from user unknown')
             return jsonify({'error': 'No host IDs provided'}), 400
         
-        logger.info(f'API ping request received for {len(host_ids)} hosts')
+        access_logger.info(f'API ping request received for {len(host_ids)} hosts')
     except Exception as e:
         logger.error(f'Invalid ping request format: {str(e)}')
         return jsonify({'error': f'Invalid request format: {str(e)}'}), 400
@@ -206,9 +207,9 @@ def ping_hosts_api():
     
     # Update log messages with user ID now that it's defined
     if not host_ids:
-        logger.warning(f'API ping request with no host IDs from user {user_id}')
+        access_logger.warning(f'API ping request with no host IDs from user {user_id}')
     else:
-        logger.info(f'API ping request received for {len(host_ids)} hosts from user {user_id}')
+        access_logger.info(f'API ping request received for {len(host_ids)} hosts from user {user_id}')
     
     # Fetch hosts from database
     try:
@@ -256,7 +257,7 @@ def ping_hosts_api():
             hosts = hosts_by_creator + hosts_by_role
         
         if not hosts:
-            logger.warning(f'User {user_id} attempted to ping hosts they cannot access: {host_ids}')
+            access_logger.warning(f'User {user_id} attempted to ping hosts they cannot access: {host_ids}')
             return jsonify({'error': 'No accessible hosts found with the provided IDs'}), 404
             
     except Exception as e:

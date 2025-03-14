@@ -22,6 +22,7 @@ auth = Blueprint('auth', __name__)
 
 # Configure module-level logger
 logger = get_logger('app.auth')
+access_logger = get_logger('app.access')
 
 # Custom decorator for admin access
 # Custom decorator for admin access
@@ -48,14 +49,14 @@ def validate_csrf_token(token=None):
         token = request.form.get('csrf_token')
     
     if not token:
-        logger.warning('CSRF validation failed: No token provided')
+        access_logger.warning('CSRF validation failed: No token provided')
         return False
     
     try:
         validate_csrf(token)
         return True
     except CSRFValidationError as e:
-        logger.warning(f'CSRF validation failed: {str(e)}')
+        access_logger.warning(f'CSRF validation failed: {str(e)}')
         return False
 
 def hash_password(password):
@@ -119,7 +120,7 @@ def login():
         # Validate CSRF token for login form
         if not validate_csrf_token():
             flash('Form submission expired or invalid. Please try again.', 'danger')
-            logger.warning(f"Login attempt failed: CSRF validation failed for user '{request.form.get('username', '')}'")
+            access_logger.warning(f"Login attempt failed: CSRF validation failed for user '{request.form.get('username', '')}'")
             return render_template('auth/login.html', form=form)
         
         try:
@@ -165,14 +166,14 @@ def login():
                 session.permanent = True
                 
                 # Log successful login
-                logger.info(f"User '{user.username}' logged in successfully")
+                access_logger.info(f"User '{user.username}' logged in successfully")
                 flash('Login successful!', 'success')
                 
                 return redirect(request.args.get('next') or url_for('main.index'))
             else:
                 # Log failed login attempt
                 failure_reason = "Invalid password" if user else "User not found"
-                logger.warning(f"Failed login attempt: {failure_reason} for username '{username}'")
+                access_logger.warning(f"Failed login attempt: {failure_reason} for username '{username}'")
         except Exception as e:
             logger.error(f"Unexpected error during login processing: {str(e)}", exc_info=True)
             flash('An unexpected error occurred during login.', 'danger')
@@ -184,7 +185,7 @@ def login():
 @login_required
 def logout():
     # Log the logout event before actually logging out
-    logger.info(f"User '{current_user.username}' logged out")
+    access_logger.info(f"User '{current_user.username}' logged out")
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))
@@ -208,7 +209,7 @@ def change_password():
         # Verify current password
         if not check_password(current_user.password_hash, form.current_password.data):
             # Log failed password change attempt
-            logger.warning(f"Failed password change attempt for user '{current_user.username}': incorrect current password")
+            access_logger.warning(f"Failed password change attempt for user '{current_user.username}': incorrect current password")
             flash('Current password is incorrect.', 'danger')
         else:
             try:
@@ -216,7 +217,7 @@ def change_password():
                 current_user.password_hash = hash_password(form.new_password.data)
                 db_session.commit()
                 # Log successful password change
-                current_app.logger.info(f"Password changed successfully for user '{current_user.username}'")
+                access_logger.info(f"Password changed successfully for user '{current_user.username}'")
                 flash('Password changed successfully!', 'success')
                 return redirect(url_for('auth.profile'))
             except SQLAlchemyError as e:

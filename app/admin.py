@@ -24,7 +24,7 @@ from app.logging_config import get_logger
 
 # Initialize module logger
 logger = get_logger('app.admin')
-
+access_logger = get_logger('app.access')
 # Simple form for CSRF protection on action forms
 class CSRFForm(FlaskForm):
     pass
@@ -155,7 +155,7 @@ def list_users():
     """Admin page to list all users"""
 
     request_id = request.headers.get('X-Request-ID', 'N/A')
-    logger.info("Admin accessing user list page: admin_id=%s, request_id=%s", current_user.id, request_id)
+    access_logger.info("Admin accessing user list page: admin_id=%s, request_id=%s", current_user.id, request_id)
     users = db_session.query(User).all()
     form = UserForm()
     # Create a CSRF form for the promote/demote/delete actions
@@ -199,7 +199,7 @@ def add_user():
                     db_session.commit()
 
                     request_id = request.headers.get('X-Request-ID', 'N/A')
-                    logger.info("New user successfully created: username=%s, created_by=%s, request_id=%s", 
+                    access_logger.info("New user successfully created: username=%s, created_by=%s, request_id=%s", 
                               username, current_user.username, request_id)
                 else:
 
@@ -263,7 +263,7 @@ def promote_user(user_id):
             db_session.commit()
 
             request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.info("User promoted to admin: username=%s, user_id=%s, promoted_by=%s, request_id=%s", 
+            access_logger.info("User promoted to admin: username=%s, user_id=%s, promoted_by=%s, request_id=%s", 
                       user.username, user_id, current_user.username, request_id)
             flash(f'User {user.username} promoted to admin.', 'success')
     else:
@@ -308,7 +308,7 @@ def demote_user(user_id):
             db_session.commit()
 
             request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.info("User demoted to regular user: username=%s, user_id=%s, demoted_by=%s, request_id=%s", 
+            access_logger.info("User demoted to regular user: username=%s, user_id=%s, demoted_by=%s, request_id=%s", 
                       user.username, user_id, current_user.username, request_id)
             flash(f'User {user.username} demoted to regular user.', 'success')
     else:
@@ -357,7 +357,7 @@ def delete_user(user_id):
                 db_session.commit()
 
                 request_id = request.headers.get('X-Request-ID', 'N/A')
-                logger.info("User successfully deleted: username=%s, user_id=%s, deleted_by=%s, request_id=%s", 
+                access_logger.info("User successfully deleted: username=%s, user_id=%s, deleted_by=%s, request_id=%s", 
                           username, user_id, current_user.username, request_id)
                 flash(f'User {username} has been deleted successfully.', 'success')
             except SQLAlchemyError as e:
@@ -404,7 +404,7 @@ def edit_permissions(user_id):
     if form.validate_on_submit():
         try:
             request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.info("Updating permissions for user %s (ID: %s) by admin %s", 
+            access_logger.info("Updating permissions for user %s (ID: %s) by admin %s", 
                       user.username, user_id, current_user.username)
             # Create a permissions dictionary based on the form data
             updated_permissions = {}
@@ -419,7 +419,7 @@ def edit_permissions(user_id):
             # Update the user's permissions
             user.permissions = updated_permissions
             db_session.commit()
-            logger.info("Permissions updated successfully for user %s (ID: %s) by admin %s", 
+            access_logger.info("Permissions updated successfully for user %s (ID: %s) by admin %s", 
                       user.username, user_id, current_user.username)
             flash(f'Permissions for {user.username} have been updated successfully.', 'success')
             return redirect(url_for('admin.list_users'))
@@ -445,7 +445,7 @@ def settings():
     """Admin page to manage application settings"""
 
     request_id = request.headers.get('X-Request-ID', 'N/A')
-    logger.info("Admin accessing application settings: admin=%s, admin_id=%s, request_id=%s", 
+    access_logger.info("Admin accessing application settings: admin=%s, admin_id=%s, request_id=%s", 
               current_user.username, current_user.id, request_id)
     form = AppSettingsForm()
     
@@ -462,7 +462,7 @@ def settings():
     
     if form.validate_on_submit():
         try:
-            logger.info("Admin %s updating application settings", current_user.username)
+            access_logger.info("Admin %s updating application settings", current_user.username)
             current_settings.min_password_length = form.min_password_length.data
             current_settings.require_special_characters = form.require_special_characters.data
             current_settings.require_numbers = form.require_numbers.data
@@ -672,21 +672,25 @@ def read_log_file(filename, log_level='all', start_date=None, end_date=None, sea
                         filtered_logs.append(line)
         
         # For access.log (with different format)
+        # For access.log (with same format as app.log)
         elif filename == 'access.log':
-            # Example format: 127.0.0.1 - - [15/Sep/2023:14:30:45 +0000] "GET /admin/users HTTP/1.1" 200 5432
-            access_pattern = re.compile(r'(.*?) - - \[(.*?)\] "(.*?)" (\d+) (\d+)')
+            # Access logs use the same format as app.log but with app.access module
+            log_pattern = re.compile(r'\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\] (\w+) - ([^-]+) - (.*)')
             
             for line in log_lines:
-                match = access_pattern.match(line)
+                match = log_pattern.match(line)
                 if match:
-                    ip, timestamp_str, request, status, size = match.groups()
+                    timestamp_str, level, module, message = match.groups()
                     
-                    # Parse timestamp for date filtering
+                    # Apply log level filter only if specifically requested
+                    if log_level != 'all' and level.upper() != log_level.upper():
+                        continue
+                    
+                    # Parse timestamp
                     try:
-                        # Parse the Apache log format timestamp
-                        timestamp = datetime.strptime(timestamp_str.split()[0], '%d/%b/%Y:%H:%M:%S')
+                        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S,%f')
                         
-                        # Filter by date range
+                        # Apply date filters only if specifically provided
                         if start_date and timestamp.date() < start_date:
                             continue
                         if end_date and timestamp.date() > end_date:
@@ -695,23 +699,21 @@ def read_log_file(filename, log_level='all', start_date=None, end_date=None, sea
                         # If timestamp parsing fails, don't filter by date
                         pass
                     
-                    # Apply log level filter only if specifically requested
-                    if log_level != 'all':
-                        status_code = int(status)
-                        if log_level.upper() == 'ERROR' and status_code < 400:
-                            continue
-                        elif log_level.upper() == 'WARNING' and (status_code < 300 or status_code >= 400):
-                            continue
-                        elif log_level.upper() == 'INFO' and (status_code < 200 or status_code >= 300):
-                            continue
-                    
                     # Apply search text filter only if specifically provided
                     if search_text and search_text.lower() not in line.lower():
                         continue
                     
                     # Add to filtered logs
                     filtered_logs.append(line)
-        
+                elif line.strip():
+                    # For non-matching lines like tracebacks
+                    if search_text:
+                        # If search text is provided, only include if it matches
+                        if search_text.lower() in line.lower():
+                            filtered_logs.append(line)
+                    else:
+                        # If no search text is provided, include all non-empty lines
+                        filtered_logs.append(line)
         # Reverse the list to show newest entries first
         filtered_logs.reverse()
         
@@ -828,7 +830,7 @@ def view_logs():
         'method': request.method
     }
     
-    logger.info("Admin accessing system logs page", extra=log_context)
+    access_logger.info("Admin accessing system logs page", extra=log_context)
     ALLOWED_LOG_FILES = ['app.log', 'error.log', 'access.log']
     
     # Create and initialize the filter form
@@ -1211,7 +1213,7 @@ def download_log():
         'ip_address': request.remote_addr
     }
     
-    logger.info("Log download operation initiated", extra=log_context)
+    access_logger.info("Log download operation initiated", extra=log_context)
     
     try:
         # Get file name from query string
@@ -1344,7 +1346,7 @@ def download_log():
             duration_ms = int((end_time - start_time).total_seconds() * 1000)
             
             # Log successful download with performance metrics
-            logger.info(
+            access_logger.info(
                 "Log file download successful",
                 extra={**log_context, 'processing_time_ms': duration_ms}
             )
