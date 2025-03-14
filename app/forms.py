@@ -96,4 +96,13 @@ class AppSettingsForm(FlaskForm):
         ],
         description='Maximum number of concurrent sessions per user. Use 0 for unlimited sessions.')
     
+    log_profile = SelectField('Logging Profile',
+        choices=[
+            ('LOW', 'LOW - Minimal logging'),
+            ('MEDIUM', 'MEDIUM - Standard logging'),
+            ('HIGH', 'HIGH - Detailed logging'),
+            ('DEBUG', 'DEBUG - Maximum verbosity')
+        ],
+        description='Sets the verbosity level of application logs')
+    
     submit = SubmitField('Save Settings')

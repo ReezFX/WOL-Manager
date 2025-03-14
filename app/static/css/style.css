@@ -430,3 +430,67 @@ body:not(.dark-theme) .bg-dark {
 body:not(.dark-theme) .text-white {
   color: #fff !important;
 }
+
+/* Profile indicator styling for admin settings */
+.profile-indicator {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px var(--box-shadow);
+  background: linear-gradient(to right, var(--info-color) 0%, rgba(var(--info-color), 0.7) 100%);
+  color: white;
+  font-weight: 500;
+  transition: all var(--transition-speed);
+}
+
+.profile-indicator i {
+  margin-right: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.profile-indicator-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.profile-indicator-label {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-bottom: 0.25rem;
+}
+
+.profile-indicator-value {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Dark theme adjustments for profile indicator */
+.dark-theme .profile-indicator {
+  background: linear-gradient(to right, var(--info-color) 0%, rgba(23, 162, 184, 0.8) 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Light theme specific styling */
+body:not(.dark-theme) .profile-indicator {
+  background: linear-gradient(to right, var(--info-color) 0%, rgba(23, 162, 184, 0.7) 100%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .profile-indicator {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .profile-indicator i {
+    font-size: 1.1rem;
+    margin-right: 0.5rem;
+  }
+  
+  .profile-indicator-value {
+    font-size: 0.95rem;
+  }
+}

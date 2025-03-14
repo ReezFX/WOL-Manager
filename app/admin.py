@@ -20,7 +20,7 @@ from app import db_session
 from app.forms import UserForm, AppSettingsForm
 from app.auth import hash_password, admin_required
 from sqlalchemy import desc
-from app.logging_config import get_logger
+from app.logging_config import get_logger, configure_logging
 
 # Initialize module logger
 logger = get_logger('app.admin')
@@ -452,6 +452,9 @@ def settings():
     # Get current settings
     current_settings = AppSettings.get_settings(db_session)
     
+    # Get current LOG_PROFILE from environment
+    current_log_profile = os.environ.get('LOG_PROFILE', 'MEDIUM')
+    
     if request.method == 'GET':
         # Populate form with current settings
         form.min_password_length.data = current_settings.min_password_length
@@ -459,6 +462,8 @@ def settings():
         form.require_numbers.data = current_settings.require_numbers
         form.password_expiration_days.data = current_settings.password_expiration_days
         form.session_timeout_minutes.data = current_settings.session_timeout_minutes
+        form.max_concurrent_sessions.data = current_settings.max_concurrent_sessions
+        form.log_profile.data = current_settings.log_profile if hasattr(current_settings, 'log_profile') else 'MEDIUM'
     
     if form.validate_on_submit():
         try:
@@ -469,7 +474,13 @@ def settings():
             current_settings.password_expiration_days = form.password_expiration_days.data
             current_settings.session_timeout_minutes = form.session_timeout_minutes.data
             current_settings.max_concurrent_sessions = form.max_concurrent_sessions.data
+            current_settings.log_profile = form.log_profile.data
             
+            # Update the environment variable
+            os.environ['LOG_PROFILE'] = form.log_profile.data
+            
+            # Reload the logging configuration to apply changes immediately
+            configure_logging()
             
             db_session.commit()
             
@@ -484,8 +495,7 @@ def settings():
             for error in errors:
                 flash(f'{getattr(form, field).label.text}: {error}', 'danger')
     
-    return render_template('admin/settings.html', form=form)
-
+    return render_template('admin/settings.html', form=form, current_log_profile=current_log_profile)
 
 def read_log_file(filename, log_level='all', start_date=None, end_date=None, search_text=None, page=1, per_page=100, chunk_size=1024*1024, request=None):
     """

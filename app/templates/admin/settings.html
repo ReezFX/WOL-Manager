@@ -107,6 +107,37 @@
               </div>
             </div>
 
+            <div class="row mb-4">
+              <div class="col-md-12">
+                <h4>Logging Configuration</h4>
+                <hr>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ form.log_profile.label(class="form-label") }}
+                  {{ form.log_profile(class="form-control") }}
+                  <small class="form-text text-muted">{{ form.log_profile.description }}</small>
+                  <div class="profile-indicator">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="profile-indicator-content">
+                      <span class="profile-indicator-label">Current active profile from environment</span>
+                      <span class="profile-indicator-value">{{ current_log_profile }}</span>
+                    </div>
+                  </div>
+                  {% if form.log_profile.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.log_profile.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
             <div class="row mt-4">
               <div class="col-md-12">
                 <div class="float-end">

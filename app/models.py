@@ -169,9 +169,10 @@ class AppSettings(Base):
     min_password_length = Column(Integer, default=8, nullable=False)
     require_special_characters = Column(Boolean, default=False, nullable=False)
     require_numbers = Column(Boolean, default=False, nullable=False)
-    password_expiration_days = Column(Integer, default=90, nullable=False)
-    session_timeout_minutes = Column(Integer, default=1440, nullable=False)  # Default 1 day (24 hours * 60 minutes)
-    max_concurrent_sessions = Column(Integer, default=0, nullable=False)  # 0 means unlimited
+    password_expiration_days = Column(Integer, default=365, nullable=False)
+    session_timeout_minutes = Column(Integer, default=15, nullable=False)  # Default 15 Minutes
+    max_concurrent_sessions = Column(Integer, default=10, nullable=False)
+    log_profile = Column(String(10), default="MEDIUM", nullable=False)  # Options: LOW, MEDIUM, HIGH, DEBUG
     
     def __repr__(self):
         return f'<AppSettings id={self.id}>'
@@ -189,9 +190,10 @@ class AppSettings(Base):
                 min_password_length=8,
                 require_special_characters=False,
                 require_numbers=False,
-                password_expiration_days=90,
-                session_timeout_minutes=1440,
-                max_concurrent_sessions=0
+                password_expiration_days=365,
+                session_timeout_minutes=15,
+                max_concurrent_sessions=10,
+                log_profile="MEDIUM"
             )
             db_session.add(settings)
             db_session.commit()

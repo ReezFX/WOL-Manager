@@ -8,10 +8,8 @@ services:
       - db_data:/app/instance
       - ./detect_ip.sh:/app/detect_ip.sh
     environment:
-      - LOG_LEVEL=DEBUG
-      - LOG_PROFILE=DEBUG
       - FLASK_APP=wsgi.py
-      - FLASK_CONFIG=development
+      - FLASK_CONFIG=production
       - FLASK_DEBUG=1
       - SECRET_KEY=dev-key-change-in-production
       - WTF_CSRF_SECRET_KEY=csrf-secret-key-change-in-production
