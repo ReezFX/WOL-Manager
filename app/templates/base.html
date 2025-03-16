@@ -225,14 +225,51 @@
         {% block content %}{% endblock %}
     </main>
     <!-- Footer -->
-    <footer class="footer apple-footer mt-auto" id="main-footer">
+    <footer class="footer apple-footer mt-auto py-1" id="main-footer">
         <div class="container">
-            <div class="row">
-                <div class="col-12 text-center py-3">
-                    <span class="footer-text">&copy; {{ now.year }} Wake-on-LAN Manager. All rights reserved. | v1.1.4 | <a href="https://github.com/ReezFX/WOL-Manager" target="_blank" class="footer-link"><i class="fab fa-github" aria-hidden="true"></i> GitHub</a></span>
+            <div class="row py-1">
+                <!-- About WoL Manager -->
+                <div class="col-md-5 mb-1 mb-md-0">
+                    <h6 class="text-accent mb-1">Wake-on-LAN Manager</h6>
+                    <p class="footer-text small mb-1">A powerful and intuitive tool to remotely wake up and manage your devices on the local network using Wake-on-LAN technology.</p>
+                    <div>
+                        <a href="https://github.com/ReezFX/WOL-Manager" class="footer-link small" target="_blank"><i class="fab fa-github me-1" aria-hidden="true"></i> GitHub</a>
+                    </div>
+                </div>
+                
+                <!-- Quick Links & Resources -->
+                <div class="col-md-7 mb-1 mb-md-0">
+                    <div class="row">
+                        <div class="col-6">
+                            <h6 class="text-accent mb-1">Quick Links</h6>
+                            <ul class="list-unstyled small mb-0">
+                                <li><a href="{{ url_for('main.index') }}" class="footer-link"><i class="fas fa-home me-1"></i>Home</a></li>
+                                <li><a href="{{ url_for('main.index') }}" class="footer-link"><i class="fas fa-server me-1"></i>Devices</a></li>
+                                <li><a href="#" class="footer-link"><i class="fas fa-question-circle me-1"></i>Help</a></li>
+                                <li><a href="#" class="footer-link"><i class="fas fa-info-circle me-1"></i>About</a></li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Resources -->
+                        <div class="col-6">
+                            <h6 class="text-accent mb-1">Resources</h6>
+                            <ul class="list-unstyled small mb-0">
+                                <li><a href="#" class="footer-link"><i class="fas fa-book me-1"></i>Documentation</a></li>
+                                <li><a href="#" class="footer-link"><i class="fas fa-shield-alt me-1"></i>Privacy Policy</a></li>
+                                <li><a href="#" class="footer-link"><i class="fas fa-file-alt me-1"></i>Terms of Use</a></li>
+                                <li><a href="https://github.com/ReezFX/WOL-Manager/issues" class="footer-link" target="_blank"><i class="fas fa-bug me-1"></i>Report an Issue</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+            
+            <!-- Copyright - more subtle with less spacing -->
+            <div class="row mt-1">
+                <div class="col-12 text-center">
+                    <span class="footer-text small text-muted">&copy; {{ now.year }} Wake-on-LAN Manager. All rights reserved. | v1.1.4</span>
+                </div>
+            </div>
     </footer>
 
     <!-- Bootstrap 5 JS Bundle with Popper -->
