@@ -5,6 +5,48 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-03-15
+
+### Added
+- New refactored logging system
+  - Consolidated logging configuration in `app/logging_config.py`
+  - Enhanced contextual logging with request information
+  - Added sensitive data filtering to prevent credential exposure in logs
+  - Improved log formatting for better readability and analysis
+  - Implementation of standardized logging patterns across all modules
+  - Added comprehensive logging documentation in `/docs/logging_guidelines.md`
+- Enhanced User Interface (UI 2.0)
+  - Completely redesigned frontend with modern design principles
+  - Implemented responsive layout with improved mobile and tablet experience
+  - Upgraded from Bootstrap 4 to Bootstrap 5 framework
+  - Redesigned dashboard with improved information hierarchy and visual appeal
+  - Enhanced dark/light mode implementation with smoother transitions
+  - Comprehensive footer rework with improved navigation links, social media integration, and responsive behavior
+  - Refined color palette with better accessibility compliance, increased contrast ratios, and consistent application across components
+### Security
+- Upgraded pip packages to latest compatible versions to patch security vulnerabilities
+  - Updated Flask to 3.1.0 and related dependencies
+  - Upgraded cryptography package to 44.0.2
+  - Updated SQLAlchemy to 2.0.39 and Flask-SQLAlchemy to 3.1.1
+  - Enhanced overall application security posture with latest security patches
+  - Implemented more secure version constraints in requirements.txt
+
+### Fixed
+- Improved host status checking mechanism in ping.js
+  - Reduced online stability period from 30 to 15 seconds for faster status updates
+  - Enhanced offline detection logic to prevent false status indicators
+  - Improved error handling and status smoothing algorithm
+  - Added more robust detection of Bootstrap version for proper styling
+  - Fixed intermittent ping failures on complex networks
+
+### Changed
+- Removed legacy logging components
+  - Cleaned up outdated logging configuration
+  - Streamlined logging implementation for better performance
+  - Removed unused logging code paths
+  - Enhanced log clarity by eliminating redundant information
+  - Centralized all logging configuration in a single module
+
 ## [1.1.5] - 2025-03-13
 
 ### Security

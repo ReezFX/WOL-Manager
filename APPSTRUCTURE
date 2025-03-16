@@ -82,9 +82,9 @@ The application uses SQLAlchemy ORM with models for:
 - External configuration through environment variables
 - Secure defaults with explicit overrides
 
-# WOL-MANAGER APPLICATION STRUCTURE
+# Application Architecture
 
-## 1. Application Architecture Overview
+## 1. Core Architecture Overview
 
 ### Factory Pattern Implementation
 The application uses the factory pattern in `app/__init__.py` to create the Flask application instance:
@@ -245,8 +245,40 @@ BaseConfig
 
 ### Docker Architecture
 - **Multi-container Setup**:
-  - Web service: Flask application with Gunicorn workers
-  - Redis service: Session storage and caching
+
+### Logging Architecture
+
+#### Centralized Logging Configuration
+- Implemented in `app/logging_config.py`
+- Provides a unified logging interface for the entire application
+- Configurable through environment variables and admin interface
+
+#### Logging Profiles
+- Multiple pre-defined logging profiles (LOW, MEDIUM, HIGH, DEBUG)
+- Each profile sets appropriate levels for different log handlers
+- Profile selection available through admin interface without restart
+
+#### Components
+- **LoggingConfigManager**: Central class that manages logging configuration
+- **SensitiveDataFilter**: Log filter to prevent sensitive data from appearing in logs
+- **ContextualLogRecord**: Enhanced log records with request context information
+- **get_logger()**: Factory function to retrieve properly configured loggers
+
+#### Log Handlers
+- **Console Handler**: Outputs to stdout/stderr with appropriate formatting
+- **File Handlers**: Multiple specialized handlers for different log types:
+  - `app.log`: General application logs
+  - `error.log`: Error-specific logs with full tracebacks
+  - `access.log`: HTTP request logs
+  - `security.log`: Authentication and security events
+- **Rotation Handling**: Automatic log rotation based on size and retention policy
+
+#### Integration Points
+- **Flask Application**: Integrated at application factory in `__init__.py`
+- **Request Handling**: Request context added through Flask before/after request hooks
+- **Error Handling**: Exception logging integrated with Flask error handlers
+- **Authentication**: Security events logged through auth blueprint
+
 - **Multi-stage Build**: Optimized Docker image size via multi-stage build
 - **Volume Persistence**:
   - Database stored in a persistent volume
@@ -321,14 +353,14 @@ BaseConfig
 - `app/wol.py`: Wake-on-LAN implementation
 - `app/config.py`: Configuration classes
 - `app/forms.py`: Form definitions with validation
+- `app/logging_config.py`: Centralized logging configuration and profiles
 - `manage.py`: CLI commands for application management
 - `wsgi.py`: WSGI entry point
 - `Dockerfile`: Container build instructions
 - `docker-compose.yml`: Multi-container definition
 - `entrypoint.sh`: Container initialization script
 
-## 6. Development Workflow (Docker Development)
-
+## 6. Development Workflow
 ### Local Development
 1. Clone repository
 2. Set up virtual environment
@@ -337,7 +369,14 @@ BaseConfig
 5. Initialize database
 6. Run development server
 
-### Docker Development Best Practices
+### Development Best Practices
+1. **Version Control**: All changes should be tracked in version control
+2. **Code Reviews**: All changes should undergo peer review before being merged
+3. **Testing**: Write unit and integration tests for new features
+4. **Documentation**: Update documentation when adding or changing features
+5. **Consistent Logging**: Use the logging system appropriately (see Logging Architecture)
+
+### Docker Development Workflow
 1. **Source Code Changes Only**: Always make changes to the source code, never to a running Docker container
 2. **Rebuild Containers**: After making code changes, build a new Docker image:
    ```

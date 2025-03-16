@@ -213,3 +213,39 @@ def wake_device(device_id):
 - Ensure the `SensitiveDataFilter` is properly configured
 - Implement periodic log audits to check for security issues
 
+## 9. Logging Profiles Feature (New in v1.2.0)
+
+The application now includes a configurable logging profiles feature accessible through the admin interface.
+This allows administrators to adjust logging behavior without changing code or restarting the application.
+
+### Available Profiles
+- **LOW**: Minimal logging (errors and warnings only)
+- **MEDIUM**: Standard production logging (errors, warnings, and important information)
+- **HIGH**: Detailed logging suitable for troubleshooting
+- **DEBUG**: Maximum verbosity for development purposes
+
+### Configuring Logging Profiles
+1. Log in as an administrator
+2. Navigate to "Admin" > "Settings"
+3. Find the "Logging Profile" section
+4. Select the desired logging level
+5. Save changes
+
+### Profile Characteristics
+
+| Profile | Console Level | File Level | Performance Impact | Use Case |
+|---------|--------------|------------|-------------------|----------|
+| LOW     | WARNING      | ERROR      | Minimal           | Production (minimal overhead) |
+| MEDIUM  | INFO         | WARNING    | Low               | Production (standard) |
+| HIGH    | DEBUG        | INFO       | Moderate          | Troubleshooting |
+| DEBUG   | DEBUG        | DEBUG      | High              | Development |
+
+### Dynamic Configuration
+
+The logging profile can be changed at runtime without application restart. This is particularly useful for:
+- Temporarily increasing verbosity to diagnose issues
+- Reducing log volume in high-traffic production environments
+- Balancing troubleshooting needs with performance considerations
+
+Changes to the logging profile are applied within 60 seconds and are automatically logged to assist with audit trails.
+

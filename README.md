@@ -410,6 +410,27 @@ If the Wake-on-LAN functionality is not working when running the application in 
 
 ## Release Notes
 
+### Version 1.2.0 (2025-03-15)
+- Enhanced User Interface (UI 2.0):
+  - Completely overhauled interface with modern design principles
+  - Improved responsive layout for better mobile and tablet experience
+  - Upgraded to Bootstrap 5 with streamlined navigation and card layout
+  - Enhanced color scheme with better accessibility and contrast ratios
+  - Redesigned dashboard for improved information hierarchy
+  - Modernized footer with improved content organization and responsive layout
+  - Implemented standardized color palette base with consistent theming across all components
+- Improved Device Status Monitoring:
+  - Enhanced ICMP ping mechanism for more accurate device status detection
+  - New status badges with dynamic color indicators (green for online, red for offline, yellow for transitioning)
+  - Automatic Bootstrap version detection for consistent badge styling
+  - Reduced online stability period from 30 to 15 seconds for faster status updates
+  - Enhanced offline detection logic to prevent false status indicators
+- New refactored logging system:
+  - Consolidated logging configuration in `app/logging_config.py`
+  - Enhanced contextual logging with request information
+  - Added sensitive data filtering to prevent credential exposure in logs
+  - Improved log formatting for better readability and analysis
+
 ### Version 1.1.5 (2025-03-13)
 - Upgraded pip packages to latest compatible versions to patch security vulnerabilities
 - Enhanced dependency management with updated requirements
