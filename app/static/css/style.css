@@ -12,12 +12,12 @@ html, body, button, input, select, textarea {
   /* Light theme variables (default) */
   --primary-color: #17a2b8;
   --primary-color-rgb: 23, 162, 184; /* RGB components of primary color */
-  --secondary-color: #6c757d;
-  --success-color: #28a745;
+  --secondary-color: #5d7a8c; /* Adjusted to complement turquoise */
+  --success-color: #2ebe9e; /* Adjusted green to complement turquoise */
   --info-color: #17a2b8;
   --info-color-rgb: 23, 162, 184; /* RGB components of info color */
-  --warning-color: #ffc107;
-  --danger-color: #dc3545;
+  --warning-color: #f9ae56; /* Warmer orange that complements turquoise */
+  --danger-color: #e25563; /* Softer red that harmonizes with turquoise */
   
   /* Background colors */
   --bg-primary: #ffffff;
@@ -37,10 +37,10 @@ html, body, button, input, select, textarea {
   
   /* Input colors */
   --input-bg: #ffffff;
-  --input-border: #ced4da;
-  --input-focus-border: #80bdff;
-  --input-placeholder: #6c757d;
-  
+  --input-bg: #ffffff;
+  --input-border: #c5d8e0; /* Subtle border color that complements turquoise */
+  --input-focus-border: #5eb8c7; /* Lighter turquoise for focus state */
+  --input-placeholder: #8fa3ad; /* Softer placeholder color with better contrast */
   /* Shadow */
   --box-shadow: rgba(0, 0, 0, 0.1);
   --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -64,12 +64,12 @@ html, body, button, input, select, textarea {
   /* Override with dark theme variables */
   --primary-color: #17a2b8;
   --primary-color-rgb: 23, 162, 184; /* RGB components of primary color */
-  --secondary-color: #6c757d;
-  --success-color: #198754;
-  --info-color: #0dcaf0;
-  --info-color-rgb: 13, 202, 240; /* RGB components of info color */
-  --warning-color: #ffc107;
-  --danger-color: #dc3545;
+  --secondary-color: #5d7a8c; /* Adjusted to complement turquoise */
+  --success-color: #25a588; /* Darker green for dark theme */
+  --info-color: #20b8cf; /* Adjusted for better visibility in dark theme */
+  --info-color-rgb: 32, 184, 207; /* RGB components of info color */
+  --warning-color: #f9ae56; /* Warmer orange that complements turquoise */
+  --danger-color: #e25563; /* Softer red that harmonizes with turquoise */
   
   /* Background colors */
   --bg-primary: #1a1a1a;
@@ -89,9 +89,9 @@ html, body, button, input, select, textarea {
   
   /* Input colors */
   --input-bg: #2d2d2d;
-  --input-border: #495057;
-  --input-focus-border: #0d6efd;
-  --input-placeholder: #adb5bd;
+  --input-border: #4a6272; /* Darker complementary color for turquoise */
+  --input-focus-border: #3b98ac; /* Visible but not harsh turquoise for focus state */
+  --input-placeholder: #8da0aa; /* Balanced placeholder with good contrast */
   
   /* Shadow */
   --box-shadow: rgba(0, 0, 0, 0.5);
@@ -214,14 +214,29 @@ body:not(.dark-theme) .footer .footer-text {
   border-radius: var(--border-radius);
   overflow: hidden;
   transition: var(--apple-transition);
+  position: relative;
 }
 
-/* Commented out card hover effect
 .card:hover {
   box-shadow: var(--apple-shadow-lg);
   transform: translateY(-2px);
 }
-*/
+
+/* Card entrance animation */
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-animate-in {
+  animation: cardEntrance 0.3s ease-out forwards;
+}
 
 .card-header {
   background: linear-gradient(145deg, var(--primary-color) 0%, rgba(23, 162, 184, 0.7) 100%);
@@ -311,7 +326,7 @@ body:not(.dark-theme) .footer .footer-text {
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, #1eb2c7 0%, #17a2b8 100%);
+  background: linear-gradient(180deg, #20bdce 0%, #17a2b8 100%);
   border-color: transparent;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   color: white;
@@ -319,9 +334,9 @@ body:not(.dark-theme) .footer .footer-text {
 }
 
 .btn-primary:hover {
-  background: linear-gradient(180deg, #25c1d6 0%, #1ab0c3 100%);
+  background: linear-gradient(180deg, #27cfe0 0%, #1cbedb 100%);
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 3px 8px rgba(23, 162, 184, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .btn-primary:active {
@@ -332,9 +347,9 @@ body:not(.dark-theme) .footer .footer-text {
 }
 
 .btn-secondary {
-  background: linear-gradient(180deg, #edeff1 0%, #dadfe3 100%);
+  background: linear-gradient(180deg, #e8eff3 0%, #d5e0e5 100%); /* Cooler tones to complement turquoise */
   border-color: transparent;
-  color: #444;
+  color: #425a67; /* Darker blue-gray that complements turquoise */
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
@@ -371,13 +386,13 @@ body:not(.dark-theme) .footer .footer-text {
 }
 
 .dark-theme .btn-secondary {
-  background: linear-gradient(180deg, #495057 0%, #343a40 100%);
+  background: linear-gradient(180deg, #4e6a7a 0%, #3a5464 100%); /* Blue-gray tones that complement turquoise */
   color: #f8f9fa;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .dark-theme .btn-secondary:hover {
-  background: linear-gradient(180deg, #5a6268 0%, #495057 100%);
+  background: linear-gradient(180deg, #5d7a8c 0%, #4e6a7a 100%); /* Blue-gray tones that complement turquoise */
   color: #ffffff;
   transform: translateY(-1px);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -399,7 +414,8 @@ body:not(.dark-theme) .footer .footer-text {
 
 .form-control:focus {
   border-color: var(--input-focus-border);
-  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.2);
+  outline: none;
 }
 
 .form-control::placeholder {
@@ -451,15 +467,23 @@ body:not(.dark-theme) .footer .footer-text {
   cursor: pointer;
   padding: 0.375rem 0.75rem;
   font-size: 1rem;
-  border-radius: 0.25rem;
+  border-radius: var(--border-radius);
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   transition: all var(--transition-speed);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .theme-toggle:hover {
   background-color: var(--bg-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(var(--primary-color-rgb), 0.15);
+}
+
+.theme-toggle:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Additional utility classes */
@@ -617,10 +641,121 @@ body:not(.dark-theme) .modal-content pre {
 .dark-theme .badge.bg-light {
   background-color: var(--bg-tertiary) !important;
   color: var(--text-primary);
+  border: 1px solid rgba(var(--primary-color-rgb), 0.15);
 }
 
 .dark-theme .badge.bg-secondary {
-  background-color: #495057 !important;
+  background-color: #4e6a7a !important; /* Complementary to turquoise */
+  color: #ffffff;
+}
+
+/* Badge styling for both themes */
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 0.35em 0.65em;
+  border-radius: 4px;
+}
+
+.badge.bg-success {
+  background-color: var(--success-color) !important;
+}
+
+.badge.bg-danger {
+  background-color: var(--danger-color) !important;
+}
+
+.badge.bg-warning {
+  background-color: var(--warning-color) !important;
+  color: #212529;
+}
+
+.badge.bg-info {
+  background-color: var(--info-color) !important;
+  color: #ffffff;
+}
+
+.badge.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+/* Enhanced status badges with visual indicators */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4em 0.75em;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.status-badge::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.status-badge[data-status="online"] {
+  background: linear-gradient(to right, #28cc9e, #25a588);
+  color: white;
+}
+
+.status-badge[data-status="online"]::before {
+  background-color: #a5f3e2;
+  box-shadow: 0 0 4px #a5f3e2;
+  animation: pulse 2s infinite;
+}
+
+.status-badge[data-status="offline"] {
+  background: linear-gradient(to right, #f85f70, #e04554);
+  color: white;
+}
+
+.status-badge[data-status="offline"]::before {
+  background-color: #ffb3ba;
+}
+
+.status-badge[data-status="unknown"] {
+  background: linear-gradient(to right, #6c757d, #5d666e);
+  color: white;
+}
+
+.status-badge[data-status="unknown"]::before {
+  background-color: #d8dce0;
+}
+
+/* Dark theme adjustments for status badges */
+.dark-theme .status-badge[data-status="online"] {
+  background: linear-gradient(to right, #1fb88f, #17a589);
+}
+
+.dark-theme .status-badge[data-status="offline"] {
+  background: linear-gradient(to right, #e55561, #c13a48);
+}
+
+.dark-theme .status-badge[data-status="unknown"] {
+  background: linear-gradient(to right, #5a626a, #4a545d);
+}
+
+/* Animation for online status indicator */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .dark-theme .alert-secondary {
@@ -740,14 +875,15 @@ body:not(.dark-theme) .profile-indicator {
 }
 
 .form-check-input:checked {
-  background-color: #2ebe9e; /* Greenish tone that complements turquoise */
-  border-color: #2ebe9e;
+  background-color: var(--success-color); /* Using the variable for consistency */
+  border-color: var(--success-color);
   box-shadow: 0 0 0 1px rgba(46, 190, 158, 0.25);
 }
 
 .form-check-input:focus {
-  border-color: #2ebe9e;
+  border-color: var(--success-color);
   box-shadow: 0 0 0 0.25rem rgba(46, 190, 158, 0.25);
+  outline: none;
 }
 
 /* Dark theme adjustments for checkboxes */

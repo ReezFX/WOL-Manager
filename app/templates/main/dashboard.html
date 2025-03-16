@@ -19,11 +19,17 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ host.name }}</h5>
                     {% if host.status == 'online' %}
-                        <span class="badge status-badge badge-success" data-status="online">Online</span>
+                        <span class="badge status-badge" data-status="online">
+                            <i class="fas fa-circle-check fa-xs me-1"></i>Online
+                        </span>
                     {% elif host.status == 'offline' %}
-                        <span class="badge status-badge badge-danger" data-status="offline">Offline</span>
+                        <span class="badge status-badge" data-status="offline">
+                            <i class="fas fa-circle-xmark fa-xs me-1"></i>Offline
+                        </span>
                     {% else %}
-                        <span class="badge status-badge badge-secondary" data-status="unknown">Unknown</span>
+                        <span class="badge status-badge" data-status="unknown">
+                            <i class="fas fa-circle-question fa-xs me-1"></i>Unknown
+                        </span>
                     {% endif %}
                 </div>
                 <div class="card-body">

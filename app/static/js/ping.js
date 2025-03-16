@@ -295,6 +295,8 @@ function updateHostStatusUI(hostStatuses) {
             if (status.is_online) {
                 statusBadge.textContent = 'Online';
                 statusBadge.classList.add(onlineClass);
+                // Set data-status attribute to "online"
+                statusBadge.setAttribute('data-status', 'online');
                 
                 // If we have response time info, add it
                 if (status.response_time) {
@@ -304,6 +306,8 @@ function updateHostStatusUI(hostStatuses) {
             } else {
                 statusBadge.textContent = 'Offline';
                 statusBadge.classList.add(offlineClass);
+                // Set data-status attribute to "offline"
+                statusBadge.setAttribute('data-status', 'offline');
                 
                 // If we have error info, add it to title tooltip
                 if (status.error) {
