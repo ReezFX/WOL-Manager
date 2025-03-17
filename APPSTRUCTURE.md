@@ -9,6 +9,7 @@ The Wake-on-LAN Manager is a web-based application designed to provide a central
 - Centralized management of host devices
 - User-friendly web interface
 - Role-based access control
+- Public host access with secure permalinks
 - Secure authentication
 - Logging and auditing of wake attempts
 - Docker-based deployment
@@ -135,6 +136,8 @@ The application uses SQLAlchemy ORM with the following models:
   - `subnet_mask`: Network subnet mask
   - `broadcast_address`: Network broadcast address
   - `notes`: Additional device information
+  - `public_access`: Boolean flag for public accessibility
+  - `access_hash`: Unique hash for public access links
   - `created_at`: Timestamp of creation
   - `updated_at`: Timestamp of last update
   - `user_id`: Creator/owner of the host entry
@@ -260,6 +263,9 @@ The application implements several security measures:
 
 ### Network Security
 - Rate limiting for login attempts and WoL operations
+- Hash-based validation for public host access links
+- Rate limiting for public access requests
+- Access logging for public host interactions
 - Permission validation before packet transmission
 - Configurable port and broadcast settings
 
