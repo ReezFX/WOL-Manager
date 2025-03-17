@@ -1,4 +1,7 @@
-# WOL-Manager
+<div align="center">
+  <img src="app/static/img/wol-manager-title.png" alt="WOL-Manager Title" width="400"><br><br>
+  <img src="app/static/img/wol-manager-logo.png" alt="WOL-Manager Logo" width="200">
+</div>
 
 ## Overview
 WOL-Manager is a Flask-based web application designed to provide a user-friendly interface for managing and waking devices using the Wake-on-LAN (WOL) protocol. This application allows users to store host information, including MAC addresses, and remotely power on these devices over a network.
@@ -409,6 +412,14 @@ If the Wake-on-LAN functionality is not working when running the application in 
      ```
 
 ## Release Notes
+
+### Version 1.2.1 (2025-03-17)
+- Changed:
+  - Webapp branding update with refreshed visual identity and improved brand consistency
+- Fixed:
+  - Enhanced ping/host status functionality with improved caching, logging, and accuracy
+  - Resolved various UI design issues in footer layout, host list action buttons, and /hosts/ view
+  - Fixed several issues with host deletion logic and error handling
 
 ### Version 1.2.0 (2025-03-15)
 - Enhanced User Interface (UI 2.0):

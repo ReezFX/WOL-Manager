@@ -5,6 +5,30 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-03-17
+
+### Changed
+- Webapp branding update
+  - Refreshed visual identity across the application
+  - Updated logo and brand elements for consistency
+  - Improved brand alignment with organizational guidelines
+
+### Fixed
+- Fixed ping/host status functionality issues
+  - Corrected ping latency check value for more accurate host status reporting
+  - Improved ping/host status caching mechanism for better performance
+  - Enhanced ping logging for better troubleshooting capabilities
+  - Resolved inconsistencies in ping status reporting
+- Resolved UI design issues
+  - Fixed footer layout formatting for proper alignment and spacing
+  - Corrected design for action buttons in host list to improve usability
+  - Addressed various design inconsistencies in the /hosts/ view
+  - Improved overall visual consistency across the application
+- Fixed host management functionality
+  - Resolved several issues with host deletion logic to prevent orphaned records
+  - Enhanced error handling during host deletion operations
+  - Improved validation checks during host management operations
+
 ## [1.2.0] - 2025-03-15
 
 ### Added
