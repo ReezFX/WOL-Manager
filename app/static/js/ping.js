@@ -345,12 +345,11 @@ function updateHostStatusUI(hostStatuses) {
                     }
                 }
                 
-                // Update the whole row styling (optional)
-                if (status.is_online) {
-                    hostElement.classList.remove('table-danger');
-                } else {
-                    hostElement.classList.add('table-danger');
-                }
+                // Update the whole row styling - just remove table-danger class
+                // regardless of status to improve contrast
+                hostElement.classList.remove('table-danger');
+                // We no longer add table-danger to improve contrast
+                
             }
             
             // Update any card-specific UI elements
@@ -361,10 +360,14 @@ function updateHostStatusUI(hostStatuses) {
                     
                 if (card) {
                     card.classList.remove('border-success', 'border-danger');
-                    if (status.is_online) {
-                        card.classList.add('border-success');
-                    } else {
-                        card.classList.add('border-danger');
+                    
+                    // Only add colored borders on dashboard, not on hosts list page
+                    if (!isHostsList) {
+                        if (status.is_online) {
+                            card.classList.add('border-success');
+                        } else {
+                            card.classList.add('border-danger');
+                        }
                     }
                 }
             }

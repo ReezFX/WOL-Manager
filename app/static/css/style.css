@@ -1,3 +1,53 @@
+/* Theme-friendly table styling */
+.table-theme {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.table-theme thead {
+  border-color: var(--border-color);
+}
+
+.table-theme tbody tr {
+  border-color: var(--border-color);
+}
+
+.dark-theme .table-theme {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* Table hover effects that work in both themes */
+.table-hover tbody tr:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.dark-theme .table-hover tbody tr:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.1);
+}
+
+/* Make btn-accent available if not already defined */
+.btn-accent {
+  background: linear-gradient(180deg, #ff9579 0%, #ff7e5f 100%);
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  color: white;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.btn-accent:hover {
+  background: linear-gradient(180deg, #ffa589 0%, #ff8c70 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(255, 126, 95, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-accent:active {
+  background: linear-gradient(180deg, #f7764f 0%, #f56746 100%);
+  transform: translateY(1px);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(0, 0, 0, 0.1);
+  transition-duration: 0.05s;
+}
+
 /* style.css - Light and Dark Mode Themes with Apple-like Design */
 
 /* Apple System Font Stack */
@@ -1964,12 +2014,58 @@ body:not(.dark-theme) .profile-indicator {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 0.25rem rgba(var(--accent-color-rgb), 0.25);
 }
+1967|
+1968|/* Dark theme input focus states */
+1969|.dark-theme .form-control:focus,
+1970|.dark-theme .form-select:focus {
+1971|  border-color: var(--accent-color);
+1972|  box-shadow: 0 0 0 0.25rem rgba(var(--accent-color-rgb), 0.25);
+1973|}
 
-/* Dark theme input focus states */
-.dark-theme .form-control:focus,
-.dark-theme .form-select:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 0.25rem rgba(var(--accent-color-rgb), 0.25);
+/* Table accent style for highlighting rows */
+.table-accent {
+  background-color: rgba(var(--accent-color-rgb), 0.15);
 }
 
-/* Call-to-action
+.dark-theme .table-accent {
+  background-color: rgba(var(--accent-color-rgb), 0.25);
+}
+
+/* Hover state for accent table rows */
+.table-hover .table-accent:hover {
+  background-color: rgba(var(--accent-color-rgb), 0.25);
+}
+
+.dark-theme .table-hover .table-accent:hover {
+  background-color: rgba(var(--accent-color-rgb), 0.35);
+}\n
+
+/* Host row styling based on status */
+.host-row-offline {
+  background-color: rgba(var(--danger-color-rgb), 0.1);
+  border-left: 2px solid var(--danger-color);
+  color: var(--danger-color);  /* Using danger color for better contrast in light theme */
+}
+
+.dark-theme .host-row-offline {
+  background-color: rgba(226, 85, 99, 0.15);
+  border-left: 2px solid var(--danger-color);
+  color: var(--text-primary);
+}
+
+/* Hover state for offline host rows */
+.table-hover .host-row-offline:hover {
+  background-color: rgba(var(--danger-color-rgb), 0.15);
+}
+
+.dark-theme .table-hover .host-row-offline:hover {
+  background-color: rgba(226, 85, 99, 0.2);
+}
+
+1974|
+1975|/* Call-to-action
+1976|
+
+1974|
+1975|/* Call-to-action
+1976|
