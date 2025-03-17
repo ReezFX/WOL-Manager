@@ -190,6 +190,17 @@ def add_host():
     # Populate the visible_to_roles field choices
     form.visible_to_roles.choices = [(role.id, role.name) for role in roles]
     
+    # Remove public_access field if user doesn't have permission to manage it
+    if not (current_user.has_permission('publish_host') or current_user.is_admin):
+        delattr(form, 'public_access')
+    else:
+        # If enabling public access, verify permission again
+        if form.validate_on_submit() and form.public_access.data:
+            if not (current_user.has_permission('publish_host') or current_user.is_admin):
+                access_logger.warning(f"Permission denied: User {current_user.username} attempted to create a host with public access without permission")
+                flash('You do not have permission to enable public access', 'danger')
+                return render_template('host/host_form.html', form=form, title='Add Host', roles=roles)
+    
     # Initialize visible_to_roles data to empty list for GET requests
     if request.method == 'GET':
         form.visible_to_roles.data = []
@@ -204,14 +215,23 @@ def add_host():
         # Create new host
         # Convert role IDs to strings for consistent storage
         visible_roles = [str(role_id) for role_id in form.visible_to_roles.data]
-        
+
+        # Generate public access token if enabled
+        public_access_token = None
+        if form.public_access.data:
+            from app.utils import generate_unique_token
+            public_access_token = generate_unique_token(db_session)
+            access_logger.info(f"Public access enabled for new host '{form.name.data}' by user: {current_user.username}")
+
         new_host = Host(
             name=form.name.data,
             mac_address=form.mac_address.data,
             ip=form.ip_address.data if form.ip_address.data else '',
             description=form.description.data if form.description.data else '',
             created_by=current_user.id,
-            visible_to_roles=visible_roles
+            visible_to_roles=visible_roles,
+            public_access=form.public_access.data,
+            public_access_token=public_access_token
         )
         try:
             db_session.add(new_host)
@@ -262,18 +282,30 @@ def edit_host(host_id):
     # Populate the visible_to_roles field choices
     form.visible_to_roles.choices = [(role.id, role.name) for role in roles]
     
+    # Remove public_access field if user doesn't have permission to manage it
+    if not (current_user.has_permission('publish_host') or current_user.is_admin):
+        delattr(form, 'public_access')
+    else:
+        # If switching to public access, verify permission again
+        if form.validate_on_submit() and form.public_access.data and not host.public_access:
+            if not (current_user.has_permission('publish_host') or current_user.is_admin):
+                access_logger.warning(f"Permission denied: User {current_user.username} attempted to enable public access for host {host.id} without permission")
+                flash('You do not have permission to enable public access', 'danger')
+                return redirect(url_for('host.view_host', host_id=host_id))
+    
     if request.method == 'GET':
         # Pre-populate form with existing host data
         form.name.data = host.name
         form.mac_address.data = host.mac_address
         form.ip_address.data = host.ip
+        form.ip_address.data = host.ip
         form.description.data = host.description
+        form.public_access.data = host.public_access  # Add this line
         # Convert string role IDs back to integers for the form
         if host.visible_to_roles:
             form.visible_to_roles.data = [int(role_id) for role_id in host.visible_to_roles]
         else:
             form.visible_to_roles.data = []
-    
     if form.validate_on_submit():
         # Check if MAC address already exists for a different host
         if form.mac_address.data != host.mac_address:
@@ -289,11 +321,24 @@ def edit_host(host_id):
         host.description = form.description.data if form.description.data else ''
         
         # Update visible_to_roles
+        # Update visible_to_roles
         # Convert role IDs to strings for consistent storage
         host.visible_to_roles = [str(role_id) for role_id in form.visible_to_roles.data]
         
+        # Handle public access toggle and token management
+        if form.public_access.data and not host.public_access:
+            # Enabling public access - generate a new token
+            from app.utils import generate_unique_token
+            host.public_access = True
+            host.public_access_token = generate_unique_token(db_session)
+            access_logger.info(f"Public access enabled for host {host.id} '{host.name}' by user: {current_user.username}")
+        elif not form.public_access.data and host.public_access:
+            # Disabling public access - remove the token
+            host.public_access = False
+            host.public_access_token = None
+            access_logger.info(f"Public access disabled for host {host.id} '{host.name}' by user: {current_user.username}")
+        
         try:
-            db_session.commit()
             access_logger.info(f"Host {host.id} '{form.name.data}' updated by user: {current_user.username} (id: {current_user.id})")
             flash(f'Host {form.name.data} updated successfully', 'success')
             return redirect(url_for('host.list_hosts'))
@@ -370,5 +415,15 @@ def view_host(host_id):
         return redirect(url_for('host.list_hosts'))
     
     access_logger.info(f"Host {host.id} '{host.name}' viewed by user: {current_user.username} (id: {current_user.id})")
-    return render_template('host/view.html', host=host)
+    
+    # Generate public access URL if enabled
+    public_access_url = None
+    if host.public_access and host.public_access_token:
+        public_access_url = url_for('public.public_host_view', 
+                                  token=host.public_access_token, 
+                                  _external=True)
+
+    return render_template('host/view.html', 
+                        host=host,
+                        public_access_url=public_access_url)
 

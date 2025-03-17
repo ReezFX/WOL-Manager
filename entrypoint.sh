@@ -30,16 +30,16 @@ echo "REDIS_URL set to $REDIS_URL"
 # Database initialization and migration process
 echo "Starting database initialization and migration process..."
 
-# Initialize the database structure
-echo "Initializing database..."
-python manage.py db-init || echo "Database already initialized, continuing..."
+# Initialize migration support first
+echo "Initializing database migration support..."
+python manage.py db-init || echo "Migration support already initialized, continuing..."
 
 # Create and run migrations
 echo "Creating and running migrations..."
 python manage.py db-migrate || echo "Migration creation failed or already exists, continuing..."
 python manage.py db-upgrade || echo "Migration upgrade failed, continuing..."
 
-# Always run init-db to ensure all tables are created (regardless of whether the database exists)
+# After migrations are applied, ensure all tables are created
 echo "Ensuring all database tables are created..."
 python manage.py init-db
 

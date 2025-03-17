@@ -43,6 +43,22 @@
                 <div class="col-md-9">{{ host.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
             </div>
             {% endif %}
+            {% if host.public_access %}
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Public Access:</div>
+                <div class="col-md-9">
+                    <span class="badge bg-success me-2">Enabled</span>
+                    <div class="input-group">
+                        <input type="text" class="form-control" readonly
+                               value="{{ url_for('public.public_host_view', token=host.public_access_token, _external=True) }}"
+                               id="public-url">
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyPublicUrl()">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
         <div class="card-footer">
             <div class="d-flex justify-content-between">
@@ -63,3 +79,21 @@
 </div>
 {% endblock %}
 
+{% block scripts %}
+{{ super() }}
+<script>
+function copyPublicUrl() {
+    var urlInput = document.getElementById('public-url');
+    urlInput.select();
+    document.execCommand('copy');
+    
+    // Optional: Show a temporary success message
+    var copyBtn = event.target.closest('button');
+    var originalHtml = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(function() {
+        copyBtn.innerHTML = originalHtml;
+    }, 2000);
+}
+</script>
+{% endblock %}

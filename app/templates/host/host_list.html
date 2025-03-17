@@ -28,7 +28,14 @@
                     <tbody>
                         {% for host in hosts %}
                         <tr data-host-id="{{ host.id }}" class="host-row-{{ host.status }}">
-                            <td>{{ host.name }}</td>
+                            <td>
+                                {{ host.name }}
+                                {% if host.public_access %}
+                                <span class="badge bg-info ms-2" title="Public Access Enabled">
+                                    <i class="fas fa-globe fa-xs"></i>
+                                </span>
+                                {% endif %}
+                            </td>
                             <td><code>{{ host.mac_address }}</code></td>
                             <td>{{ host.ip }}</td>
                             <td>

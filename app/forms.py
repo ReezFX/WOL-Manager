@@ -42,6 +42,8 @@ class HostForm(FlaskForm):
         Length(max=255, message='Description must be less than 255 characters')
     ])
     visible_to_roles = SelectMultipleField('Visible to Roles', choices=[], coerce=int)
+    public_access = BooleanField('Enable Public Access',
+        description='WARNING: This will create a public URL that anyone can use to view basic host information. Only enable this if you understand the security implications.')
     submit = SubmitField('Save Host')
     
     def validate_ip_address(self, field):

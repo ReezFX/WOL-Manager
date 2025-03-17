@@ -139,6 +139,10 @@ def create_app(config_name=None):
     from app.admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix='/admin')
     
+    # Public access blueprint
+    from app.blueprints.public import bp as public_blueprint
+    app.register_blueprint(public_blueprint, url_prefix='/public')
+    
     # Main route blueprint (can contain dashboard, etc.)
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint)

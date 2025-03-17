@@ -75,6 +75,22 @@
                             {% endfor %}
                             <small class="form-text text-muted">Hold Ctrl (or Cmd on Mac) to select multiple roles. Users with these roles will be able to see this host.</small>
                         </div>
+                        {% if form.public_access is defined %}
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                {{ form.public_access(class="form-check-input") }}
+                                {{ form.public_access.label(class="form-check-label") }}
+                                {% if form.public_access.description %}
+                                <small class="form-text text-warning">{{ form.public_access.description }}</small>
+                                {% endif %}
+                            </div>
+                            {% for error in form.public_access.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                         <div class="form-group mt-4">
                             {{ form.submit(class="btn btn-primary") }}
                             <a href="{{ url_for('host.list_hosts') }}" class="btn btn-secondary">Cancel</a>

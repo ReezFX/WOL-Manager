@@ -79,6 +79,7 @@ def create_permissions():
         {'name': 'read_host', 'description': 'View hosts', 'category': 'hosts'},
         {'name': 'update_host', 'description': 'Edit hosts', 'category': 'hosts'},
         {'name': 'delete_host', 'description': 'Delete hosts', 'category': 'hosts'},
+        {'name': 'publish_host', 'description': 'Make hosts publicly accessible', 'category': 'hosts'},
         
         # User permissions
         {'name': 'create_user', 'description': 'Create new users', 'category': 'users'},
@@ -106,7 +107,7 @@ def create_permissions():
         {
             'name': 'admin',
             'description': 'Administrator with full access',
-            'permissions': ['create_host', 'read_host', 'update_host', 'delete_host',
+            'permissions': ['create_host', 'read_host', 'update_host', 'delete_host', 'publish_host',
                            'create_user', 'read_user', 'update_user', 'delete_user',
                            'send_wol', 'view_logs', 'configure_system']
         },
