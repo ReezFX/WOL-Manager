@@ -2014,13 +2014,13 @@ body:not(.dark-theme) .profile-indicator {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 0.25rem rgba(var(--accent-color-rgb), 0.25);
 }
-1967|
-1968|/* Dark theme input focus states */
-1969|.dark-theme .form-control:focus,
-1970|.dark-theme .form-select:focus {
-1971|  border-color: var(--accent-color);
-1972|  box-shadow: 0 0 0 0.25rem rgba(var(--accent-color-rgb), 0.25);
-1973|}
+
+/* Dark theme input focus states */
+.dark-theme .form-control:focus,
+.dark-theme .form-select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 0.25rem rgba(var(--accent-color-rgb), 0.25);
+}
 
 /* Table accent style for highlighting rows */
 .table-accent {
@@ -2062,10 +2062,51 @@ body:not(.dark-theme) .profile-indicator {
   background-color: rgba(226, 85, 99, 0.2);
 }
 
-1974|
-1975|/* Call-to-action
-1976|
 
-1974|
-1975|/* Call-to-action
-1976|
+/* Call-to-action
+
+
+/* Fix for delete button styling in btn-group */
+.btn-group form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.btn-group form:not(:first-child):not(:last-child) .btn {
+  border-radius: 0;
+}
+
+.btn-group form:first-child .btn {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.btn-group form:last-child .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.btn-group form:not(:first-child) .btn {
+  margin-left: -1px;
+}
+
+.btn-group form .btn {
+  position: relative;
+  flex: 1 1 auto;
+}
+
+/* Ensure proper z-index when hovering form buttons in btn-group */
+.btn-group form .btn:hover {
+  z-index: 1;
+}
+
+/* Fix for delete button when it's the only form in the group */
+.btn-group > a:not(:first-child) + form .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.btn-group > form + a .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
