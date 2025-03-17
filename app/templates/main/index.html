@@ -3,6 +3,100 @@
 {% block title %}Wake-on-LAN - Home{% endblock %}
 
 {% block content %}
+<div class="branding-header text-center py-5">
+    <div class="branding-bg"></div>
+    <div class="container position-relative">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="brand-container">
+                    <img src="{{ url_for('static', filename='img/wol-manager-logo.png') }}" alt="WOL Manager Logo" class="brand-logo img-fluid mb-3" style="max-width: 220px;">
+                    <div class="brand-title-wrapper">
+                        <img src="{{ url_for('static', filename='img/wol-manager-title.png') }}" alt="WOL Manager Title" class="brand-title img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .branding-header {
+        position: relative;
+        overflow: hidden;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid rgba(var(--border-color), 0.5);
+    }
+    
+    .branding-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        /* Removed gradient background to let the transparent PNG images shine through */
+        z-index: -1;
+    }
+    
+    .dark-theme .branding-bg {
+        /* Removed gradient background for dark theme as well */
+    }
+    
+    .brand-container {
+        padding: 2rem 0;
+        /* Removed backdrop-filter blur effect to show transparent PNG properly */
+        /* Removed webkit backdrop filter as well */
+        border-radius: var(--border-radius-lg);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        transform: translateY(0);
+        transition: var(--apple-transition);
+    }
+    
+    .brand-container:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--apple-shadow-lg);
+    }
+    
+    .brand-logo {
+        filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.25));
+        transition: transform 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+    
+    .brand-container:hover .brand-logo {
+        transform: scale(1.05);
+    }
+    
+    .brand-title-wrapper {
+        padding: 0.5rem 0 0.5rem;
+        position: relative;
+    }
+    
+    .brand-title {
+        filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.22));
+        transition: transform 0.3s ease;
+        max-width: 80%;
+    }
+    
+    .brand-container:hover .brand-title {
+        transform: scale(1.02);
+    }
+    
+    /* Enhanced shadow effect for better visual depth without background */
+    .brand-container::after {
+        content: "";
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 10px;
+        /* Removed background gradient */
+        border-radius: 50%;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        z-index: -1;
+    }
+</style>
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-10">
