@@ -10,6 +10,16 @@
 // before displaying a host as offline
 let hostStatusCache = {};
 
+// Store timeout IDs for each host to allow individual scheduling
+let hostIntervals = {};
+
+// Ping intervals based on host status (in milliseconds)
+const OFFLINE_CHECK_INTERVAL = 15000; // 15 seconds for offline hosts
+const ONLINE_CHECK_INTERVAL = 30000;  // 30 seconds for online hosts
+
+// Key for storing host statuses in localStorage
+const HOST_STATUS_STORAGE_KEY = 'wolHostStatuses';
+
 // Constants for smoothing status changes
 // Number of consecutive offline checks before showing as offline
 const OFFLINE_THRESHOLD = 3; 
@@ -31,14 +41,67 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /**
- * Initialize host status checks - runs immediately and sets up interval
+ * Initialize host status checks - runs immediately and sets up intervals for each host
  */
 function initHostStatusChecks() {
-    // Run immediately on page load
-    checkHostStatus();
-    // Then run every 15 seconds
-    setInterval(checkHostStatus, 15000);
+    // Load host statuses from localStorage before first API call
+    loadHostStatusesFromStorage();
     
+    // Update UI based on restored statuses
+    applyStoredStatusesToUI();
+    
+    // Run immediately for all hosts on page load
+    checkAllHostStatuses();
+    
+    // Then schedule individual checks for each host
+    scheduleHostChecks();
+}
+
+/**
+ * Schedule status checks for each host with appropriate intervals
+ */
+function scheduleHostChecks() {
+    // Clear any existing intervals
+    for (const hostId in hostIntervals) {
+        clearTimeout(hostIntervals[hostId]);
+        delete hostIntervals[hostId];
+    }
+    
+    // Get all host IDs from the page
+    const hostElements = document.querySelectorAll('[data-host-id]');
+    if (hostElements.length === 0) {
+        return;
+    }
+    
+    // Schedule each host with appropriate interval
+    hostElements.forEach(hostElement => {
+        const hostId = hostElement.getAttribute('data-host-id');
+        scheduleHostCheck(hostId);
+    });
+}
+
+/**
+ * Schedule a check for a specific host with an interval based on its status
+ * @param {string} hostId - The ID of the host to schedule
+ */
+function scheduleHostCheck(hostId) {
+    // Clear existing timeout if any
+    if (hostIntervals[hostId]) {
+        clearTimeout(hostIntervals[hostId]);
+    }
+    
+    // Determine interval based on host status
+    let interval = OFFLINE_CHECK_INTERVAL; // Default to offline interval
+    
+    // If we have cached data for this host and it's online, use longer interval
+    if (hostStatusCache[hostId] && hostStatusCache[hostId].lastKnownStatus) {
+        interval = ONLINE_CHECK_INTERVAL;
+    }
+    
+    // Schedule the check
+    hostIntervals[hostId] = setTimeout(() => {
+        checkHostStatus([hostId]);
+    }, interval);
 }
 
 /**
@@ -50,9 +113,20 @@ function startStatusChecking() {
 }
 
 /**
+ * Update the ping interval for a specific host based on its status
+ * @param {string} hostId - The ID of the host
+ * @param {boolean} isOnline - Whether the host is online
+ */
+function updateHostInterval(hostId, isOnline) {
+    // Schedule with the appropriate interval based on status
+    scheduleHostCheck(hostId);
+}
+
+/**
+/**
  * Check the status of all hosts visible on the current page
  */
-function checkHostStatus() {
+function checkAllHostStatuses() {
     // Get all host IDs from the page
     const hostElements = document.querySelectorAll('[data-host-id]');
     if (hostElements.length === 0) {
@@ -62,6 +136,18 @@ function checkHostStatus() {
     // Extract host IDs from the DOM
     const hostIds = Array.from(hostElements).map(el => el.getAttribute('data-host-id'));
     
+    // Check all hosts
+    checkHostStatus(hostIds);
+}
+
+/**
+ * Check the status of specified hosts
+ * @param {string[]} hostIds - Array of host IDs to check
+ */
+function checkHostStatus(hostIds) {
+    if (!hostIds || hostIds.length === 0) {
+        return;
+    }
     // Call the API to check host statuses
     // Get CSRF token from meta tag or form input
     const getCSRFToken = () => {
@@ -99,6 +185,11 @@ function checkHostStatus() {
     })
     .then(data => {
         updateHostStatusUI(data.hosts);
+        
+        // Reschedule the checked hosts with appropriate intervals
+        for (const hostId of hostIds) {
+            scheduleHostCheck(hostId);
+        }
     })
     .catch(error => {
         console.error('Error checking host status:', error);
@@ -135,9 +226,14 @@ function smoothHostStatuses(rawStatuses) {
         if (status.is_online) {
             // If host is online, immediately update UI and reset offline counter
             hostStatusCache[hostId].lastKnownStatus = true;
-            hostStatusCache[hostId].offlineCount = 0;
-            hostStatusCache[hostId].lastResponseTime = status.response_time;
-            hostStatusCache[hostId].lastOnlineTime = now;
+                            hostStatusCache[hostId].offlineCount = 0;
+                            hostStatusCache[hostId].lastResponseTime = status.response_time;
+                            hostStatusCache[hostId].lastOnlineTime = now;
+                            
+                            // Update interval if status has changed
+                            if (!hostStatusCache[hostId].lastKnownStatus) {
+                                updateHostInterval(hostId, true);
+                            }
             
             // If this is a change from offline to online, log it
             if (!hostStatusCache[hostId].lastKnownStatus) {
@@ -155,10 +251,13 @@ function smoothHostStatuses(rawStatuses) {
                     // Host has failed too many consecutive checks, override stability period
                     smoothedStatus.is_online = false;
                     
-                    // Update the last known status
-                    if (hostStatusCache[hostId].lastKnownStatus) {
-                        hostStatusCache[hostId].lastKnownStatus = false;
-                        hostStatusCache[hostId].lastStatusChangeTime = now;
+                        // Update the last known status
+                        if (hostStatusCache[hostId].lastKnownStatus) {
+                            hostStatusCache[hostId].lastKnownStatus = false;
+                            hostStatusCache[hostId].lastStatusChangeTime = now;
+                            
+                            // Update interval for status change
+                            updateHostInterval(hostId, false);
                     }
                 } 
                 // Also check if it's been an excessive amount of time since last successful ping
@@ -170,6 +269,9 @@ function smoothHostStatuses(rawStatuses) {
                     if (hostStatusCache[hostId].lastKnownStatus) {
                         hostStatusCache[hostId].lastKnownStatus = false;
                         hostStatusCache[hostId].lastStatusChangeTime = now;
+                        
+                        // Update interval for status change
+                        updateHostInterval(hostId, false);
                     }
                 }
                 else {
@@ -200,16 +302,24 @@ function smoothHostStatuses(rawStatuses) {
                         if (hostStatusCache[hostId].lastKnownStatus) {
                             hostStatusCache[hostId].lastKnownStatus = false;
                             hostStatusCache[hostId].lastStatusChangeTime = now;
+                            
+                            // Update interval for status change
+                            updateHostInterval(hostId, false);
                         }
                     }
                 } else {
                     // Threshold reached, show as offline
+                    smoothedStatus.is_online = false;
+                    
                     // Only log a state change if this is a new change
                     if (hostStatusCache[hostId].lastKnownStatus) {
                         hostStatusCache[hostId].lastStatusChangeTime = now;
+                        
+                        // Update interval for status change
+                        updateHostInterval(hostId, false);
+                        
+                        hostStatusCache[hostId].lastKnownStatus = false;
                     }
-                    
-                    hostStatusCache[hostId].lastKnownStatus = false;
                 }
             }
         }
@@ -227,6 +337,9 @@ function smoothHostStatuses(rawStatuses) {
 function updateHostStatusUI(hostStatuses) {
     // Apply smoothing to prevent status flickering
     const smoothedStatuses = smoothHostStatuses(hostStatuses);
+    
+    // Save the updated statuses to localStorage
+    saveHostStatusesToStorage(smoothedStatuses);
     // Detect current page - different layouts for dashboard vs hosts page
     const isDashboard = window.location.pathname === '/dashboard';
     const isHostsList = window.location.pathname === '/hosts' || window.location.pathname === '/hosts/';
@@ -372,6 +485,113 @@ function updateHostStatusUI(hostStatuses) {
                 }
             }
         });
+    }
+}
+/**
+ * Save host statuses to localStorage
+ * @param {Object} statuses - Object with host IDs as keys and status data as values
+ */
+function saveHostStatusesToStorage(statuses) {
+    try {
+        // Don't save if we have no statuses
+        if (!statuses || Object.keys(statuses).length === 0) {
+            return;
+        }
+        
+        // Prepare storage data with timestamp
+        const storageData = {
+            timestamp: Date.now(),
+            statuses: {}
+        };
+        
+        // Store only necessary data (not the full status objects)
+        for (const [hostId, status] of Object.entries(statuses)) {
+            storageData.statuses[hostId] = {
+                is_online: status.is_online,
+                response_time: status.response_time,
+                error: status.error
+            };
+        }
+        
+        // Save to localStorage
+        localStorage.setItem(HOST_STATUS_STORAGE_KEY, JSON.stringify(storageData));
+    } catch (error) {
+        console.error('Error saving host statuses to localStorage:', error);
+    }
+}
+
+/**
+ * Load host statuses from localStorage
+ * @returns {Object} - Retrieved host statuses or empty object if none found
+ */
+function loadHostStatusesFromStorage() {
+    try {
+        // Get stored data
+        const storedData = localStorage.getItem(HOST_STATUS_STORAGE_KEY);
+        if (!storedData) {
+            return;
+        }
+        
+        // Parse stored data
+        const parsedData = JSON.parse(storedData);
+        
+        // Check if data is too old (15 minutes)
+        const MAX_STORAGE_AGE = 15 * 60 * 1000; // 15 minutes
+        const now = Date.now();
+        if (now - parsedData.timestamp > MAX_STORAGE_AGE) {
+            // Data is too old, remove it
+            localStorage.removeItem(HOST_STATUS_STORAGE_KEY);
+            return;
+        }
+        
+        // Initialize hostStatusCache with stored data
+        for (const [hostId, status] of Object.entries(parsedData.statuses)) {
+            hostStatusCache[hostId] = {
+                lastKnownStatus: status.is_online,
+                offlineCount: status.is_online ? 0 : OFFLINE_THRESHOLD, // Preserve offline state
+                lastResponseTime: status.response_time,
+                lastError: status.error,
+                lastOnlineTime: status.is_online ? parsedData.timestamp : null,
+                lastStatusChangeTime: parsedData.timestamp
+            };
+        }
+        
+        return parsedData.statuses;
+    } catch (error) {
+        console.error('Error loading host statuses from localStorage:', error);
+        return {};
+    }
+}
+
+/**
+ * Apply stored statuses to the UI immediately on page load
+ */
+function applyStoredStatusesToUI() {
+    // Get all host IDs from the page
+    const hostElements = document.querySelectorAll('[data-host-id]');
+    if (hostElements.length === 0) {
+        return;
+    }
+    
+    // Build status object from cache
+    const statuses = {};
+    
+    hostElements.forEach(hostElement => {
+        const hostId = hostElement.getAttribute('data-host-id');
+        
+        // Only include hosts that we have cached statuses for
+        if (hostStatusCache[hostId]) {
+            statuses[hostId] = {
+                is_online: hostStatusCache[hostId].lastKnownStatus,
+                response_time: hostStatusCache[hostId].lastResponseTime,
+                error: hostStatusCache[hostId].lastError
+            };
+        }
+    });
+    
+    // Only update if we have any statuses
+    if (Object.keys(statuses).length > 0) {
+        updateHostStatusUI(statuses);
     }
 }
 

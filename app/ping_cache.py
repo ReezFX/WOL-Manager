@@ -85,8 +85,9 @@ class PingCache:
             # Test connection
             ping_result = self.redis.ping()
             
-            logger.info(f"Redis connection successful: {redis_url}")
-            logger.debug(f"Redis server info: {connection_info.get('redis_version', 'unknown')} on {connection_info.get('os', 'unknown')}")
+            logger.debug(f"Redis connection successful: {redis_url}")
+            if DEBUG_VERBOSE:
+                logger.debug(f"Redis server info: {connection_info.get('redis_version', 'unknown')} on {connection_info.get('os', 'unknown')}")
                 
         except redis.ConnectionError as e:
             self.redis = None
@@ -126,8 +127,13 @@ class PingCache:
             if total_ops > 0:
                 hits_ratio = (self._cache_hits / total_ops) * 100
                 
-            logger.info(f"Cache stats: {self._cache_hits} hits, {self._cache_misses} misses "
-                       f"({hits_ratio:.1f}% hit ratio), {self._redis_errors} Redis errors")
+            # Keep cache stats at INFO level but only when there's significant activity
+            if total_ops > 100 or self._redis_errors > 0:
+                logger.info(f"Cache stats: {self._cache_hits} hits, {self._cache_misses} misses "
+                           f"({hits_ratio:.1f}% hit ratio), {self._redis_errors} Redis errors")
+            else:
+                logger.debug(f"Cache stats: {self._cache_hits} hits, {self._cache_misses} misses "
+                            f"({hits_ratio:.1f}% hit ratio), {self._redis_errors} Redis errors")
             self._last_stats_time = current_time
     
     def _get_key(self, host_id: str) -> str:
@@ -211,7 +217,9 @@ class PingCache:
                     "data_size": len(json_data)
                 })
                 
-                logger.debug(f"Cache update: host={host_id}, online={is_online}, response_time={response_time}ms, expiry={expiry}s")
+                # Only log cache updates conditionally to reduce verbosity
+                if DEBUG_VERBOSE or (response_time is not None and response_time > 100):
+                    logger.debug(f"Cache update: host={host_id}, online={is_online}, response_time={response_time}ms, expiry={expiry}s")
                 
                 
                 # Track this host's status change if any
@@ -255,7 +263,9 @@ class PingCache:
             # Use local cache if Redis is not available
             self._local_cache[host_id] = data
             op_time = (time.time() - op_start) * 1000  # ms
-            logger.debug(f"Local cache update: host={host_id}, online={is_online}, response_time={response_time}ms")
+            # Only log local cache updates in verbose mode or for significant changes
+            if DEBUG_VERBOSE or (response_time is not None and response_time > 100):
+                logger.debug(f"Local cache update: host={host_id}, online={is_online}, response_time={response_time}ms")
             
             update_details.update({
                 "status": "success",
@@ -311,7 +321,9 @@ class PingCache:
                         "response_time": entry.get('response_time')
                     })
                     
-                    logger.debug(f"Cache hit: host={host_id}, online={entry['is_online']}, age={age:.1f}s")
+                    # Only log cache hits in verbose mode or for hosts that have been offline
+                    if DEBUG_VERBOSE or not entry['is_online']:
+                        logger.debug(f"Cache hit: host={host_id}, online={entry['is_online']}, age={age:.1f}s")
                     
                     # Increment hit counter
                     self._cache_hits += 1
@@ -346,7 +358,9 @@ class PingCache:
                         "reason": "key_not_found"
                     })
                     
-                    logger.debug(f"Cache miss: host={host_id}, key not found")
+                    # Only log cache misses in verbose mode
+                    if DEBUG_VERBOSE:
+                        logger.debug(f"Cache miss: host={host_id}, key not found")
                     
                     
                     # Track timing metrics for cache misses
@@ -471,16 +485,20 @@ class PingCache:
     
     def clear(self) -> None:
         """Clear all cached ping results"""
-        logger.info("Clearing ping cache")
+        logger.debug("Clearing ping cache")
         if self.redis:
             try:
                 # Delete all keys with this prefix
                 keys = self.redis.keys(f"{self.prefix}*")
                 if keys:
                     self.redis.delete(*keys)
-                    logger.info(f"Redis ping cache cleared: {len(keys)} keys removed")
+                    # Keep as INFO only if significant number of keys were removed
+                    if len(keys) > 10:
+                        logger.info(f"Redis ping cache cleared: {len(keys)} keys removed")
+                    else:
+                        logger.debug(f"Redis ping cache cleared: {len(keys)} keys removed")
                 else:
-                    logger.info("Redis ping cache was already empty")
+                    logger.debug("Redis ping cache was already empty")
             except Exception as e:
                 # Error clearing Redis cache
                 logger.error(f"Error clearing Redis cache: {str(e)}")
@@ -489,7 +507,11 @@ class PingCache:
         if hasattr(self, '_local_cache'):
             entry_count = len(self._local_cache)
             self._local_cache.clear()
-            logger.info(f"Local ping cache cleared: {entry_count} entries removed")
+            # Keep as INFO only if significant number of entries were removed
+            if entry_count > 10:
+                logger.info(f"Local ping cache cleared: {entry_count} entries removed")
+            else:
+                logger.debug(f"Local ping cache cleared: {entry_count} entries removed")
     
     def _track_host_status_change(self, host_id: str, is_online: bool) -> None:
         """
@@ -503,7 +525,11 @@ class PingCache:
         if prev_status is not None and prev_status != is_online:
             status_str = "online" if is_online else "offline"
             prev_status_str = "online" if prev_status else "offline"
-            logger.info(f"Host {host_id} status change: {prev_status_str} -> {status_str}")
+            # Important host status change, keep at INFO level if going offline
+            if prev_status and not is_online:
+                logger.info(f"Host {host_id} status change: {prev_status_str} -> {status_str}")
+            else:
+                logger.debug(f"Host {host_id} status change: {prev_status_str} -> {status_str}")
             
             # Record the status change
             self._status_changes.append({

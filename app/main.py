@@ -334,7 +334,7 @@ def ping_hosts_api():
                 'error': str(e)
             }
     
-    logger.info(f'Completed ping requests for {len(results)} hosts')
+    logger.debug(f'Completed ping requests for {len(results)} hosts')
     return jsonify({'hosts': results})
 
 

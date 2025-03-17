@@ -50,7 +50,9 @@ def resolve_hostname(hostname: str) -> Optional[str]:
     try:
         # If it's already an IP address, this will still work
         ip = socket.gethostbyname(hostname)
-        logger.debug(f"Resolved hostname '{hostname}' to IP '{ip}'")
+        # Only log hostname resolution at trace level (if implemented) or very verbose debug
+        if hostname != ip:  # Only log when hostname is actually resolved, not for IP addresses
+            logger.debug(f"Resolved hostname '{hostname}' to IP '{ip}'")
         return ip
     except socket.gaierror as e:
         logger.warning(f"Failed to resolve hostname '{hostname}': {str(e)}")
@@ -68,7 +70,7 @@ def ping_host(host: str, config: PingConfig = PingConfig()) -> PingResult:
     """
     ip_address = resolve_hostname(host)
     if not ip_address:
-        logger.info(f"Ping failed for host '{host}': Unable to resolve hostname")
+        logger.debug(f"Ping failed for host '{host}': Unable to resolve hostname")
         return PingResult(
             host=host,
             ip_address=None,
@@ -100,7 +102,9 @@ def ping_host(host: str, config: PingConfig = PingConfig()) -> PingResult:
                 response_time = (time.time() - start_time) * 1000  # in milliseconds
                 # Verify response
                 if verify_icmp_response(data, packet_id):
-                    logger.debug(f"Host '{host}' ({ip_address}) is alive, response time: {response_time:.2f}ms")
+                    # Minimize repetitive debug logs for successful pings
+                    if response_time > 100:  # Only log slower responses that might be of interest
+                        logger.debug(f"Host '{host}' ({ip_address}) is alive, response time: {response_time:.2f}ms")
                     return PingResult(
                         host=host,
                         ip_address=ip_address,
@@ -137,7 +141,7 @@ def ping_host(host: str, config: PingConfig = PingConfig()) -> PingResult:
                     error=f"Multiple socket errors ({socket_errors}): {last_error}"
                 )
     # If we get here, all attempts failed
-    logger.info(f"Host '{host}' ({ip_address}) did not respond to ping after {config.retries+1} attempts")
+    logger.debug(f"Host '{host}' ({ip_address}) did not respond to ping after {config.retries+1} attempts")
     return PingResult(
         host=host,
         ip_address=ip_address,
@@ -175,7 +179,8 @@ def verify_icmp_response(data: bytes, packet_id: int) -> bool:
         # ICMP header starts at byte 20 in the IP packet
         icmp_header = data[20:28]
         type, code, checksum, received_id, sequence = struct.unpack('!BBHHH', icmp_header)
-        logger.debug(f"ICMP response received: type={type}, code={code}, id={received_id} (expected id={packet_id})")
+        # Too verbose for regular operations
+        # logger.debug(f"ICMP response received: type={type}, code={code}, id={received_id} (expected id={packet_id})")
         
         # Only accept echo reply (type 0) as the standard response
         if type == 0:
@@ -220,7 +225,11 @@ def ping_hosts(hosts: List[str], config: PingConfig = PingConfig()) -> Dict[str,
     Returns:
         Dictionary mapping each host to its PingResult
     """
-    logger.info(f"Pinging {len(hosts)} hosts concurrently")
+    # Keep INFO level only for large batches that might impact performance
+    if len(hosts) > 10:
+        logger.info(f"Pinging {len(hosts)} hosts concurrently")
+    else:
+        logger.debug(f"Pinging {len(hosts)} hosts concurrently")
     results = {}
     
     # Use a thread pool to ping hosts concurrently
