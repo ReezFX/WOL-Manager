@@ -413,7 +413,7 @@ function updateHostStatusUI(hostStatuses) {
                 
                 // If we have response time info, add it
                 if (status.response_time) {
-                    const responseTime = Math.round(status.response_time * 1000); // Convert to ms
+                    const responseTime = Math.round(status.response_time); // Already in ms
                     statusBadge.textContent = `Online (${responseTime}ms)`;
                 }
             } else {
@@ -434,7 +434,7 @@ function updateHostStatusUI(hostStatuses) {
                 if (status.is_online) {
                     detailedStatus.innerHTML = `<i class="fas fa-check-circle text-success"></i> Online`;
                     if (status.response_time) {
-                        const responseTime = Math.round(status.response_time * 1000); // Convert to ms
+                        const responseTime = Math.round(status.response_time); // Already in ms
                         detailedStatus.innerHTML += ` <small>(${responseTime}ms)</small>`;
                     }
                 } else {
