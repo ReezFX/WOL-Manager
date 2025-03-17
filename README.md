@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="app/static/img/wol-manager-title.png" alt="WOL-Manager Title" width="400"><br><br>
   <img src="app/static/img/wol-manager-logo.png" alt="WOL-Manager Logo" width="200">
+  <img src="app/static/img/wol-manager-title.png" alt="WOL-Manager Title" width="400"><br><br>
 </div>
 
 ## Overview
