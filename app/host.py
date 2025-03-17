@@ -218,6 +218,7 @@ def add_host():
             db_session.commit()
             access_logger.info(f"Host '{form.name.data}' (MAC: {form.mac_address.data}) created by user: {current_user.username} (id: {current_user.id})")
             flash(f'Host {form.name.data} added successfully', 'success')
+            return redirect(url_for('host.list_hosts'))
         except Exception as e:
             db_session.rollback()
             flash(f'Error adding host: {str(e)}', 'danger')
@@ -337,7 +338,14 @@ def delete_host(host_id):
         db_session.rollback()
         flash(f'Error deleting host: {str(e)}', 'danger')
     
-    return redirect(url_for('host.list_hosts'))
+    # Check request.referrer to determine where the request came from
+    referer = request.referrer or ''
+    if 'dashboard' in referer:
+        # Redirect to dashboard if deletion was initiated from there
+        return redirect(url_for('main.dashboard'))
+    else:
+        # Otherwise redirect to the hosts list page
+        return redirect(url_for('host.list_hosts'))
 
 @host.route('/view/<int:host_id>')
 @login_required
