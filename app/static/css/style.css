@@ -473,6 +473,15 @@ body:not(.dark-theme) .footer .footer-text {
   .card-header h3 { font-size: 1.3rem; }
 }
 
+/* Card title button styling */
+.card-title .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    line-height: 32px;
+    text-align: center;
+    border-radius: var(--border-radius-sm);
+}
 /* Consistent gradients for card headers with Bootstrap background classes */
 .card-header.bg-primary {
   background: linear-gradient(to right, var(--primary-color) 0%, rgba(23, 162, 184, 0.7) 100%) !important;
@@ -1106,6 +1115,87 @@ body:not(.dark-theme) .footer .footer-text {
 .dark-theme .btn-cta:active {
   background: linear-gradient(145deg, #ff5c3c 0%, #ff4a25 100%);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Small button size */
+/*
+* Button Dimensions and Styling
+* -------------------------------
+* .btn-sm: Small button base styling
+*   - Default padding: 0.25rem 0.5rem
+*   - Font size: 0.875rem
+*   - Line height: 1.5
+*   - Border radius: 0.2rem
+* 
+* .btn-sm.view-btn-header: Square button variant
+*   - Fixed dimensions: 32x32px
+*   - Line height: 32px (for vertical centering)
+*   - No padding (padding: 0)
+*   - Uses CSS Grid for perfect centering
+*   - Maintains consistent appearance in both light/dark themes
+*/
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 0.2rem;
+  transition: all 0.2s ease;
+}
+
+/* Header specific small button */
+.btn-sm.view-btn-header {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  padding: 0;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #1490b2 0%, #0f7c9c 100%);
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  margin-left: 0.5rem;
+  border: none;
+  border-radius: var(--border-radius-sm);
+}
+
+.btn-sm.view-btn-header:hover {
+  background: linear-gradient(180deg, #20a2c7 0%, #1490b2 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.btn-sm.view-btn-header:active {
+  background: linear-gradient(180deg, #0d7ea1 0%, #0a6b8a 100%);
+  transform: translateY(1px);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(0, 0, 0, 0.1);
+  transition-duration: 0.05s;
+}
+
+/* Ensure icon or text is centered */
+.btn-sm.view-btn-header i,
+.btn-sm.view-btn-header span {
+  line-height: 1;
+}
+
+/* Dark theme small header button */
+.dark-theme .btn-sm.view-btn-header {
+  background: linear-gradient(180deg, #0f7c9c 0%, #0d6a87 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .btn-sm.view-btn-header:hover {
+  background: linear-gradient(180deg, #1490b2 0%, #0f7c9c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .btn-sm.view-btn-header:active {
+  background: linear-gradient(180deg, #0a6b8a 0%, #085978 100%);
+  transform: translateY(1px);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(0, 0, 0, 0.1);
+  transition-duration: 0.05s;
 }
 
 /* Form styling */

@@ -163,6 +163,13 @@ class Host(Base):
                     raise ValueError("IP address octets must be between 0 and 255")
         return ip
     
+    def is_visible_to_user(self, user):
+        if user.is_admin or self.created_by == user.id or user.has_permission('view_hosts'):
+            return True
+        if self.visible_to_roles:
+            user_role_ids = [str(role.id) for role in user.roles]
+            return any(role_id in self.visible_to_roles for role_id in user_role_ids)
+        return False
 
 class AppSettings(Base):
     __tablename__ = 'app_settings'

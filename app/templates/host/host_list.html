@@ -2,6 +2,134 @@
 
 {% block title %}Hosts Management{% endblock %}
 
+{% block styles %}
+{{ super() }}
+<style>
+    /* Card styling */
+    .host-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.125);
+        overflow: hidden;
+    }
+    
+    .host-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Status badges styling */
+    .status-badge[data-status="online"] {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .status-badge[data-status="offline"] {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .status-badge[data-status="unknown"] {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    /* Card border based on status */
+    .host-card-online {
+        border-top: 3px solid #28a745;
+    }
+    
+    .host-card-offline {
+        border-top: 3px solid #dc3545;
+    }
+    
+    .host-card-unknown {
+        border-top: 3px solid #6c757d;
+    }
+    
+    /* Card header */
+    .card-header {
+        background-color: rgba(0,0,0,0.03);
+        padding: 0.75rem 1.25rem;
+    }
+    
+    /* Card body content */
+    .card-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+    }
+    
+    /* Code blocks for MAC addresses */
+    .card-text code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Action buttons */
+    .card-body .btn {
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Collapsible toggle styling */
+    [data-bs-toggle="collapse"] {
+        display: inline-flex;
+        align-items: center;
+        color: #495057;
+        font-weight: 500;
+        padding: 0.5rem 0;
+        transition: all 0.2s ease;
+    }
+    
+    [data-bs-toggle="collapse"]:hover {
+        color: #212529;
+        text-decoration: none !important;
+    }
+    
+    [data-bs-toggle="collapse"] i {
+        transition: transform 0.2s ease;
+        margin-right: 0.5rem;
+    }
+    
+    [data-bs-toggle="collapse"][aria-expanded="true"] i {
+        transform: rotate(180deg);
+    }
+    
+    /* Collapsed content */
+    .collapse {
+        border-top: 1px solid rgba(0,0,0,0.125);
+        padding-top: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 767.98px) {
+        .container {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .d-flex.flex-wrap.gap-1 {
+            justify-content: space-between;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -12,85 +140,114 @@
     </div>
     
     {% if hosts %}
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover table-theme" id="hostsTable">
-                    <thead class="bg-tertiary-theme">
-                        <tr>
-                            <th>Name</th>
-                            <th>MAC Address</th>
-                            <th>IP Address</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for host in hosts %}
-                        <tr data-host-id="{{ host.id }}" class="host-row-{{ host.status }}">
-                            <td>
-                                {{ host.name }}
-                                {% if host.public_access %}
-                                <span class="badge bg-info ms-2" title="Public Access Enabled">
-                                    <i class="fas fa-globe fa-xs"></i>
-                                </span>
-                                {% endif %}
-                            </td>
-                            <td><code>{{ host.mac_address }}</code></td>
-                            <td>{{ host.ip }}</td>
-                            <td>
-                                {% if host.status == 'online' %}
-                                    <span class="badge status-badge" data-status="online">
-                                        <i class="fas fa-circle-check fa-xs me-1"></i>Online
-                                    </span>
-                                {% elif host.status == 'offline' %}
-                                    <span class="badge status-badge" data-status="offline">
-                                        <i class="fas fa-circle-xmark fa-xs me-1"></i>Offline
-                                    </span>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+        {% for host in hosts %}
+        <div class="col">
+            <div class="card h-auto shadow host-card" data-host-id="{{ host.id }}">
+                <!-- Card Header - Only contains status badge and public URL badge -->
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if host.status == 'online' %}
+                            <span class="badge status-badge" data-status="online">
+                                <i class="fas fa-circle-check fa-xs me-1"></i>Online
+                            </span>
+                        {% elif host.status == 'offline' %}
+                            <span class="badge status-badge" data-status="offline">
+                                <i class="fas fa-circle-xmark fa-xs me-1"></i>Offline
+                            </span>
+                        {% else %}
+                            <span class="badge status-badge" data-status="unknown">
+                                <i class="fas fa-circle-question fa-xs me-1"></i>Unknown
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if host.public_access %}
+                        <span class="badge bg-info" title="Public Access Enabled">
+                            <i class="fas fa-globe fa-xs"></i> Public Access
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Card Preview Body - Shows hostname, MAC, and IP -->
+                <div class="card-body">
+                    <h5 class="card-title">{{ host.name }}</h5>
+                    <div class="card-text">
+                        <div class="mb-2"><strong>MAC:</strong> <code>{{ host.mac_address }}</code></div>
+                        <div><strong>IP:</strong> {{ host.ip }}</div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="d-flex flex-wrap gap-1 mt-3 justify-content-between">
+                        {% set user_role_ids = current_user.roles|map(attribute='id')|list %}
+                        {% set visible_to_user = user_role_ids|select("in", host.visible_to_roles)|list|length > 0 %}
+                        {% set is_owner = host.created_by == current_user.id %}
+                        
+                        <a href="{{ url_for('host.view_host', host_id=host.id) }}" class="btn btn-sm btn-secondary" title="View">
+                            <i class="fas fa-eye me-1"></i><span class="d-none d-md-inline">View</span>
+                        </a>
+                        
+                        {% if current_user.has_permission('send_wol') or is_owner or current_user.is_admin or visible_to_user %}
+                        <a href="{{ url_for('wol.wol_send', host_id=host.id) }}" class="btn btn-sm btn-success" title="Wake">
+                            <i class="fas fa-power-off me-1"></i><span class="d-none d-md-inline">Wake</span>
+                        </a>
+                        {% endif %}
+                        
+                        {% if current_user.has_permission('edit_hosts') or (is_owner and visible_to_user) %}
+                        <a href="{{ url_for('host.edit_host', host_id=host.id) }}" class="btn btn-sm btn-accent" title="Edit">
+                            <i class="fas fa-edit me-1"></i><span class="d-none d-md-inline">Edit</span>
+                        </a>
+                        {% endif %}
+                        
+                        {% if current_user.has_permission('delete_hosts') or is_owner %}
+                        <form action="{{ url_for('host.delete_host', host_id=host.id) }}" method="POST" style="display: inline;">
+                            {{ csrf_form.hidden_tag() }}
+                            <button type="submit" class="btn btn-sm btn-danger" title="Delete" 
+                                    onclick="return confirm('Are you sure you want to delete this host?');">
+                                <i class="fas fa-trash me-1"></i><span class="d-none d-md-inline">Delete</span>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Collapsible Section -->
+                <div class="card-footer bg-transparent border-top-0 pb-0">
+                    <p class="mb-2 w-100">
+                        <a class="text-decoration-none d-block w-100" data-bs-toggle="collapse" href="#collapse-details-{{ host.id }}" role="button" aria-expanded="false" aria-controls="collapse-details-{{ host.id }}">
+                            <i class="fas fa-chevron-down me-1"></i> Show Details
+                        </a>
+                    </p>
+                    <div class="collapse" id="collapse-details-{{ host.id }}">
+                        <div class="card-text mb-3">
+                            <div class="mb-1"><strong>Created by:</strong> {{ host.created_by_user.username if host.created_by_user else 'Unknown' }}</div>
+                            <div class="mb-1"><strong>Created on:</strong> {{ host.created_at.strftime('%Y-%m-%d %H:%M') if host.created_at else 'Unknown' }}</div>
+                            <div class="mb-1"><strong>Visible to:</strong> 
+                                {% if host.visible_to_roles_names %}
+                                    {{ host.visible_to_roles_names|join(', ') }}
                                 {% else %}
-                                    <span class="badge status-badge" data-status="unknown">
-                                        <i class="fas fa-circle-question fa-xs me-1"></i>Unknown
-                                    </span>
+                                    All users
                                 {% endif %}
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group" role="group">
-                                    <a href="{{ url_for('host.view_host', host_id=host.id) }}" class="btn btn-sm btn-secondary" title="View">
-                                        <i class="fas fa-eye me-1"></i><span class="d-none d-md-inline">View</span>
-                                    </a>
-                                    
-                                    {% set user_role_ids = current_user.roles|map(attribute='id')|list %}
-                                    {% set visible_to_user = user_role_ids|select("in", host.visible_to_roles)|list|length > 0 %}
-                                    {% set is_owner = host.created_by == current_user.id %}
-                                    {% if current_user.has_permission('send_wol') or is_owner or current_user.is_admin or visible_to_user %}
-                                    <a href="{{ url_for('wol.wol_send', host_id=host.id) }}" class="btn btn-sm btn-success" title="Wake">
-                                        <i class="fas fa-power-off me-1"></i><span class="d-none d-md-inline">Wake</span>
-                                    </a>
-                                    {% endif %}
-                                    
-                                    
-                                    {% if current_user.has_permission('edit_hosts') or (is_owner and visible_to_user) %}
-                                    <a href="{{ url_for('host.edit_host', host_id=host.id) }}" class="btn btn-sm btn-accent" title="Edit">
-                                        <i class="fas fa-edit me-1"></i><span class="d-none d-md-inline">Edit</span>
-                                    </a>
-                                    {% endif %}
-                                    
-                                    {% if current_user.has_permission('delete_hosts') or is_owner %}
-                                    <form action="{{ url_for('host.delete_host', host_id=host.id) }}" method="POST" style="display: inline;">
-                                        {{ csrf_form.hidden_tag() }}
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete" 
-                                                onclick="return confirm('Are you sure you want to delete this host?');">
-                                            <i class="fas fa-trash me-1"></i><span class="d-none d-md-inline">Delete</span>
-                                        </button>
-                                    </form>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                            </div>
+                            {% if host.description %}
+                            <div class="mb-1"><strong>Description:</strong> {{ host.description }}</div>
+                            {% endif %}
+                            {% if host.public_access %}
+                            <div class="mb-1">
+                                <strong>Public URL:</strong> 
+                                <a href="{{ url_for('wol.test_wol', token=host.public_access_token, _external=True) }}" target="_blank">
+                                    {{ url_for('wol.test_wol', token=host.public_access_token, _external=True) }}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
+        {% endfor %}
+    </div>
             
             {% if pagination %}
             <nav aria-label="Host pagination">
@@ -149,8 +306,31 @@
 <script src="{{ url_for('static', filename='js/ping.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize automatic host status checks for the hosts list page
+        // Initialize automatic host status checks
         initHostStatusChecks();
+        
+        // Toggle the collapse icon when expanding/collapsing details
+        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                if (icon.classList.contains('fa-chevron-down')) {
+                    icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+                    this.innerHTML = this.innerHTML.replace('Show Details', 'Hide Details');
+                } else {
+                    icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+                    this.innerHTML = this.innerHTML.replace('Hide Details', 'Show Details');
+                }
+            });
+        });
+        
+        // Add class to host cards based on status
+        document.querySelectorAll('.host-card').forEach(function(card) {
+            const statusBadge = card.querySelector('.status-badge');
+            if (statusBadge) {
+                const status = statusBadge.getAttribute('data-status');
+                card.classList.add('host-card-' + status);
+            }
+        });
     });
 </script>
 {% endblock %}

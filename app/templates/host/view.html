@@ -69,9 +69,11 @@
                     <a href="{{ url_for('wol.wol_send', host_id=host.id) }}" class="btn btn-success me-2">
                         <i class="fas fa-power-off"></i> Wake Host
                     </a>
+                    {% if current_user.has_permission('edit_hosts') or host.created_by == current_user.id or current_user.is_admin %}
                     <a href="{{ url_for('host.edit_host', host_id=host.id) }}" class="btn btn-primary">
                         <i class="fas fa-edit"></i> Edit
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

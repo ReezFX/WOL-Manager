@@ -258,89 +258,62 @@ def edit_host(host_id):
     # Check if user is allowed to edit this host
     is_owner = host.created_by == current_user.id
     has_edit_perm = current_user.has_permission('edit_hosts')
-    user_role_ids = [role.id for role in current_user.roles]
-    # Convert role IDs to strings for consistent comparison
-    if host.visible_to_roles:
-        host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
-        visible_to_user = any(str(role_id) in host_role_ids for role_id in user_role_ids)
-    else:
-        visible_to_user = False
     
-    if not (has_edit_perm or (is_owner and visible_to_user) or current_user.is_admin):
+    if not (has_edit_perm or is_owner or current_user.is_admin):
         access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to edit host {host.id} ({host.name}) without permission")
         flash('You do not have permission to edit this host', 'danger')
         return redirect(url_for('host.list_hosts'))
     
     # Create form and set hidden id field
     form = HostForm()
-    # Add an ID field dynamically for the template to differentiate edit/add
     form.id = host_id
     
     # Get all roles to populate the multi-select dropdown
     roles = db_session.query(Role).all()
-    
-    # Populate the visible_to_roles field choices
     form.visible_to_roles.choices = [(role.id, role.name) for role in roles]
     
-    # Remove public_access field if user doesn't have permission to manage it
+    # Remove public_access field if user doesn't have permission
     if not (current_user.has_permission('publish_host') or current_user.is_admin):
         delattr(form, 'public_access')
-    else:
-        # If switching to public access, verify permission again
-        if form.validate_on_submit() and form.public_access.data and not host.public_access:
-            if not (current_user.has_permission('publish_host') or current_user.is_admin):
-                access_logger.warning(f"Permission denied: User {current_user.username} attempted to enable public access for host {host.id} without permission")
-                flash('You do not have permission to enable public access', 'danger')
-                return redirect(url_for('host.view_host', host_id=host_id))
     
     if request.method == 'GET':
         # Pre-populate form with existing host data
         form.name.data = host.name
         form.mac_address.data = host.mac_address
         form.ip_address.data = host.ip
-        form.ip_address.data = host.ip
         form.description.data = host.description
-        form.public_access.data = host.public_access  # Add this line
-        # Convert string role IDs back to integers for the form
+        if hasattr(form, 'public_access'):
+            form.public_access.data = host.public_access
         if host.visible_to_roles:
             form.visible_to_roles.data = [int(role_id) for role_id in host.visible_to_roles]
         else:
             form.visible_to_roles.data = []
+    
     if form.validate_on_submit():
-        # Check if MAC address already exists for a different host
-        if form.mac_address.data != host.mac_address:
-            existing_host = db_session.query(Host).filter_by(mac_address=form.mac_address.data).first()
-            if existing_host and existing_host.id != host_id:
-                flash(f'Another host with MAC address {form.mac_address.data} already exists', 'danger')
-                return render_template('host/host_form.html', form=form, title='Edit Host', roles=roles)
-        
-        # Update host
-        host.name = form.name.data
-        host.mac_address = form.mac_address.data
-        host.ip = form.ip_address.data if form.ip_address.data else ''
-        host.description = form.description.data if form.description.data else ''
-        
-        # Update visible_to_roles
-        # Update visible_to_roles
-        # Convert role IDs to strings for consistent storage
-        host.visible_to_roles = [str(role_id) for role_id in form.visible_to_roles.data]
-        
-        # Handle public access toggle and token management
-        if form.public_access.data and not host.public_access:
-            # Enabling public access - generate a new token
-            from app.utils import generate_unique_token
-            host.public_access = True
-            host.public_access_token = generate_unique_token(db_session)
-            access_logger.info(f"Public access enabled for host {host.id} '{host.name}' by user: {current_user.username}")
-        elif not form.public_access.data and host.public_access:
-            # Disabling public access - remove the token
-            host.public_access = False
-            host.public_access_token = None
-            access_logger.info(f"Public access disabled for host {host.id} '{host.name}' by user: {current_user.username}")
-        
         try:
-            access_logger.info(f"Host {host.id} '{form.name.data}' updated by user: {current_user.username} (id: {current_user.id})")
-            flash(f'Host {form.name.data} updated successfully', 'success')
+            # Basic host updates
+            host.name = form.name.data
+            host.mac_address = form.mac_address.data
+            host.ip = form.ip_address.data if form.ip_address.data else ''
+            host.description = form.description.data if form.description.data else ''
+            host.visible_to_roles = [str(role_id) for role_id in form.visible_to_roles.data]
+            
+            # Handle public access
+            if hasattr(form, 'public_access'):
+                if form.public_access.data and not host.public_access:
+                    from app.utils import generate_unique_token
+                    host.public_access = True
+                    host.public_access_token = generate_unique_token(db_session)
+                    db_session.commit()  # Commit immediately after token generation
+                    access_logger.info(f"Public access enabled for host {host.id} '{host.name}' by user: {current_user.username}")
+                elif not form.public_access.data and host.public_access:
+                    host.public_access = False
+                    host.public_access_token = None
+                    access_logger.info(f"Public access disabled for host {host.id} '{host.name}' by user: {current_user.username}")
+            
+            db_session.commit()
+            access_logger.info(f"Host {host.id} '{host.name}' updated by user: {current_user.username} (id: {current_user.id})")
+            flash(f'Host {host.name} updated successfully', 'success')
             return redirect(url_for('host.list_hosts'))
         except Exception as e:
             db_session.rollback()
@@ -402,14 +375,7 @@ def view_host(host_id):
         flash('Host not found', 'danger')
         return redirect(url_for('host.list_hosts'))
     
-    # Check if user is allowed to view this host
-    user_role_ids = [role.id for role in current_user.roles]
-    can_view = (current_user.has_permission('view_hosts') or 
-                host.created_by == current_user.id or 
-                current_user.is_admin or
-                (host.visible_to_roles and any(str(role_id) in [str(r) for r in host.visible_to_roles] for role_id in user_role_ids)))
-    
-    if not can_view:
+    if not host.is_visible_to_user(current_user):
         access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to view host {host.id} ({host.name}) without permission")
         flash('You do not have permission to view this host', 'danger')
         return redirect(url_for('host.list_hosts'))
@@ -420,10 +386,44 @@ def view_host(host_id):
     public_access_url = None
     if host.public_access and host.public_access_token:
         public_access_url = url_for('public.public_host_view', 
-                                  token=host.public_access_token, 
-                                  _external=True)
-
+                                token=host.public_access_token, 
+                                _external=True)
+    
     return render_template('host/view.html', 
                         host=host,
                         public_access_url=public_access_url)
 
+
+def get_role_names(role_ids):
+    """
+    Convert a list of role IDs to a list of role names
+    
+    Args:
+        role_ids (list): List of role IDs (as strings)
+        
+    Returns:
+        list: List of role names corresponding to the provided IDs
+    """
+    if not role_ids:
+        return []
+    
+    try:
+        # Convert string IDs to integers for query
+        int_role_ids = [int(role_id) for role_id in role_ids]
+        roles = db_session.query(Role).filter(Role.id.in_(int_role_ids)).all()
+        return [role.name for role in roles]
+    except Exception as e:
+        logger.error(f"Error resolving role names: {str(e)}")
+        return []
+        
+@host.context_processor
+def utility_processor():
+    """
+    Add utility functions to the host blueprint's template context
+    
+    Returns:
+        dict: Dictionary containing utility functions available in templates
+    """
+    return {
+        'get_role_names': get_role_names
+    }
