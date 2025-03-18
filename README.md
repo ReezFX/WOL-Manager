@@ -5,10 +5,12 @@
 ## Overview
 WOL-Manager is a Flask-based web application designed to provide a user-friendly interface for managing and waking devices using the Wake-on-LAN (WOL) protocol. This application allows users to store host information, including MAC addresses, and remotely power on these devices over a network.
 
+## How to use and install
+- Deployment and Usage Guide has moved to the WOL-Manager Wiki []
+
 ## Table of Contents
 - [Features](#features)
 - [System Requirements](#system-requirements)
-- [API Endpoints](#api-endpoints)
 - [Security](#security)
 - [Release Notes](#release-notes)
 - [Contributing](#contributing)
@@ -28,30 +30,6 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 - Docker and Docker Compose (if using containerized deployment)
 - Network with support for broadcast UDP packets
 - Devices configured to support Wake-on-LAN
-
-## API Endpoints
-
-### Authentication Routes
-- `GET/POST /auth/login`: User login
-- `GET /auth/logout`: User logout
-- `GET/POST /auth/reset-password`: Password reset
-### Host Management
-- `GET /hosts`: List hosts
-- `GET/POST /host/add`: Add a new host
-- `GET/POST /host/<id>/edit`: Edit host details
-- `POST /host/<id>/delete`: Delete a host
-- `POST /host/<id>/wake`: Wake a host
-
-### Main Routes
-- `GET /`: Dashboard
-- `GET /profile`: User profile
-- `GET /logs`: View operation logs
-
-### Admin Routes
-- `GET /admin/users`: List users
-- `GET/POST /admin/user/<id>/edit`: Edit user details
-- `POST /admin/user/<id>/delete`: Delete a user
-- `GET/POST /admin/settings`: Configure application settings
 
 ## Security
 - Passwords are hashed using Werkzeug's security functions
