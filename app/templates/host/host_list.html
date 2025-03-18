@@ -224,8 +224,8 @@
                             <div class="mb-1"><strong>Created by:</strong> {{ host.created_by_user.username if host.created_by_user else 'Unknown' }}</div>
                             <div class="mb-1"><strong>Created on:</strong> {{ host.created_at.strftime('%Y-%m-%d %H:%M') if host.created_at else 'Unknown' }}</div>
                             <div class="mb-1"><strong>Visible to:</strong> 
-                                {% if host.visible_to_roles_names %}
-                                    {{ host.visible_to_roles_names|join(', ') }}
+                                {% if host.visible_to_roles %}
+                                    {{ get_role_names(host.visible_to_roles)|join(', ') }}
                                 {% else %}
                                     All users
                                 {% endif %}
