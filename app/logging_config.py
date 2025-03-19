@@ -47,16 +47,18 @@ class RequestFormatter(logging.Formatter):
     - Username of the authenticated user (or 'Anonymous')
     
     When used outside of a request context (e.g., background tasks),
-    these fields will be set to '-' to avoid errors.
+    this formatter will use a simplified format that doesn't include request fields.
     """
     # Define all fields that can be used in format strings
-    REQUIRED_FIELDS = ['url', 'remote_addr', 'method', 'user']
+    REQUIRED_FIELDS = ['url', 'remote_addr', 'method']
     
-    def __init__(self, fmt=None, datefmt=None, style='%', validate=True):
+    def __init__(self, fmt=None, basic_fmt=None, datefmt=None, style='%', validate=True):
         """Initialize with custom handling to ensure fields exist before formatting."""
         super().__init__(fmt, datefmt, style, validate)
         # Store the original format string for later processing
         self._original_fmt = fmt
+        # Store a basic format string for non-request context logging
+        self._basic_fmt = basic_fmt or '[%(asctime)s] %(levelname)s - %(module)s - %(message)s'
     
     def _ensure_fields_exist(self, record):
         """Ensure all required fields exist on the record."""
@@ -104,12 +106,26 @@ class RequestFormatter(logging.Formatter):
                 setattr(record, 'formatting_error', str(e))
     
     def format(self, record):
-        """Format the record, ensuring all necessary fields exist first."""
-        # Ensure all required fields exist before formatting
+        """Format the record, using appropriate format based on request context."""
+        # If not in a request context, use the basic format without request fields
+        if not has_request_context():
+            # Temporarily switch to basic format
+            original_fmt = self._fmt
+            self._fmt = self._basic_fmt
+            try:
+                result = super().format(record)
+                # Restore the original format
+                self._fmt = original_fmt
+                return result
+            except Exception as e:
+                # Restore format even on error
+                self._fmt = original_fmt
+                # Return a basic error message
+                return f"[ERROR FORMATTING LOG] {record.getMessage()} (Error: {str(e)})"
+        
+        # For request context, use the detailed format with request fields
         try:
             self._ensure_fields_exist(record)
-            
-            # Now it's safe to format
             return super().format(record)
         except Exception as e:
             # As a last resort, if formatting fails, return a basic message
@@ -133,7 +149,7 @@ def ensure_log_directory():
     os.chmod(LOG_DIR, 0o755)
 
 
-def create_rotating_handler(filename, level=logging.INFO, format_str=None):
+def create_rotating_handler(filename, level=logging.INFO, format_str=None, basic_fmt=None):
     """
     Create a rotating file handler with the given configuration.
     
@@ -147,13 +163,17 @@ def create_rotating_handler(filename, level=logging.INFO, format_str=None):
     Args:
         filename (str): The name of the log file
         level (int): The logging level for this handler (default: INFO)
-        format_str (str, optional): Custom format string for log messages
+        format_str (str, optional): Custom format string for log messages with request context
+        basic_fmt (str, optional): Basic format string for non-request context logs
         
     Returns:
         RotatingFileHandler: A configured handler instance
     """
     if format_str is None:
-        format_str = '[%(asctime)s] %(levelname)s - User:%(user)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s'
+        format_str = '[%(asctime)s] %(levelname)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s'
+    
+    if basic_fmt is None:
+        basic_fmt = '[%(asctime)s] %(levelname)s - %(module)s - %(message)s'
     
     # Ensure full path exists
     full_path = os.path.join(LOG_DIR, filename)
@@ -162,7 +182,7 @@ def create_rotating_handler(filename, level=logging.INFO, format_str=None):
         maxBytes=MAX_BYTES,
         backupCount=BACKUP_COUNT
     )
-    formatter = RequestFormatter(format_str)
+    formatter = RequestFormatter(format_str, basic_fmt)
     handler.setFormatter(formatter)
     handler.setLevel(level)
     
@@ -216,7 +236,9 @@ LOG_PROFILES = {
                 'format': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
             },
             'detailed': {
-                'format': '[%(asctime)s] %(levelname)s - %(user)s - %(remote_addr)s - %(url)s - %(method)s - %(module)s - %(message)s',
+                '()': 'app.logging_config.RequestFormatter',
+                'fmt': '[%(asctime)s] %(levelname)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s',
+                'basic_fmt': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
             },
             'error': {
                 'format': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
@@ -283,7 +305,9 @@ LOG_PROFILES = {
                 'format': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
             },
             'detailed': {
-                'format': '[%(asctime)s] %(levelname)s - %(user)s - %(remote_addr)s - %(url)s - %(method)s - %(module)s - %(message)s',
+                '()': 'app.logging_config.RequestFormatter',
+                'fmt': '[%(asctime)s] %(levelname)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s',
+                'basic_fmt': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
             },
             'error': {
                 'format': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
@@ -347,7 +371,9 @@ LOG_PROFILES = {
                 'format': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
             },
             'detailed': {
-                'format': '[%(asctime)s] %(levelname)s - %(user)s - %(remote_addr)s - %(url)s - %(method)s - %(module)s - %(message)s',
+                '()': 'app.logging_config.RequestFormatter',
+                'fmt': '[%(asctime)s] %(levelname)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s',
+                'basic_fmt': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
             },
             'error': {
                 'format': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
@@ -411,7 +437,9 @@ LOG_PROFILES = {
                 'format': '[%(asctime)s] %(levelname)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',
             },
             'detailed': {
-                'format': '[%(asctime)s] %(levelname)s - %(user)s - %(remote_addr)s - %(url)s - %(method)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',
+                '()': 'app.logging_config.RequestFormatter',
+                'fmt': '[%(asctime)s] %(levelname)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',
+                'basic_fmt': '[%(asctime)s] %(levelname)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',
             },
             'error': {
                 'format': '[%(asctime)s] %(levelname)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',

@@ -43,6 +43,11 @@ def create_app(config_name=None):
     # Configure logging before app creation
     configure_logging()
     
+    # For non-request logging during startup
+    simple_formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(module)s - %(message)s')
+    for handler in logging.getLogger().handlers:
+        handler.setFormatter(simple_formatter)
+    
     # Create and configure the app
     app = Flask(__name__)
     app.config.from_object(config[config_name])

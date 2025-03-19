@@ -16,7 +16,7 @@ from app.logging_config import get_logger
 logger = get_logger('app.ping_cache')
 
 # Default cache expiration time in seconds
-DEFAULT_CACHE_EXPIRY = 15  
+DEFAULT_CACHE_EXPIRY = 60  # Increased from 15 to 60 seconds to reduce ping frequency
 # Default Redis cache key prefix
 DEFAULT_CACHE_PREFIX = "ping_cache:"
 
@@ -44,7 +44,8 @@ class PingCache:
         try:
             self.redis = redis.from_url(redis_url)
             self.redis.ping()  # Test connection
-            logger.debug(f"Redis connection successful: {redis_url}")
+            if __debug__:
+                logger.debug(f"Redis connection successful: {redis_url}")
         except Exception as e:
             self.redis = None
             # Fallback to in-memory cache if Redis is not available
@@ -83,9 +84,9 @@ class PingCache:
         }
         
         # Calculate expiration time
+        # Calculate expiration time
         # Use a longer expiry for online hosts, shorter for offline hosts to prevent rapid flipping
-        expiry = self.expiry_seconds if is_online else 3
-        
+        expiry = self.expiry_seconds if is_online else 5  # Increased offline expiry from 3 to 5 seconds
         if self.redis:
             try:
                 # Store in Redis as JSON
@@ -94,12 +95,12 @@ class PingCache:
                 self.redis.setex(key, expiry, json_data)
                 
                 # Log significant updates (slow response times)
-                if response_time is not None and response_time > 100:
+                # Only log in debug mode and only for very slow responses
+                if __debug__ and response_time is not None and response_time > 300:
                     logger.debug(f"Cache update: host={host_id}, online={is_online}, response_time={response_time}ms")
                 
             except Exception as e:
-                logger.error(f"Redis error during cache update for host {host_id}: {str(e)}")
-                
+                logger.error(f"Redis error during update for {host_id}: {str(e)}")
                 # Fallback to local cache
                 if hasattr(self, '_local_cache'):
                     self._local_cache[host_id] = data
@@ -107,9 +108,9 @@ class PingCache:
             # Use local cache if Redis is not available
             self._local_cache[host_id] = data
             
-            # Log significant updates
-            if response_time is not None and response_time > 100:
-                logger.debug(f"Local cache update: host={host_id}, online={is_online}, response_time={response_time}ms")
+            # Only log in debug mode and only for very slow responses
+            if __debug__ and response_time is not None and response_time > 300:
+                logger.debug(f"Local cache: host={host_id}, online={is_online}, response_time={response_time}ms")
         
     
     def get(self, host_id: str) -> Optional[Dict]:
@@ -136,7 +137,7 @@ class PingCache:
                     # Cache miss
                     return None
             except Exception as e:
-                logger.error(f"Redis error during cache lookup for host {host_id}: {str(e)}")
+                logger.error(f"Redis lookup error {host_id}: {str(e)}")
                 # Fallback to local cache
                 return self._get_from_local_cache(host_id)
         else:
@@ -166,7 +167,7 @@ class PingCache:
             return entry
         
         # If the entry is a failed ping, use shorter expiry time
-        if not entry['is_online'] and age < 3.0:
+        if not entry['is_online'] and age < 5.0:  # Increased from 3.0 to 5.0 seconds
             return entry
         
         # Entry expired
@@ -181,13 +182,14 @@ class PingCache:
                 if keys:
                     self.redis.delete(*keys)
             except Exception as e:
-                logger.error(f"Error clearing Redis cache: {str(e)}")
+                logger.error(f"Redis clear error: {str(e)}")
                 
         # Clear local cache as well
         if hasattr(self, '_local_cache'):
             self._local_cache.clear()
     
 # Create a global singleton instance of the cache
+# Singleton cache instance with longer expiry to minimize network traffic
 ping_cache = PingCache(DEFAULT_CACHE_EXPIRY)
 
 

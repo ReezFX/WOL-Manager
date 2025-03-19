@@ -2,12 +2,10 @@ from flask import render_template, abort, current_app, request, redirect, url_fo
 from app.models import Host, db_session
 from app.utils import validate_public_access_token
 from . import bp
-from app.extensions import limiter
 from app.wol import send_magic_packet
 from flask_wtf import FlaskForm
 
 @bp.route('/host/<token>')
-@limiter.limit("30 per minute")  # Rate limiting similar to other endpoints
 def public_host_view(token):
     """
     Public view endpoint for hosts with public access enabled.

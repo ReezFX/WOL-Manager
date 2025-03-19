@@ -25,8 +25,6 @@ class Config:
     WOL_BROADCAST_PORT = 9  # Port for broadcasting magic packets
     WOL_TIMEOUT = 5  # Timeout for WoL operations in seconds
     
-    # Rate limiting
-    MAX_WOL_REQUESTS_PER_HOUR = 20
     
     # Pagination
     HOSTS_PER_PAGE = 10

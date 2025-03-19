@@ -4,7 +4,7 @@ cd /app
 
 # Set Flask app and environment
 export FLASK_APP=wsgi.py
-export FLASK_CONFIG=production
+export FLASK_CONFIG=development
 
 # Create instance directory with proper permissions
 mkdir -p /app/instance
@@ -27,19 +27,10 @@ echo "Redis server started"
 export REDIS_URL="redis://localhost:6379/0"
 echo "REDIS_URL set to $REDIS_URL"
 
-# Database initialization and migration process
-echo "Starting database initialization and migration process..."
+# Database initialization
+echo "Starting database initialization..."
 
-# Initialize migration support first
-echo "Initializing database migration support..."
-python manage.py db-init || echo "Migration support already initialized, continuing..."
-
-# Create and run migrations
-echo "Creating and running migrations..."
-python manage.py db-migrate || echo "Migration creation failed or already exists, continuing..."
-python manage.py db-upgrade || echo "Migration upgrade failed, continuing..."
-
-# After migrations are applied, ensure all tables are created
+# Ensure all database tables are created
 echo "Ensuring all database tables are created..."
 python manage.py init-db
 
@@ -115,9 +106,6 @@ echo "Starting the application in production mode..."
 # Ensure we're binding to all interfaces
 echo "Binding gunicorn to 0.0.0.0:8008 to accept connections from all network interfaces"
 
-# Check current network interfaces for diagnostic purposes
-echo "Network interfaces on this container:"
-ip addr show || echo "ip command not available"
 # Pass the SESSION_COOKIE_DOMAIN to the Flask application
 if [ -n "$SESSION_COOKIE_DOMAIN" ]; then
   echo "Setting session cookie domain to $SESSION_COOKIE_DOMAIN"
@@ -133,9 +121,27 @@ PORT="8008"
 echo "Starting Gunicorn on ${HOST}:${PORT} with 1 worker"
 
 # Set Python optimization environment variables to reduce memory usage
-export PYTHONOPTIMIZE=1
-export PYTHONDONTWRITEBYTECODE=1
+# Python Performance Optimizations
+export PYTHONOPTIMIZE=2                    # Enable aggressive optimizations
+export PYTHONHASHSEED=random              # Random hash seed for better performance
+export PYTHONMALLOC=malloc                # Use system malloc
+export PYTHONFAULTHANDLER=1               # Enable faulthandler for better crash reports
+export PYTHONWARNINGS="ignore"            # Ignore warnings
+export PYTHONGC_STATS=0                   # Disable GC stats
+# For better memory management
+export MALLOC_TRIM_THRESHOLD_=65536
+export MALLOC_TOP_PAD_=1
+export MALLOC_MMAP_THRESHOLD_=1024
 
 # Execute gunicorn with binding to all interfaces and memory optimization flags
-exec gunicorn --bind ${HOST}:${PORT} --workers 1 --timeout 120 --preload --max-requests 1000 --max-requests-jitter 50 --threads 2 --worker-class sync wsgi:app
+exec gunicorn \
+    --bind ${HOST}:${PORT} \
+    --workers 1 \
+    --worker-class gthread \
+    --backlog 2048 \
+    --preload \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info \
+    "wsgi:app"
 
