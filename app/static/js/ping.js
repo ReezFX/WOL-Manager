@@ -123,7 +123,6 @@ function updateHostInterval(hostId, isOnline) {
 }
 
 /**
-/**
  * Check the status of all hosts visible on the current page
  */
 function checkAllHostStatuses() {
@@ -203,6 +202,7 @@ function checkHostStatus(hostIds) {
  */
 function smoothHostStatuses(rawStatuses) {
     const smoothedStatuses = {};
+    const now = Date.now();
     
     for (const [hostId, status] of Object.entries(rawStatuses)) {
         // Initialize cache entry if it doesn't exist
@@ -212,115 +212,60 @@ function smoothHostStatuses(rawStatuses) {
                 offlineCount: 0,
                 lastResponseTime: status.response_time,
                 lastError: status.error,
-                lastOnlineTime: status.is_online ? Date.now() : null,
-                lastStatusChangeTime: Date.now()
+                lastOnlineTime: status.is_online ? now : null,
+                lastStatusChangeTime: now
             };
         }
         
         let smoothedStatus = {...status};
-        const now = Date.now();
-        const timeSinceLastOnline = hostStatusCache[hostId].lastOnlineTime ? 
-            now - hostStatusCache[hostId].lastOnlineTime : Infinity;
+        const cache = hostStatusCache[hostId];
+        const timeSinceLastOnline = cache.lastOnlineTime ? now - cache.lastOnlineTime : Infinity;
         
-        // Apply enhanced smoothing logic
+        // Handle online status - simple case
         if (status.is_online) {
-            // If host is online, immediately update UI and reset offline counter
-            hostStatusCache[hostId].lastKnownStatus = true;
-                            hostStatusCache[hostId].offlineCount = 0;
-                            hostStatusCache[hostId].lastResponseTime = status.response_time;
-                            hostStatusCache[hostId].lastOnlineTime = now;
-                            
-                            // Update interval if status has changed
-                            if (!hostStatusCache[hostId].lastKnownStatus) {
-                                updateHostInterval(hostId, true);
-                            }
+            // Host is online - update cache and reset counters
+            const wasOffline = !cache.lastKnownStatus;
+            cache.lastKnownStatus = true;
+            cache.offlineCount = 0;
+            cache.lastResponseTime = status.response_time;
+            cache.lastOnlineTime = now;
             
-            // If this is a change from offline to online, log it
-            if (!hostStatusCache[hostId].lastKnownStatus) {
-                hostStatusCache[hostId].lastStatusChangeTime = now;
+            // Log status change if needed
+            if (wasOffline) {
+                cache.lastStatusChangeTime = now;
+                updateHostInterval(hostId, true);
             }
-        } else {
-            // Check if we're within the stability period of a previous online state
-            if (hostStatusCache[hostId].lastOnlineTime && 
-                timeSinceLastOnline < ONLINE_STABILITY_PERIOD && 
-                hostStatusCache[hostId].lastKnownStatus) {
+        } 
+        // Handle offline status - apply smoothing logic
+        else {
+            // Update error and increment offline counter
+            cache.lastError = status.error;
+            cache.offlineCount++;
+            
+            // Determine if we should show as offline based on conditions
+            const exceededOfflineThreshold = cache.offlineCount >= OFFLINE_THRESHOLD;
+            const exceededMaxOfflineTime = timeSinceLastOnline > MAX_OFFLINE_DETECTION_TIME;
+            const outsideStabilityPeriod = timeSinceLastOnline > ONLINE_STABILITY_PERIOD;
+            const tooManyConsecutiveFailures = cache.offlineCount >= OFFLINE_THRESHOLD * 2;
+            
+            // Show as offline if any of these conditions are true
+            if (exceededOfflineThreshold || exceededMaxOfflineTime || 
+                (outsideStabilityPeriod && !cache.lastKnownStatus) || 
+                tooManyConsecutiveFailures) {
                 
-                // Even within stability period, ensure we don't keep a host online too long
-                // if it's been consistently failing checks
-                if (hostStatusCache[hostId].offlineCount >= OFFLINE_THRESHOLD * 2) {
-                    // Host has failed too many consecutive checks, override stability period
-                    smoothedStatus.is_online = false;
-                    
-                        // Update the last known status
-                        if (hostStatusCache[hostId].lastKnownStatus) {
-                            hostStatusCache[hostId].lastKnownStatus = false;
-                            hostStatusCache[hostId].lastStatusChangeTime = now;
-                            
-                            // Update interval for status change
-                            updateHostInterval(hostId, false);
-                    }
-                } 
-                // Also check if it's been an excessive amount of time since last successful ping
-                else if (timeSinceLastOnline > MAX_OFFLINE_DETECTION_TIME) {
-                    // It's been too long since the last successful ping, show as offline
-                    smoothedStatus.is_online = false;
-                    
-                    // Update the last known status
-                    if (hostStatusCache[hostId].lastKnownStatus) {
-                        hostStatusCache[hostId].lastKnownStatus = false;
-                        hostStatusCache[hostId].lastStatusChangeTime = now;
-                        
-                        // Update interval for status change
-                        updateHostInterval(hostId, false);
-                    }
-                }
-                else {
-                    // Within stability period and not too many failures, keep showing as online
-                    smoothedStatus.is_online = true;
-                    smoothedStatus.response_time = hostStatusCache[hostId].lastResponseTime;
-                    
-                    
-                    // Still increment the offline counter for tracking purposes
-                    hostStatusCache[hostId].offlineCount++;
-                }
-            } else {
-                // Beyond stability period, apply normal threshold logic
-                hostStatusCache[hostId].offlineCount++;
-                hostStatusCache[hostId].lastError = status.error;
+                smoothedStatus.is_online = false;
                 
-                // Only show as offline if we've seen it offline multiple times consecutively
-                if (hostStatusCache[hostId].offlineCount < OFFLINE_THRESHOLD) {
-                    // Keep showing as online until threshold is reached, but only if recently online
-                    if (timeSinceLastOnline < MAX_OFFLINE_DETECTION_TIME) {
-                        smoothedStatus.is_online = hostStatusCache[hostId].lastKnownStatus;
-                        smoothedStatus.response_time = hostStatusCache[hostId].lastResponseTime;
-                        
-                    } else {
-                        // It's been too long since last successful ping, show as offline regardless
-                        smoothedStatus.is_online = false;
-                        
-                        if (hostStatusCache[hostId].lastKnownStatus) {
-                            hostStatusCache[hostId].lastKnownStatus = false;
-                            hostStatusCache[hostId].lastStatusChangeTime = now;
-                            
-                            // Update interval for status change
-                            updateHostInterval(hostId, false);
-                        }
-                    }
-                } else {
-                    // Threshold reached, show as offline
-                    smoothedStatus.is_online = false;
-                    
-                    // Only log a state change if this is a new change
-                    if (hostStatusCache[hostId].lastKnownStatus) {
-                        hostStatusCache[hostId].lastStatusChangeTime = now;
-                        
-                        // Update interval for status change
-                        updateHostInterval(hostId, false);
-                        
-                        hostStatusCache[hostId].lastKnownStatus = false;
-                    }
+                // Only update status and interval if this is a change
+                if (cache.lastKnownStatus) {
+                    cache.lastKnownStatus = false;
+                    cache.lastStatusChangeTime = now;
+                    updateHostInterval(hostId, false);
                 }
+            } 
+            // Otherwise keep showing as online (within stability period)
+            else {
+                smoothedStatus.is_online = true;
+                smoothedStatus.response_time = cache.lastResponseTime;
             }
         }
         
@@ -334,99 +279,81 @@ function smoothHostStatuses(rawStatuses) {
  * Update the UI with the latest host status information
  * @param {Object} hostStatuses - Object with host IDs as keys and status data as values
  */
+/**
+ * Helper function to update a status badge element
+ * @param {HTMLElement} badge - The status badge element to update
+ * @param {boolean} isOnline - Whether the host is online
+ * @param {number|null} responseTime - Response time in ms (only for online hosts)
+ * @param {string|null} error - Error message (only for offline hosts)
+ */
+function updateStatusBadge(badge, isOnline, responseTime, error) {
+    if (!badge) return;
+    
+    // Remove all status classes
+    badge.classList.remove(
+        'bg-success', 'bg-danger', 'bg-warning', 'bg-secondary',
+        'badge-success', 'badge-danger', 'badge-warning', 'badge-secondary',
+        'text-bg-success', 'text-bg-danger', 'text-bg-warning', 'text-bg-secondary'
+    );
+    
+    // Apply appropriate status class (works with any Bootstrap version)
+    const statusClasses = ['bg-success', 'badge-success', 'text-bg-success'].filter(cls => 
+        document.querySelector(`.${cls}`) !== null || badge.classList.contains(cls.replace('success', ''))
+    );
+    
+    const dangerClasses = ['bg-danger', 'badge-danger', 'text-bg-danger'].filter(cls => 
+        document.querySelector(`.${cls}`) !== null || badge.classList.contains(cls.replace('danger', ''))
+    );
+    
+    // Add the first found class or default to bg-* classes if none found
+    if (isOnline) {
+        badge.classList.add(statusClasses.length > 0 ? statusClasses[0] : 'bg-success');
+        badge.setAttribute('data-status', 'online');
+        badge.textContent = responseTime ? `Online (${Math.round(responseTime)}ms)` : 'Online';
+    } else {
+        badge.classList.add(dangerClasses.length > 0 ? dangerClasses[0] : 'bg-danger');
+        badge.setAttribute('data-status', 'offline');
+        badge.textContent = 'Offline';
+        if (error) {
+            badge.title = error;
+        }
+    }
+}
+
 function updateHostStatusUI(hostStatuses) {
     // Apply smoothing to prevent status flickering
     const smoothedStatuses = smoothHostStatuses(hostStatuses);
     
     // Save the updated statuses to localStorage
     saveHostStatusesToStorage(smoothedStatuses);
+    
     // Detect current page - different layouts for dashboard vs hosts page
-    const isDashboard = window.location.pathname === '/dashboard';
     const isHostsList = window.location.pathname === '/hosts' || window.location.pathname === '/hosts/';
     
     // Update status on both dashboard cards and the host list table
     for (const [hostId, status] of Object.entries(smoothedStatuses)) {
-        // Find elements for this host
+        // Find all elements for this host
         const hostElements = document.querySelectorAll(`[data-host-id="${hostId}"]`);
         
         hostElements.forEach(hostElement => {
-            // Dashboard cards and host list table rows have different structures
-            // Find status badge element within this host element
-            let statusBadge;
+            // Find status badge regardless of element type (card or table row)
+            let statusBadge = hostElement.querySelector('.status-badge');
             
-            // Check if we're in a table row (hosts list) or a card (dashboard)
-            if (hostElement.tagName === 'TR') {
-                // This is likely a table row in the hosts list
-                statusBadge = hostElement.querySelector('.status-badge');
-                // Some implementations might put the badge in a specific status cell
-                if (!statusBadge) {
+            // Try alternative selectors if not found
+            if (!statusBadge) {
+                if (hostElement.tagName === 'TR') {
                     const statusCell = hostElement.querySelector('td.host-status');
                     if (statusCell) {
                         statusBadge = statusCell.querySelector('.badge') || statusCell.querySelector('.status-badge');
                     }
-                }
-            } else {
-                // This is likely a card on the dashboard
-                statusBadge = hostElement.querySelector('.status-badge');
-                // If not found, look deeper in card structure
-                if (!statusBadge) {
+                } else {
                     statusBadge = hostElement.querySelector('.card-body .status-badge') || 
                                  hostElement.querySelector('.card .status-badge');
                 }
             }
             
-            if (!statusBadge) return;
-            
-            // Remove all existing status classes
-            statusBadge.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-secondary',
-                'badge-success', 'badge-danger', 'badge-warning', 'badge-secondary',
-                'text-bg-success', 'text-bg-danger', 'text-bg-warning', 'text-bg-secondary');
-            
-            // Determine if using new Bootstrap 5 (with "text-bg-*" classes) or older versions
-            const isBootstrap5 = document.documentElement.getAttribute('data-bs-theme') !== null ||
-                document.querySelector('.btn-close') !== null;
-                
-            // Prepare class sets for different Bootstrap versions
-            let onlineClass, offlineClass;
-            
-            if (isBootstrap5) {
-                // Bootstrap 5+ classes
-                onlineClass = 'text-bg-success';
-                offlineClass = 'text-bg-danger';
-            } else if (statusBadge.classList.contains('badge') || 
-                      statusBadge.classList.contains('badge-pill')) {
-                // Bootstrap 4 classes
-                onlineClass = 'badge-success';
-                offlineClass = 'badge-danger';
-            } else {
-                // Default to newer bg-* classes
-                onlineClass = 'bg-success';
-                offlineClass = 'bg-danger';
-            }
-            
-            // Update status badge text and class
-            if (status.is_online) {
-                statusBadge.textContent = 'Online';
-                statusBadge.classList.add(onlineClass);
-                // Set data-status attribute to "online"
-                statusBadge.setAttribute('data-status', 'online');
-                
-                // If we have response time info, add it
-                if (status.response_time) {
-                    const responseTime = Math.round(status.response_time); // Already in ms
-                    statusBadge.textContent = `Online (${responseTime}ms)`;
-                }
-            } else {
-                statusBadge.textContent = 'Offline';
-                statusBadge.classList.add(offlineClass);
-                // Set data-status attribute to "offline"
-                statusBadge.setAttribute('data-status', 'offline');
-                
-                // If we have error info, add it to title tooltip
-                if (status.error) {
-                    statusBadge.title = status.error;
-                }
-            }
+            // Update the status badge
+            updateStatusBadge(statusBadge, status.is_online, status.response_time, status.error);
             
             // Find and update any detailed status elements if they exist
             const detailedStatus = hostElement.querySelector('.host-detailed-status');
@@ -434,7 +361,7 @@ function updateHostStatusUI(hostStatuses) {
                 if (status.is_online) {
                     detailedStatus.innerHTML = `<i class="fas fa-check-circle text-success"></i> Online`;
                     if (status.response_time) {
-                        const responseTime = Math.round(status.response_time); // Already in ms
+                        const responseTime = Math.round(status.response_time);
                         detailedStatus.innerHTML += ` <small>(${responseTime}ms)</small>`;
                     }
                 } else {
@@ -445,42 +372,25 @@ function updateHostStatusUI(hostStatuses) {
                 }
             }
             
-            // Update any row-specific UI elements for table rows
+            // Handle row-specific or card-specific UI updates
             if (hostElement.tagName === 'TR') {
-                // Some tables might have a dedicated status icon column
+                // Update status icon if present
                 const statusIcon = hostElement.querySelector('.status-icon');
                 if (statusIcon) {
                     statusIcon.className = 'status-icon';
-                    if (status.is_online) {
-                        statusIcon.classList.add('text-success', 'fa', 'fa-check-circle');
-                    } else {
-                        statusIcon.classList.add('text-danger', 'fa', 'fa-times-circle');
-                    }
+                    statusIcon.classList.add(status.is_online ? 'text-success fa fa-check-circle' : 'text-danger fa fa-times-circle');
                 }
-                
-                // Update the whole row styling - just remove table-danger class
-                // regardless of status to improve contrast
+                // Remove table-danger class to improve contrast
                 hostElement.classList.remove('table-danger');
-                // We no longer add table-danger to improve contrast
-                
-            }
-            
-            // Update any card-specific UI elements
-            if (hostElement.classList.contains('card') || hostElement.closest('.card')) {
-                // Update card border if needed
-                const card = hostElement.classList.contains('card') ? 
-                    hostElement : hostElement.closest('.card');
-                    
+            } else {
+                // Update card border if this is a card
+                const card = hostElement.classList.contains('card') ? hostElement : hostElement.closest('.card');
                 if (card) {
                     card.classList.remove('border-success', 'border-danger');
                     
                     // Only add colored borders on dashboard, not on hosts list page
                     if (!isHostsList) {
-                        if (status.is_online) {
-                            card.classList.add('border-success');
-                        } else {
-                            card.classList.add('border-danger');
-                        }
+                        card.classList.add(status.is_online ? 'border-success' : 'border-danger');
                     }
                 }
             }
