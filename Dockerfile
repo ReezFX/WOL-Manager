@@ -2,8 +2,8 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install Redis server
-RUN apt-get update && apt-get install -y --no-install-recommends redis-server && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install Redis and ping utilities
+RUN apt-get update && apt-get install -y --no-install-recommends redis-server iputils-ping && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .

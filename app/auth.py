@@ -229,3 +229,41 @@ def change_password():
 # User management functionality moved to admin.py
 
 
+@auth.route('/api/refresh-csrf-token', methods=['GET'])
+@login_required
+def refresh_csrf_token():
+    """
+    API endpoint for refreshing CSRF tokens.
+    
+    This endpoint:
+    1. Only works for authenticated users (enforced by login_required)
+    2. Returns a new CSRF token
+    3. Sets appropriate security headers
+    
+    Returns:
+        JSON response with the new CSRF token
+    """
+    from flask import jsonify, current_app
+    from flask_wtf.csrf import generate_csrf
+    
+    # Generate a new CSRF token
+    token = generate_csrf()
+    
+    # Log the token refresh event
+    access_logger.info(f"CSRF token refreshed for user '{current_user.username}'")
+    
+    # Create response with the new token
+    response = jsonify({'status': 'success', 'csrf_token': token})
+    
+    # Add security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    
+    if request.is_secure:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000'
+    
+    return response
+

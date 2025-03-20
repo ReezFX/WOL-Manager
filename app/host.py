@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import desc, or_
 from app import db_session
@@ -427,3 +427,46 @@ def utility_processor():
     return {
         'get_role_names': get_role_names
     }
+
+@host.route('/api/status')
+@login_required
+def get_host_statuses():
+    """Get status of all hosts from Redis"""
+    try:
+        # Get hosts based on user permissions
+        if current_user.is_admin:
+            hosts = db_session.query(Host).all()
+        else:
+            # Get hosts created by user
+            hosts = db_session.query(Host).filter(
+                or_(
+                    Host.created_by == current_user.id,
+                    Host.id.in_([h.id for h in db_session.query(Host).all() 
+                              if h.is_visible_to_user(current_user)])
+                )
+            ).all()
+        
+        # Get status for all hosts from Redis
+        from app.ping_service import get_all_host_statuses
+        host_ids = [host.id for host in hosts]
+        statuses = get_all_host_statuses(host_ids)
+        
+        # Build response
+        response_data = {
+            "statuses": [
+                {
+                    "host_id": host.id,
+                    "name": host.name,
+                    "ip": host.ip,
+                    "status": statuses[host.id]["status"],
+                    "last_check": statuses[host.id]["last_check"]
+                }
+                for host in hosts
+            ]
+        }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        logger.error(f"Error getting host statuses: {str(e)}")
+        return jsonify({"error": str(e)}), 500

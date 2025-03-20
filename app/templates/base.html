@@ -275,6 +275,48 @@
     
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('{{ url_for("static", filename="js/service-worker.js") }}')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+    </script>
+    
+    <!-- CSRF Token Access for JS -->
+    <script>
+        // Make CSRF token available for AJAX requests
+        window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Set up AJAX defaults for CSRF protection
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add CSRF token to all fetch requests
+            const originalFetch = window.fetch;
+            window.fetch = function(url, options = {}) {
+                // Only add CSRF token for same-origin requests that modify data
+                if (url.startsWith('/') || url.startsWith(window.location.origin)) {
+                    options = options || {};
+                    options.headers = options.headers || {};
+                    
+                    // Add CSRF token for non-GET requests
+                    if (!options.method || options.method.toUpperCase() !== 'GET') {
+                        options.headers['X-CSRFToken'] = window.csrfToken;
+                    }
+                }
+                return originalFetch(url, options);
+            };
+        });
+    </script>
+    
+    <!-- Ping.js should be loaded after CSRF token setup -->
     <script src="{{ url_for('static', filename='js/ping.js') }}"></script>
     
     <!-- Scripts Block -->

@@ -1,5 +1,19 @@
 import os
 import redis
+import threading
+from redis import ConnectionPool
+
+# Initialize Redis connection pool
+redis_pool = ConnectionPool(
+    host='localhost',
+    port=6379,
+    db=0,
+    decode_responses=True,
+    max_connections=20  # Adjust based on your needs
+)
+
+# Create Redis client using the pool
+redis_client = redis.Redis(connection_pool=redis_pool)
 import pathlib
 import logging
 import logging.config
@@ -181,5 +195,23 @@ def create_app(config_name=None):
     # instead of creating tables directly.
     # However, keeping this for backward compatibility
     Base.metadata.create_all(bind=engine)
+    
+    # Initialize logger for app init
+    from app.logging_config import get_logger
+    logger = get_logger('app.init')
+    
+    # Start ping service in a background thread
+    try:
+        from app.async_ping_service import start_ping_service
+        ping_thread = threading.Thread(target=start_ping_service, daemon=True)
+        ping_thread.start()
+        logger.info("Ping service started successfully")
+    except Exception as e:
+        logger.error(f"Failed to start ping service: {str(e)}")
+
+    # Update ping_service.py to use connection pool
+    from app.ping_service import update_redis_pool
+    update_redis_pool(redis_pool)
+    
     return app
 
