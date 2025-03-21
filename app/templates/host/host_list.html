@@ -119,7 +119,19 @@
                 <!-- Card Header - Only contains status badge and public URL badge -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <!-- Status badges removed -->
+                        {% if host.status == 'online' %}
+                            <span class="badge status-badge badge-success" id="host-{{ host.id }}-status" data-status="online">
+                                <i class="fas fa-circle-check fa-xs me-1"></i>online
+                            </span>
+                        {% elif host.status == 'offline' %}
+                            <span class="badge status-badge badge-danger" id="host-{{ host.id }}-status" data-status="offline">
+                                <i class="fas fa-circle-xmark fa-xs me-1"></i>offline
+                            </span>
+                        {% else %}
+                            <span class="badge status-badge badge-secondary" id="host-{{ host.id }}-status" data-status="unknown">
+                                <i class="fas fa-circle-question fa-xs me-1"></i>unknown
+                            </span>
+                        {% endif %}
                     </div>
                     <div>
                         {% if host.public_access %}
@@ -279,6 +291,37 @@
                 }
             });
         });
+
+        // Host status update functionality
+        function updateHostStatuses() {
+            fetch('/hosts/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    data.statuses.forEach(hostStatus => {
+                        const statusBadge = document.querySelector(`#host-${hostStatus.host_id}-status`);
+                        if (statusBadge) {
+                            // Update status badge
+                            statusBadge.setAttribute('data-status', hostStatus.status);
+                            
+                            // Update icon and text
+                            let icon = '<i class="fas fa-circle-question fa-xs me-1"></i>';
+                            if (hostStatus.status === 'online') {
+                                icon = '<i class="fas fa-circle-check fa-xs me-1"></i>';
+                            } else if (hostStatus.status === 'offline') {
+                                icon = '<i class="fas fa-circle-xmark fa-xs me-1"></i>';
+                            }
+                            statusBadge.innerHTML = icon + hostStatus.status;
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error updating host statuses:', error);
+                });
+        }
+
+        // Update initially and then every 15 seconds
+        updateHostStatuses();
+        setInterval(updateHostStatuses, 15000);
     });
 </script>
 {% endblock %}
