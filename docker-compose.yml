@@ -8,9 +8,8 @@ services:
       - db_data:/app/instance
     environment:
       - FLASK_APP=wsgi.py
-      - FLASK_CONFIG=development
-      - LOG_PROFILE=DEBUG
-      - FLASK_DEBUG=1
+      - FLASK_CONFIG=production
+      - FLASK_DEBUG=0
       - SECRET_KEY=dev-key-change-in-production
       - WTF_CSRF_SECRET_KEY=csrf-secret-key-change-in-production
       - REDIS_URL=redis://localhost:6379/0  # Updated to use localhost since we're in host network mode
