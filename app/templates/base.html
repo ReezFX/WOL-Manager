@@ -22,16 +22,15 @@
             -webkit-backdrop-filter: saturate(180%) blur(20px);
             box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
             padding: 0.8rem 0;
-            transition: all 0.3s ease;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             width: 100%;
-            z-index: 1100;
+            z-index: 1030;
         }
         
-        /* Apple-like theme toggle button */
+        /* Theme toggle button */
         .theme-toggle-btn {
             display: flex;
             align-items: center;
@@ -54,7 +53,7 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
         
-        /* Apple-like footer */
+        /* Footer styles */
         .apple-footer {
             padding: 1.5rem 0;
             backdrop-filter: saturate(180%) blur(20px);
@@ -79,51 +78,66 @@
             font-size: 0.9rem;
             opacity: 0.8;
         }
-    /* Enhanced dropdown styling for better visibility */
-    /* Adjust body padding to account for fixed navbar */
-    body {
-        padding-top: 70px;
-    }
-    
-    .dropdown-menu {
-        opacity: 0;
-        transform: translateY(-10px);
-        display: block;
-        visibility: hidden;
-        margin-top: 0;
-    }
-    
-    .dropdown-menu.show {
-        opacity: 1;
-        transform: translateY(0);
-        visibility: visible;
-    }
-    
-    /* Ensure admin dropdown is always above other elements */
-    .nav-item.dropdown {
-        position: relative;
-        z-index: 1050;
-    }
-    
-    /* Add subtle animation to dropdown items */
-    .dropdown-item {
-        padding: 0.6rem 1.2rem;
-        position: relative;
-        transition: all 0.2s ease;
-    }
-    
-    .dropdown-item i {
-        transition: transform 0.15s ease;
-    }
-    
-    .dropdown-item:hover i {
-        transform: translateX(2px);
-    }
-    
-    /* Improve navbar contrast in dark mode */
-    .dark-theme .apple-navbar {
-        background-color: rgba(29, 29, 31, 0.85);
-    }
+
+        /* Adjust body padding to account for fixed navbar */
+        body {
+            padding-top: 70px;
+        }
+        
+        /* Enhanced dropdown styling */
+        .dropdown-item {
+            padding: 0.7rem 1.2rem;
+        }
+        
+        .dropdown-item i {
+            transition: transform 0.15s ease;
+        }
+        
+        .dropdown-item:hover i {
+            transform: translateX(2px);
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 991.98px) {
+            /* Larger touch targets for mobile */
+            .dropdown-item {
+                padding: 0.75rem 1.2rem;
+                font-size: 1rem;
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+            }
+            
+            /* Add space between dropdown items */
+            .dropdown-menu .dropdown-item:not(:last-child) {
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+            }
+            
+            /* Improve touch area of navbar toggler */
+            .navbar-toggler {
+                padding: 0.6rem;
+                min-width: 44px;
+                min-height: 44px;
+            }
+        }
+        
+        /* Dark mode styling */
+        .dark-theme .apple-navbar {
+            background-color: rgba(29, 29, 31, 0.85);
+        }
+        
+        .dark-theme .dropdown-menu {
+            background-color: rgba(50, 50, 50, 0.95);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .dark-theme .dropdown-item {
+            color: rgba(255, 255, 255, 0.85);
+        }
+        
+        .dark-theme .dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
     </style>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
@@ -152,11 +166,11 @@
                         </a>
                     </li>
                     {% if current_user.is_admin %}
-                    <li class="nav-item dropdown position-relative">
-                      <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <li class="nav-item dropdown">
+                      <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-shield-alt fa-fw"></i> Admin
                       </a>
-                      <ul class="dropdown-menu position-absolute">
+                      <ul class="dropdown-menu">
                         <li>
                           <a class="dropdown-item" href="{{ url_for('admin.list_users') }}">
                             <i class="fas fa-users fa-fw"></i> Users
@@ -184,11 +198,11 @@
                         </button>
                     </li>
                     {% if current_user.is_authenticated %}
-                    <li class="nav-item dropdown position-relative">
+                    <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user-circle me-1"></i>{{ current_user.username }}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end position-absolute" aria-labelledby="navbarDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
                                 <i class="fas fa-key me-1"></i>Change Password
                             </a></li>
@@ -322,40 +336,87 @@
     <!-- Scripts Block -->
     {% block scripts %}{% endblock %}
     
-    <!-- Dropdown positioning fix script -->
+    <!-- Mobile Navigation Enhancement Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Fix z-index issues with dropdowns
-            const dropdowns = document.querySelectorAll('.dropdown');
-            dropdowns.forEach(dropdown => {
-                dropdown.addEventListener('show.bs.dropdown', function() {
-                    // Force dropdown menu to have higher z-index than alerts and cards
-                    setTimeout(() => {
-                        const menu = this.querySelector('.dropdown-menu');
-                        if (menu) {
-                            menu.style.zIndex = '1050';
-                        }
-                    }, 10);
-                });
+            const navbar = document.getElementById('main-navbar');
+            const navbarCollapse = document.getElementById('navbarNav');
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
+            
+            // 1. Add icon animations for dropdown items
+            dropdownItems.forEach(item => {
+                const icon = item.querySelector('i');
+                if (icon) {
+                    item.addEventListener('mouseover', () => {
+                        icon.style.transform = 'translateX(3px)';
+                    });
+                    
+                    item.addEventListener('mouseout', () => {
+                        icon.style.transform = 'translateX(0)';
+                    });
+                }
             });
             
-            // Improve dropdown item interactions
-            const dropdownItems = document.querySelectorAll('.dropdown-item');
-            dropdownItems.forEach(item => {
-                item.addEventListener('mouseenter', () => {
-                    const icon = item.querySelector('i');
-                    if (icon) {
-                        icon.style.transition = 'transform 0.15s ease';
-                        icon.style.transform = 'translateX(2px)';
-                    }
-                });
-                
-                item.addEventListener('mouseleave', () => {
-                    const icon = item.querySelector('i');
-                    if (icon) {
-                        icon.style.transform = 'translateX(0)';
-                    }
-                });
+            // 2. Add a small amount of bottom padding to the mobile navbar
+            function adjustNavbarPadding() {
+                if (window.innerWidth < 992) {
+                    navbar.style.paddingBottom = '0.9rem';
+                } else {
+                    navbar.style.paddingBottom = '0.8rem';
+                }
+            }
+            
+            // 3. Ensure the navbar collapse works properly on mobile
+            function setupMobileNavbar() {
+                if (window.innerWidth < 992) {
+                    // 4. Close the navbar when a regular nav link (non-dropdown-toggle) is clicked
+                    navLinks.forEach(link => {
+                        // Skip dropdown toggle links to allow menu interaction
+                        if (!link.classList.contains('dropdown-toggle')) {
+                            link.addEventListener('click', () => {
+                                const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+                                if (bsCollapse && navbarCollapse.classList.contains('show')) {
+                                    // Add small delay to allow the click to process
+                                    setTimeout(() => {
+                                        bsCollapse.hide();
+                                    }, 150);
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Only close when dropdown items are clicked (not the toggles)
+                    dropdownItems.forEach(item => {
+                        item.addEventListener('click', () => {
+                            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+                            if (bsCollapse && navbarCollapse.classList.contains('show')) {
+                                // Add small delay to allow the click to process
+                                setTimeout(() => {
+                                    bsCollapse.hide();
+                                }, 150);
+                            }
+                        });
+                    });
+                }
+            }
+            
+            // Initial setup
+            adjustNavbarPadding();
+            setupMobileNavbar();
+            
+            // 5. Handle orientation changes and window resizing
+            window.addEventListener('resize', function() {
+                adjustNavbarPadding();
+                setupMobileNavbar();
+            });
+            
+            window.addEventListener('orientationchange', function() {
+                // Short delay to ensure proper rendering after orientation change
+                setTimeout(function() {
+                    adjustNavbarPadding();
+                    setupMobileNavbar();
+                }, 100);
             });
         });
     </script>
