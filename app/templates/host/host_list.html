@@ -208,9 +208,17 @@
                             {% if host.public_access %}
                             <div class="mb-1">
                                 <strong>Public URL:</strong> 
-                                <a href="{{ url_for('public.public_host_view', token=host.public_access_token, _external=True) }}" target="_blank">
-                                    {{ url_for('public.public_host_view', token=host.public_access_token, _external=True) }}
-                                </a>
+                                <div class="d-flex align-items-center">
+                                    <a href="{{ url_for('public.public_host_view', token=host.public_access_token, _external=True) }}" target="_blank" class="me-2 text-truncate" id="public-url-{{ host.id }}">
+                                        {{ url_for('public.public_host_view', token=host.public_access_token, _external=True) }}
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary copy-url-btn" 
+                                            data-url="{{ url_for('public.public_host_view', token=host.public_access_token, _external=True) }}"
+                                            data-host-id="{{ host.id }}"
+                                            title="Copy URL to clipboard">
+                                        <i class="fas fa-clipboard"></i>
+                                    </button>
+                                </div>
                             </div>
                             {% endif %}
                         </div>
@@ -322,6 +330,80 @@
         // Update initially and then every 15 seconds
         updateHostStatuses();
         setInterval(updateHostStatuses, 15000);
+
+        // Copy URL functionality with fallback method
+        document.querySelectorAll('.copy-url-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const url = this.getAttribute('data-url');
+                const hostId = this.getAttribute('data-host-id');
+                const originalIcon = this.innerHTML;
+                const button = this;
+                
+                // Function for showing success feedback
+                function showSuccessFeedback() {
+                    button.innerHTML = '<i class="fas fa-check"></i>';
+                    button.classList.remove('btn-outline-secondary');
+                    button.classList.add('btn-success');
+                    
+                    // Reset button after 1.5 seconds
+                    setTimeout(() => {
+                        button.innerHTML = originalIcon;
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-outline-secondary');
+                    }, 1500);
+                }
+                
+                // Try modern clipboard API first
+                let copySuccess = false;
+                
+                // Try the modern clipboard API
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url)
+                        .then(() => {
+                            copySuccess = true;
+                            showSuccessFeedback();
+                        })
+                        .catch(err => {
+                            console.log('Clipboard API failed, trying fallback method:', err);
+                            // Will try fallback method below
+                        });
+                }
+                
+                // If modern API is not available or failed, use fallback method
+                if (!navigator.clipboard || !navigator.clipboard.writeText || !copySuccess) {
+                    try {
+                        // Create a temporary textarea element
+                        const textarea = document.createElement('textarea');
+                        textarea.value = url;
+                        
+                        // Make the textarea out of viewport
+                        textarea.style.position = 'fixed';
+                        textarea.style.left = '-999999px';
+                        textarea.style.top = '-999999px';
+                        document.body.appendChild(textarea);
+                        
+                        // Select and copy the text
+                        textarea.focus();
+                        textarea.select();
+                        
+                        const successful = document.execCommand('copy');
+                        
+                        // Remove the temporary element
+                        document.body.removeChild(textarea);
+                        
+                        if (successful) {
+                            showSuccessFeedback();
+                        } else {
+                            console.error('Fallback clipboard copy failed');
+                            alert('Failed to copy URL. Please try manually selecting and copying the URL.');
+                        }
+                    } catch (err) {
+                        console.error('Error in fallback clipboard method:', err);
+                        alert('Failed to copy URL. Please try manually selecting and copying the URL.');
+                    }
+                }
+            });
+        });
     });
 </script>
 {% endblock %}
