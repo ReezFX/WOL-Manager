@@ -48,32 +48,34 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function updateHostStatuses() {
-        fetch('/hosts/api/status')
+        // Extract the token from the current URL
+        const pathSegments = window.location.pathname.split('/');
+        const token = pathSegments[pathSegments.length - 1];
+        
+        fetch(`/public/host/${token}/status`)
             .then(response => response.json())
             .then(data => {
-                data.statuses.forEach(hostStatus => {
-                    const statusBadge = document.querySelector(`#host-${hostStatus.host_id}-status`);
-                    if (statusBadge) {
-                        // Update status badge
-                        statusBadge.setAttribute('data-status', hostStatus.status);
-                        
-                        // Update icon and text
-                        let icon = '<i class="fas fa-circle-question fa-xs me-1"></i>';
-                        if (hostStatus.status === 'online') {
-                            icon = '<i class="fas fa-circle-check fa-xs me-1"></i>';
-                        } else if (hostStatus.status === 'offline') {
-                            icon = '<i class="fas fa-circle-xmark fa-xs me-1"></i>';
-                        }
-                        statusBadge.innerHTML = icon + hostStatus.status;
-                        
-                        // Update last check time
-                        const lastCheck = document.querySelector(`#host-${hostStatus.host_id}-last-check`);
-                        if (lastCheck && hostStatus.last_check) {
-                            const date = new Date(hostStatus.last_check);
-                            lastCheck.textContent = `Last status check: ${date.toLocaleString()}`;
-                        }
+                const statusBadge = document.querySelector(`#host-${data.host_id}-status`);
+                if (statusBadge) {
+                    // Update status badge
+                    statusBadge.setAttribute('data-status', data.status);
+                    
+                    // Update icon and text
+                    let icon = '<i class="fas fa-circle-question fa-xs me-1"></i>';
+                    if (data.status === 'online') {
+                        icon = '<i class="fas fa-circle-check fa-xs me-1"></i>';
+                    } else if (data.status === 'offline') {
+                        icon = '<i class="fas fa-circle-xmark fa-xs me-1"></i>';
                     }
-                });
+                    statusBadge.innerHTML = icon + data.status;
+                    
+                    // Update last check time
+                    const lastCheck = document.querySelector(`#host-${data.host_id}-last-check`);
+                    if (lastCheck && data.last_check) {
+                        const date = new Date(data.last_check);
+                        lastCheck.textContent = `Last status check: ${date.toLocaleString()}`;
+                    }
+                }
             })
             .catch(error => {
                 console.error('Error updating host statuses:', error);

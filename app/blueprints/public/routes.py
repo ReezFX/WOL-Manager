@@ -1,4 +1,4 @@
-from flask import render_template, abort, current_app, request, redirect, url_for, flash
+from flask import render_template, abort, current_app, request, redirect, url_for, flash, jsonify
 from app.models import Host, db_session
 from app.utils import validate_public_access_token
 from . import bp
@@ -78,3 +78,33 @@ def wake_host():
     
     # Redirect back to the public view
     return redirect(url_for('public.public_host_view', token=host.public_access_token))
+
+
+@bp.route('/host/<token>/status')
+def get_host_status(token):
+    """
+    Public endpoint to get the status of a host with public access enabled.
+    """
+    # Validate token format first
+    if not validate_public_access_token(token):
+        return jsonify({"error": "Invalid token"}), 404
+    
+    # Look up host by token
+    host = db_session.query(Host).filter_by(
+        public_access_token=token,
+        public_access=True
+    ).first()
+    
+    if not host:
+        return jsonify({"error": "Host not found"}), 404
+    
+    # Get host status from Redis
+    from app.ping_service import get_host_status
+    status_data = get_host_status(host.id)
+    
+    return jsonify({
+        "host_id": host.id,
+        "name": host.name,
+        "status": status_data["status"],
+        "last_check": status_data["last_check"]
+    })
