@@ -6,38 +6,47 @@ cd /app
 export FLASK_APP=wsgi.py
 export FLASK_CONFIG=development
 
-# Create instance directory with proper permissions
-mkdir -p /app/instance
-chmod 770 /app/instance
-
-# Create flask_session directory with proper permissions
-mkdir -p /app/instance/flask_session
-chmod 770 /app/instance/flask_session
-
-# Create logs directory with proper permissions
-mkdir -p /app/instance/logs
-chmod 770 /app/instance/logs
+# Create necessary directories with proper permissions
+echo "Creating necessary directories..."
+mkdir -p /app/instance/flask_session /app/instance/logs
+chmod 770 /app/instance /app/instance/flask_session /app/instance/logs
 
 # Start Redis server in the background
 echo "Starting Redis server in the background..."
-redis-server --daemonize yes
-echo "Redis server started"
+if redis-server --daemonize yes; then
+    echo "Redis server started successfully"
+    # Set Redis URL environment variable
+    export REDIS_URL="redis://localhost:6379/0"
+    echo "REDIS_URL set to $REDIS_URL"
+else
+    echo "Failed to start Redis server, exiting."
+    exit 1
+fi
 
-# Set Redis URL environment variable
-export REDIS_URL="redis://localhost:6379/0"
-echo "REDIS_URL set to $REDIS_URL"
+# Make check_admin.py executable (before it's used)
+chmod +x check_admin.py || {
+    echo "Failed to make check_admin.py executable, this may cause issues later."
+}
 
 # Database initialization
 echo "Starting database initialization..."
 
-# Ensure all database tables are created
-echo "Ensuring all database tables are created..."
-python manage.py init-db
-
-# Apply database migrations
+# Apply database migrations (covers both schema creation and updates)
+# This eliminates the redundancy of running init-db separately
 echo "Applying database migrations..."
-python manage.py db-upgrade
-# Verify critical tables exist and create them if needed
+if python manage.py db-upgrade; then
+    echo "Database migrations applied successfully"
+else
+    echo "Error applying migrations, attempting to initialize database..."
+    if python manage.py init-db; then
+        echo "Database initialized successfully"
+    else
+        echo "Database initialization failed, exiting."
+        exit 1
+    fi
+fi
+
+# Verify critical tables exist
 echo "Verifying critical tables exist..."
 python -c "
 import sqlite3
@@ -56,52 +65,49 @@ with app.app_context():
     existing_tables = inspector.get_table_names()
     print(f'Existing tables: {existing_tables}')
     
-    # Logging tables have been removed from the models
+    # Verify minimum required tables exist
+    if len(existing_tables) == 0:
+        raise Exception('No tables found in database')
     
     print('Table verification complete.')
-" || echo "Table verification failed, please check database configuration."
+" || {
+    echo "Table verification failed, please check database configuration."
+    exit 1
+}
 
-# Check if database exists and need to initialize data
-if [ -f /app/instance/wol.db ]; then
-    echo "Database exists, checking if data needs to be initialized..."
-    
-    # Check if admin user exists using Python script
-    python check_admin.py
-    ADMIN_EXISTS=$?
-    
-    if [ "$ADMIN_EXISTS" -ne 0 ]; then
-        echo "Admin user not found, initializing data..."
-        
-        # Create default permissions
-        echo "Creating default permissions..."
-        python manage.py create-permissions || echo "Failed to create permissions, continuing..."
-        
-        # Create admin user
-        echo "Creating admin user..."
-        python manage.py create-admin || echo "Failed to create admin user, continuing..."
-    else
-        echo "Admin user already exists, skipping data initialization."
-    fi
+# Check if admin user exists using Python script
+echo "Checking if admin user exists..."
+if python check_admin.py; then
+    echo "Admin user already exists, skipping data initialization."
 else
-    echo "Initializing database from scratch..."
-    # Tables already created above, so we don't need to run init-db again
+    echo "Admin user not found or database is new, initializing permissions and admin user..."
     
     # Create default permissions
     echo "Creating default permissions..."
-    python manage.py create-permissions
+    if python manage.py create-permissions; then
+        echo "Permissions created successfully"
+    else
+        echo "Failed to create permissions, but continuing..."
+    fi
     
     # Create admin user
     echo "Creating admin user..."
-    python manage.py create-admin
+    if python manage.py create-admin; then
+        echo "Admin user created successfully"
+    else
+        echo "Failed to create admin user, but continuing..."
+    fi
     
-    echo "Database initialization complete."
+    echo "Data initialization complete."
 fi
 
-# Make check_admin.py executable
-chmod +x check_admin.py
-
-# Ensure proper permissions on database file
-chown -R nobody:nogroup /app/instance /app/instance/flask_session /app/instance/logs || echo "Failed to set permissions on instance directory, continuing..."
+# Ensure proper permissions on instance directories
+echo "Setting proper permissions on instance directories..."
+if chown -R nobody:nogroup /app/instance /app/instance/flask_session /app/instance/logs; then
+    echo "Permissions set successfully"
+else
+    echo "Failed to set permissions on instance directories, but continuing..."
+fi
 
 # Start the application
 echo "Starting the application in production mode..."
@@ -116,7 +122,6 @@ else
   echo "SESSION_COOKIE_DOMAIN not set, using empty value"
   export SESSION_COOKIE_DOMAIN=""
 fi
-export SESSION_COOKIE_DOMAIN="${SESSION_COOKIE_DOMAIN}"
 
 # Explicitly set host to 0.0.0.0 to ensure binding to all interfaces
 HOST="0.0.0.0"
