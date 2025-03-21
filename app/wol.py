@@ -174,6 +174,9 @@ def wake_host(host_id):
     
     # Show a success or error message
     if success:
+        # Update the last_wake_time field
+        host.last_wake_time = datetime.now()
+        db_session.commit()
         access_logger.info(f"Successfully sent WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
         flash(f'Wake-on-LAN packet sent to {host.name} ({host.mac_address}).', 'success')
     else:

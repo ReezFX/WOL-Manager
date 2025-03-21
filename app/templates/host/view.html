@@ -28,7 +28,7 @@
             {% if host.created_by %}
             <div class="row mb-3">
                 <div class="col-md-3 fw-bold">Created by:</div>
-                <div class="col-md-9">{{ host.created_by }}</div>
+                <div class="col-md-9">{{ host.created_by_user.username if host.created_by_user else 'Unknown' }}</div>
             </div>
             {% endif %}
             {% if host.created_at %}

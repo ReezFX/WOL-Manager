@@ -1,5 +1,6 @@
 from flask import render_template, abort, current_app, request, redirect, url_for, flash, jsonify
 from app.models import Host, db_session
+from datetime import datetime
 from app.utils import validate_public_access_token
 from . import bp
 from app.wol import send_magic_packet
@@ -72,6 +73,9 @@ def wake_host():
     success = send_magic_packet(host.mac_address)
     
     if success:
+        # Update the last wake time
+        host.last_wake_time = datetime.now()
+        db_session.commit()
         flash('Wake-on-LAN packet sent successfully.', 'success')
     else:
         flash('Failed to send Wake-on-LAN packet.', 'danger')

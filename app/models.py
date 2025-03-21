@@ -133,6 +133,7 @@ class Host(Base):
     visible_to_roles = Column(JSONType, default=lambda: [])  # Array of role IDs that can view this host
     public_access = Column(Boolean, default=False, nullable=False)
     public_access_token = Column(String(64), unique=True, nullable=True)
+    last_wake_time = Column(DateTime, nullable=True)
     
     # Relationships
     created_by_user = relationship('User', back_populates='hosts')

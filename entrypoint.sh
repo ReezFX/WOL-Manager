@@ -34,6 +34,9 @@ echo "Starting database initialization..."
 echo "Ensuring all database tables are created..."
 python manage.py init-db
 
+# Apply database migrations
+echo "Applying database migrations..."
+python manage.py db-upgrade
 # Verify critical tables exist and create them if needed
 echo "Verifying critical tables exist..."
 python -c "
