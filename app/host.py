@@ -165,11 +165,22 @@ def list_hosts():
                 
         pagination = Pagination(page, per_page, total)
         csrf_form = CSRFForm()
+        
+        # Fetch status for all hosts before rendering the template
+        from app.ping_service import get_all_host_statuses
+        host_ids = [host.id for host in hosts]
+        if host_ids:
+            statuses = get_all_host_statuses(host_ids)
+            # Attach status to each host object
+            for host in hosts:
+                host.status = statuses[host.id]["status"]
+        
         return render_template('host/host_list.html', hosts=hosts, pagination=pagination, csrf_form=csrf_form)
     except Exception as e:
         logger.error(f"Unexpected error in list_hosts: {str(e)}")
         flash(f"An unexpected error occurred: {str(e)}", "danger")
         csrf_form = CSRFForm()
+        # No hosts to fetch statuses for in the error case
         return render_template('host/host_list.html', hosts=[], pagination=Pagination(1, per_page, 0), csrf_form=csrf_form)
 
 @host.route('/add', methods=['GET', 'POST'])

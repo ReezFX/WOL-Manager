@@ -208,8 +208,8 @@
                             {% if host.public_access %}
                             <div class="mb-1">
                                 <strong>Public URL:</strong> 
-                                <a href="{{ url_for('wol.test_wol', token=host.public_access_token, _external=True) }}" target="_blank">
-                                    {{ url_for('wol.test_wol', token=host.public_access_token, _external=True) }}
+                                <a href="{{ url_for('public.public_host_view', token=host.public_access_token, _external=True) }}" target="_blank">
+                                    {{ url_for('public.public_host_view', token=host.public_access_token, _external=True) }}
                                 </a>
                             </div>
                             {% endif %}
