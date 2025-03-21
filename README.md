@@ -6,7 +6,7 @@
 WOL-Manager is a Flask-based web application designed to provide a user-friendly interface for managing and waking devices using the Wake-on-LAN (WOL) protocol. This application allows users to store host information, including MAC addresses, and remotely power on these devices over a network.
 
 ## How to use and install
-**Deployment and Usage Guide has moved to the WOL-Manager Wiki [https://github.com/ReezFX/WOL-Manager/wiki](https://github.com/ReezFX/WOL-Manager/wiki)**
+**Deployment and Usage Guide has moved to the [WOL-Manager Wiki](https://github.com/ReezFX/WOL-Manager/wiki)**
 
 ## Table of Contents
 - [Features](#features)
@@ -20,6 +20,7 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 - **Wake-on-LAN**: Send magic packets to wake devices remotely
 - **User Authentication**: Secure login system with session management (admin-managed user accounts)
 - **Role-based Access Control**: Different permission levels for users and administrators, with host visibility controls based on user roles
+- **Host Status API**: External API endpoint for automated host status updates with token-based authentication
 - **Public Host Access**: Configurable public access controls for selected hosts with hash encrypted permalinks
 - **Responsive UI**: Web interface that works on desktop and mobile devices
 - **Dark/Light Mode**: Toggle between dark and light themes with automatic system preference detection
@@ -44,6 +45,17 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 - Proper cleanup of expired sessions to prevent unauthorized access
 
 ## Release Notes
+
+### Version 1.3.0 (2025-03-21)
+- Added public API endpoint for host status updates with token-based authentication
+- Enhanced database management with optimized initialization and upgrades
+- Improved UI and layout across multiple pages:
+  - Better mobile device compatibility
+  - Fixed pagination and spacing issues
+  - Enhanced responsiveness
+- Refactored ping system for improved reliability
+- Optimized performance with multiple code cleanup passes
+- Fixed various host status and visibility issues
 
 ### Version 1.2.2 (2025-03-17)
 - Added initial implementation of public host access feature

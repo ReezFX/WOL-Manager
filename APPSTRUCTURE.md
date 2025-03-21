@@ -27,7 +27,8 @@ The application is built using the Flask web framework and follows a modular blu
 - **Flask-WTF**: Form handling and CSRF protection with comprehensive validation
 - **bcrypt**: Password hashing
 - **redis**: Session storage and caching
-
+- **async_ping_service.py**: Asynchronous ping implementation
+- **ping_service.py**: Core ping service functionality
 ### Architecture
 The application follows a Model-View-Controller (MVC) pattern:
 - **Models**: Database entities (User, Role, Permission, Host, AppSettings)
@@ -60,8 +61,8 @@ WOL-Manager/
 │   ├── logging_config.py             # Logging system configuration
 │   ├── main.py                       # Main routes & dashboard
 │   ├── models.py                     # Database models
-│   ├── ping.py                       # ICMP ping implementation
-│   ├── ping_cache.py                 # Redis-based ping caching
+│   ├── async_ping_service.py         # Asynchronous ping implementation
+│   ├── ping_service.py               # Core ping service functionality
 │   ├── wol.py                        # Wake-on-LAN implementation
 │   ├── static/                       # Static assets
 │   │   ├── css/                      # Stylesheets
@@ -196,36 +197,29 @@ The Wake-on-LAN functionality is implemented in `wol.py` using the following app
 3. System sends the magic packet to the target
 4. User receives confirmation of the attempt
 5. Logs record the action with timestamp and user info
-1## 7. User Roles and Permissions
-cation includes a comprehensive ping system to monitor device availability:
 
-### ICMP Implementation
-- Uses Python's `subprocess` module to execute ICMP ping requests
-- Configurable timeout and packet count settings
-- Handles platform-specific differences (Windows/Linux/macOS)
-- Parses response time and packet loss statistics
-- Thread-safe implementation for concurrent pinging
+### Public Access Features
+- Secure public URLs for individual hosts
+- Copy-to-clipboard functionality for public URLs
+- Public API endpoint for host status updates
+- Token-based authentication for public endpoints
 
-### Redis-Backed Cache
-- Implements a `PingCache` class in `ping_cache.py` for efficient status storage
-- Uses Redis as a high-performance backend for ping results
-- TTL (Time To Live) based caching to prevent stale data
-- Keys structured as `ping:{host_ip}` for easy lookup
-- Atomic operations to prevent race conditions
-- Batch operations for efficiently checking multiple hosts
+### Ping System Implementation
+The application uses an asynchronous ping system for efficient host monitoring:
 
-### Status Integration
-- Host list displays real-time ping status indicators
-- Dashboard shows aggregate statistics of online/offline hosts
-- Status history tracking for uptime analysis
-- Configurable alert thresholds for consecutive failed pings
+#### Asynchronous Ping Architecture
+- Implements async_ping_service.py for non-blocking ping operations
+- Uses ping_service.py for core ping functionality
+- Improved performance through asynchronous execution
+- Reduced system resource usage
+- Real-time status updates
 
-### Performance Optimization
-- Asynchronous ping execution to prevent UI blocking
-- Prioritized pinging for recently accessed hosts
-- Background ping service for automatic status updates
-- Configurable ping interval through application settings
-
+#### Features
+- Efficient async ping operations
+- Real-time host status monitoring
+- Status caching for quick responses
+- Automatic status updates before page load
+- Public API endpoint for external status checks
 ## 7. User Roles and Permissions
 
 The application implements a role-based access control (RBAC) system:
@@ -348,8 +342,8 @@ The following environment variables can be configured:
 - `app/admin.py`: Administrative functions
 - `app/main.py`: Dashboard and main pages
 - `app/logging_config.py`: Logging system configuration
-- `app/ping.py`: ICMP ping implementation
-- `app/ping_cache.py`: Redis-based ping result caching
+- `app/async_ping_service.py`: Asynchronous ping implementation
+- `app/ping_service.py`: Core ping service functionality
 - `app/forms.py`: Form definitions and validation
 ### Templates
 - `app/templates/`: HTML templates using Jinja2

@@ -5,6 +5,35 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-03-21
+
+### Added
+- Public API endpoint for host status updates
+  - New token-based authentication for external status updates
+  - Secure public URL access for hosts
+  - Copy button functionality for public URLs in host cards
+
+### Changed
+- Enhanced database management
+  - Optimized entrypoint script for better database initialization and upgrades
+  - Improved database handling and performance
+
+### Fixed
+- UI and Layout Improvements
+  - Fixed pagination element spacing on hosts page
+  - Optimized navbar layout for better mobile device compatibility
+  - Corrected spacing issues on admin users page
+  - Improved responsiveness and layout consistency
+- Host Status System Enhancements
+  - Refactored ping system for better reliability
+  - Fixed last wake attempt field functionality
+  - Improved host status update mechanism
+  - Enhanced status badge behavior
+- Performance Optimizations
+  - Multiple performance optimization passes
+  - Code cleanup and minimization for ping functionality
+  - Fixed host visibility role handling in host cards
+
 ## [1.2.2] - 2025-03-17
 
 ### Added
