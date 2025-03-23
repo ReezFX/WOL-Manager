@@ -7,12 +7,9 @@
     <div class="branding-bg"></div>
     <div class="container position-relative">
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="brand-container">
-                    <img src="{{ url_for('static', filename='img/wol-manager-logo.png') }}" alt="WOL Manager Logo" class="brand-logo img-fluid mb-3" style="max-width: 220px;">
-                    <div class="brand-title-wrapper">
-                        <img src="{{ url_for('static', filename='img/wol-manager-title.png') }}" alt="WOL Manager Title" class="brand-title img-fluid">
-                    </div>
+            <div class="col-md-10 col-lg-8">
+                <div class="brand-container text-center">
+                    <img src="{{ url_for('static', filename='img/WOL-Manager-DIsplay.png') }}" alt="WOL Manager Logo" class="brand-logo img-fluid my-md-3 my-2 mx-auto d-block" style="max-width: 100%; width: auto;">
                 </div>
             </div>
         </div>
@@ -23,9 +20,17 @@
     .branding-header {
         position: relative;
         overflow: hidden;
-        padding: 3rem 0;
+        padding: 2rem 0;
         margin-bottom: 2rem;
         border-bottom: 1px solid rgba(var(--border-color), 0.5);
+    }
+    
+    /* Media query for mobile devices */
+    @media (max-width: 767.98px) {
+        .branding-header {
+            padding: 1rem 0;
+            margin-bottom: 1rem;
+        }
     }
     
     .branding-bg {
@@ -43,29 +48,46 @@
     }
     
     .brand-container {
-        padding: 2rem 0;
+        padding: 1rem;
+        margin: 0 auto;
+        width: 100%;
         /* Removed backdrop-filter blur effect to show transparent PNG properly */
         /* Removed webkit backdrop filter as well */
         border-radius: var(--border-radius-lg);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-        transform: translateY(0);
+        /* Removed box-shadow as requested */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         transition: var(--apple-transition);
     }
     
+    /* Hover effect removed as requested
     .brand-container:hover {
         transform: translateY(-5px);
         box-shadow: var(--apple-shadow-lg);
     }
+    */
     
-    .brand-logo {
-        filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.25));
+        /* filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.25)); */
         transition: transform 0.3s ease;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
     }
     
+    /* Media query for mobile devices */
+    @media (max-width: 767.98px) {
+        .brand-logo {
+            margin-bottom: 1rem;
+            max-width: 80%;
+        }
+    }
+    }
+    
+    /* Hover effect for logo removed as requested
     .brand-container:hover .brand-logo {
         transform: scale(1.05);
     }
+    */
     
     .brand-title-wrapper {
         padding: 0.5rem 0 0.5rem;
@@ -78,30 +100,18 @@
         max-width: 80%;
     }
     
+    /* Hover effect for brand title removed as requested
     .brand-container:hover .brand-title {
         transform: scale(1.02);
     }
+    */
     
-    /* Enhanced shadow effect for better visual depth without background */
-    .brand-container::after {
-        content: "";
-        position: absolute;
-        bottom: -15px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 60%;
-        height: 10px;
-        /* Removed background gradient */
-        border-radius: 50%;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        z-index: -1;
-    }
 </style>
-<div class="container py-5">
+<div class="container pt-md-5 pt-3 pb-5">
     <div class="row justify-content-center">
         <div class="col-md-10">
-            <div class="text-center mb-5">
-                <h1 class="display-4 fw-bold">Wake up your devices remotely</h1>
+            <div class="text-center mb-md-5 mb-4">
+                <h1 class="display-4 fw-bold mb-md-3 mb-2">Wake up your devices remotely</h1>
                 <p class="fs-5 text-muted">Control your network devices from anywhere with our Wake-on-LAN solution</p>
                 
                 <div class="d-flex justify-content-center gap-3 mt-4">
@@ -117,11 +127,11 @@
                 </div>
             </div>
             
-            <div class="row g-4 py-3">
+            <div class="row g-4 py-md-4 py-3">
                 <div class="col-md-6">
                     <div class="card h-100 shadow-sm">
                         <div class="card-body">
-                            <div class="text-center mb-3">
+                            <div class="text-center mb-md-3 mb-2">
                                 <i class="fas fa-power-off fa-3x text-primary"></i>
                             </div>
                             <h3 class="card-title text-center">What is Wake-on-LAN?</h3>
@@ -140,7 +150,7 @@
                 <div class="col-md-6">
                     <div class="card h-100 shadow-sm">
                         <div class="card-body">
-                            <div class="text-center mb-3">
+                            <div class="text-center mb-md-3 mb-2">
                                 <i class="fas fa-laptop-house fa-3x text-primary"></i>
                             </div>
                             <h3 class="card-title text-center">How Our App Helps</h3>
@@ -159,7 +169,7 @@
                 </div>
             </div>
             
-            <div class="card mt-4 shadow-sm">
+            <div class="card mt-md-5 mt-4 shadow-sm">
                 <div class="card-body">
                     <h3 class="card-title"><i class="fas fa-lightbulb text-warning me-2"></i>Getting Started</h3>
                     <p class="card-text">
