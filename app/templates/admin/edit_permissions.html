@@ -2,58 +2,316 @@
 
 {% block title %}Edit User Permissions{% endblock %}
 
+{% block styles %}
+{{ super() }}
+<style>
+    /* CSS Variables for consistency */
+    :root {
+        --transition-standard: all 0.25s ease-in-out;
+        --hover-opacity: 0.05;
+        --active-opacity: 0.15;
+        --dark-hover-opacity: 0.1;
+        --dark-active-opacity: 0.25;
+        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Permission item styling */
+    .permission-item {
+        border: 1px solid transparent;
+        transition: var(--transition-standard);
+        border-radius: var(--border-radius);
+        padding: 12px !important;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+    
+    .permission-item:hover {
+        background-color: rgba(var(--primary-color-rgb), var(--hover-opacity));
+        border-color: rgba(var(--primary-color-rgb), 0.12);
+        box-shadow: var(--shadow-sm);
+        transform: translateY(-1px);
+    }
+    
+    .dark-theme .permission-item:hover {
+        background-color: rgba(var(--primary-color-rgb), var(--dark-hover-opacity));
+        border-color: rgba(var(--primary-color-rgb), 0.2);
+    }
+    
+    /* Toggle switch enhancements */
+    .form-check-input[type="checkbox"].form-switch {
+        height: 1.5rem;
+        width: 3rem;
+        cursor: pointer;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+    
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.25rem rgba(var(--accent-color-rgb), 0.25);
+        border-color: var(--accent-color);
+    }
+    
+    /* Dark theme checkbox adjustments */
+    .dark-theme .form-check-input[type="checkbox"].form-switch {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .dark-theme .form-check-input:checked {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+    
+    /* Transition effects */
+    .form-check-input, 
+    .btn,
+    .category-heading {
+        transition: var(--transition-standard);
+    }
+    
+    /* Loading overlay background */
+    #loading-overlay {
+        background-color: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Category styling */
+    .category-heading {
+        background: linear-gradient(145deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 600;
+        border-radius: var(--border-radius);
+        box-shadow: var(--apple-shadow-sm);
+    }
+    
+    /* Light theme category heading fallback */
+    body:not(.dark-theme) .category-heading.bg-light {
+        background: linear-gradient(145deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        color: white;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* Dark theme category heading fallback */
+    .dark-theme .category-heading.bg-light {
+        background: linear-gradient(145deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        color: white;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    
+    .category-divider {
+        border-top: 1px solid var(--border-color);
+        opacity: 0.6;
+    }
+    
+    /* Permission description */
+    .permission-description {
+        opacity: 0.9;
+        transition: opacity 0.3s;
+        color: var(--text-secondary);
+    }
+    
+    .permission-item:hover .permission-description {
+        opacity: 1;
+    }
+    
+    .dark-theme .permission-description {
+        color: var(--text-secondary);
+    }
+    
+    /* Loading overlay */
+    #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(var(--bg-primary-rgb, 255, 255, 255), 0.8);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1050;
+        transition: opacity 0.3s ease;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+    
+    .dark-theme #loading-overlay {
+        background-color: rgba(var(--bg-dark-rgb, 0, 0, 0), 0.7);
+    }
+    
+    #loading-overlay.d-none {
+        display: none !important;
+    }
+    
+    /* Animation for toggled items */
+    .permission-item.bg-light {
+        background-color: rgba(var(--accent-color-rgb), var(--active-opacity)) !important;
+        transition: background-color 0.3s ease;
+    }
+    
+    .dark-theme .permission-item.bg-light {
+        background-color: rgba(var(--accent-color-rgb), var(--dark-active-opacity)) !important;
+    }
+    
+    /* Card styling to match app theme */
+    .category-section {
+        margin-bottom: 2rem;
+        transition: var(--transition-standard);
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 767.98px) {
+        .permission-item {
+            padding: 15px !important; /* Larger touch targets on mobile */
+        }
+        
+        .form-check-input[type="checkbox"].form-switch {
+            height: 1.6rem;
+            width: 3.2rem;
+        }
+        
+        .form-check-label {
+            padding-top: 0.2rem; /* Better vertical alignment on mobile */
+        }
+        
+        .category-heading {
+            padding: 0.75rem 1rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">Edit Permissions for {{ user.username }}</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h1 class="me-2">Edit Permissions for {{ user.username }}</h1>
+        <span class="badge bg-accent">User ID: {{ user.id }}</span>
+    </div>
     
-    <form method="POST" action="{{ url_for('admin.edit_permissions', user_id=user.id) }}">
+    <form method="POST" action="{{ url_for('admin.edit_permissions', user_id=user.id) }}" id="permissions-form">
         {{ form.hidden_tag() }}
         
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <p><strong>Note:</strong> Changes to permissions will take effect immediately after saving.</p>
-                </div>
-                
-                {% for category, perms in categorized_permissions.items() %}
-                <div class="card mb-3">
-                    <div class="card-header bg-tertiary-theme">
-                        <h5 class="mb-0">{{ category }}</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            {% for perm in perms %}
-                            <div class="col-md-6 mb-2">
-                                <div class="form-check">
-                                    {% set field_name = 'perm_' + perm.id|string %}
-                                    {{ form[field_name](class="form-check-input", id="perm_" + perm.id|string) }}
-                                    <label class="form-check-label" for="perm_{{ perm.id }}">
-                                        <strong>{{ perm.name }}</strong>
-                                        {% if perm.description %}
-                                        <p class="permission-description small mb-0">{{ perm.description }}</p>
-                                        {% endif %}
-                                    </label>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-                
-                {% if not categorized_permissions %}
-                <div class="alert alert-warning">
-                    <p>No permissions found in the system.</p>
-                </div>
-                {% endif %}
+        <div class="alert alert-info d-flex align-items-center border-0 shadow-sm" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <div>
+                <strong>Note:</strong> Changes to permissions will take effect immediately after saving.
             </div>
         </div>
         
-        <div class="form-group d-flex justify-content-between">
-            <a href="{{ url_for('admin.list_users') }}" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
+        <div id="loading-overlay" class="d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Saving changes...</span>
+            </div>
+            <p class="mt-2">Saving changes...</p>
+        </div>
+        
+        {% for category, perms in categorized_permissions.items() %}
+        <div class="category-section mb-4">
+            <h3 class="category-heading p-3 mb-3 d-flex align-items-center">
+                <i class="fas fa-shield-alt me-2"></i>
+                {{ category }}
+            </h3>
+            
+            <div class="row row-cols-1 row-cols-md-2 g-3 px-2 py-1">
+                {% for perm in perms %}
+                <div class="col">
+                    <div class="permission-item p-2">
+                        <div class="form-check form-switch">
+                            {% set field_name = 'perm_' + perm.id|string %}
+                            {{ form[field_name](class="form-check-input", id="perm_" + perm.id|string, 
+                                    role="switch", 
+                                    **{'aria-describedby': 'desc_' + perm.id|string if perm.description else ''}) }}
+                            <label class="form-check-label" for="perm_{{ perm.id }}">
+                                <strong>{{ perm.name }}</strong>
+                            </label>
+                        </div>
+                        {% if perm.description %}
+                        <div class="permission-description text-muted small ms-4 mt-1" id="desc_{{ perm.id }}">
+                            {{ perm.description }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if not loop.last %}
+        <hr class="category-divider my-4">
+        {% endif %}
+        {% endfor %}
+        
+        {% if not categorized_permissions %}
+        <div class="alert alert-warning d-flex align-items-center border-0 shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>No permissions found in the system.</div>
+        </div>
+        {% endif %}
+        
+        <div class="d-flex gap-3 justify-content-end mt-4 mb-3">
+            <a class="btn btn-outline-secondary border-1 shadow-sm" href="{{ url_for('admin.list_users') }}">
+                <i class="fas fa-times-circle me-2"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-accent shadow-sm" id="save-button">
+                <i class="fas fa-save me-2"></i>Save Changes
+                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="save-spinner"></span>
+            </button>
         </div>
     </form>
 </div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add loading state to form submission
+        const form = document.getElementById('permissions-form');
+        const saveButton = document.getElementById('save-button');
+        const saveSpinner = document.getElementById('save-spinner');
+        
+        if (form) {
+            form.addEventListener('submit', function() {
+                // Disable button and show spinner
+                saveButton.setAttribute('disabled', 'disabled');
+                saveSpinner.classList.remove('d-none');
+                
+                // Show the loading overlay
+                const loadingOverlay = document.getElementById('loading-overlay');
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('d-none');
+                }
+                
+                // Enable after timeout (in case of network issues)
+                setTimeout(function() {
+                    saveButton.removeAttribute('disabled');
+                    saveSpinner.classList.add('d-none');
+                    
+                    // Hide the loading overlay
+                    if (loadingOverlay) {
+                        loadingOverlay.classList.add('d-none');
+                    }
+                }, 10000);
+            });
+        }
+        
+        // Toggle switch accessibility enhancements
+        const toggles = document.querySelectorAll('.form-check-input[role="switch"]');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                // Add visual feedback when toggled
+                const item = this.closest('.permission-item');
+                if (item) {
+                    item.classList.add('bg-light');
+                    setTimeout(() => {
+                        item.classList.remove('bg-light');
+                    }, 300);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
 {% endblock %}
 
