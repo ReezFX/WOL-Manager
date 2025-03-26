@@ -16,18 +16,63 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        /* Apple-like navigation bar styles */
-        .apple-navbar {
-            backdrop-filter: saturate(180%) blur(20px);
-            -webkit-backdrop-filter: saturate(180%) blur(20px);
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-            padding: 0.8rem 0;
+        /* Apple-like navigation bar styles - Highest specificity */
+        body nav.navbar.navbar-expand-lg.apple-navbar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             width: 100%;
             z-index: 1030;
+            padding: 0.8rem 0;
+            background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.5), rgba(var(--accent-color-rgb), 0.5)) !important;
+            backdrop-filter: saturate(180%) blur(20px) !important;
+            -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-theme nav.navbar.navbar-expand-lg.apple-navbar {
+            background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.6), rgba(var(--accent-color-rgb), 0.6)) !important;
+        }
+
+        /* Dropdown styling with blur effect */
+        body nav.navbar.navbar-expand-lg.apple-navbar .dropdown-menu {
+            background-color: rgba(255, 255, 255, 0.65) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-theme nav.navbar.navbar-expand-lg.apple-navbar .dropdown-menu {
+            background-color: rgba(50, 50, 50, 0.65) !important;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 991.98px) {
+            .apple-navbar, .dropdown-menu {
+                backdrop-filter: saturate(180%) blur(10px) !important;
+                -webkit-backdrop-filter: saturate(180%) blur(10px) !important;
+            }
+        }
+
+        /* Fallback for browsers without backdrop-filter support */
+        @supports not (backdrop-filter: blur()) {
+            .apple-navbar {
+                background-color: rgb(245, 245, 247);
+            }
+            
+            .dark-theme .apple-navbar {
+                background-color: rgb(29, 29, 31);
+            }
+            
+            .dropdown-menu {
+                background-color: rgb(255, 255, 255);
+            }
+            
+            .dark-theme .dropdown-menu {
+                background-color: rgb(50, 50, 50);
+            }
         }
         
         /* Theme toggle button */
@@ -138,14 +183,6 @@
         }
         
         /* Dark mode styling */
-        .dark-theme .apple-navbar {
-            background-color: rgba(29, 29, 31, 0.85);
-        }
-        
-        .dark-theme .dropdown-menu {
-            background-color: rgba(50, 50, 50, 0.95);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
         
         .dark-theme .dropdown-item {
             color: rgba(255, 255, 255, 0.85);
