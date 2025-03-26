@@ -366,7 +366,7 @@ body:not(.dark-theme) .footer .footer-text {
   transform: translateY(-2px);
   border-color: rgba(var(--primary-color-rgb), 0.3);
 }
-}
+
 
 /* Card entrance animation */
 @keyframes cardEntrance {
@@ -1979,7 +1979,7 @@ body:not(.dark-theme) .profile-indicator {
   .profile-indicator-value {
     font-size: 0.95rem;
   }
-732|}
+}
 
 /* Checkbox styling for form-check-input */
 .form-check-input {
@@ -2023,7 +2023,7 @@ body:not(.dark-theme) .profile-indicator {
   border-color: #ff8c70;
 }
 
-1677|/* Form validation styles */
+/* Form validation styles */
 .form-control.is-valid,
 .was-validated .form-control:valid {
   border-color: var(--success-color);
