@@ -485,7 +485,8 @@ def settings():
             db_session.commit()
             
             flash('Application settings have been updated successfully.', 'success')
-            return redirect(url_for('admin.settings'))
+            # Add success parameter to redirect for JS animations
+            return redirect(url_for('admin.settings', success=1))
         except SQLAlchemyError as e:
             db_session.rollback()
             flash(f'Error updating settings: {str(e)}', 'danger')

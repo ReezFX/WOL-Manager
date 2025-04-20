@@ -45,6 +45,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Custom CSS (Modularized) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/animations.css') }}">
     <style>
         /* Apple-like navigation bar styles - Highest specificity */
         body nav.navbar.navbar-expand-lg.apple-navbar {
@@ -368,34 +369,13 @@
             </div>
     </footer>
 
-    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <!-- Core JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-    
-    <!-- Custom JavaScript -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
-    <!-- Service Worker Registration -->
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('{{ url_for("static", filename="js/service-worker.js") }}')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('ServiceWorker registration failed: ', error);
-                    });
-            });
-        }
-    </script>
-    
-    <!-- CSRF Token Access for JS -->
-    <script>
-        // Make CSRF token available for AJAX requests
-        window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
-        // Set up AJAX defaults for CSRF protection
         document.addEventListener('DOMContentLoaded', function() {
+            // Set CSRF token for use with AJAX requests
+            window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
             // Add CSRF token to all fetch requests
             const originalFetch = window.fetch;
             window.fetch = function(url, options = {}) {
@@ -414,11 +394,30 @@
         });
     </script>
     
+    <!-- Animation enhancements - Loaded early to ensure global availability -->
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+    
+    <!-- Additional utilities -->
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('{{ url_for("static", filename="js/service-worker.js") }}')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+    </script>
+    
     <!-- Ping.js should be loaded after CSRF token setup -->
     <script src="{{ url_for('static', filename='js/ping.js') }}"></script>
-    
-    <!-- Animation enhancements -->
-    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
     
     <!-- Scripts Block -->
     {% block scripts %}{% endblock %}

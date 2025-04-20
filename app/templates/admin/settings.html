@@ -11,21 +11,21 @@
           <h2 class="card-title">Application Settings</h2>
         </div>
         <div class="card-body">
-          <form method="POST" action="{{ url_for('admin.settings') }}">
+          <form method="POST" action="{{ url_for('admin.settings') }}" data-animate="true" data-show-success="true">
             {{ form.hidden_tag() }}
-
+            
             <div class="row mb-4">
               <div class="col-md-12">
                 <h4>Password Policy</h4>
                 <hr>
               </div>
             </div>
-
+            
             <div class="row mb-3">
               <div class="col-md-6">
                 <div class="form-group">
                   {{ form.min_password_length.label(class="form-label") }}
-                  {{ form.min_password_length(class="form-control") }}
+                  {{ form.min_password_length(class="form-control" + (" is-invalid" if form.min_password_length.errors else "")) }}
                   <small class="form-text text-muted">Minimum number of characters required for user passwords.</small>
                   {% if form.min_password_length.errors %}
                     <div class="invalid-feedback d-block">
@@ -39,7 +39,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   {{ form.password_expiration_days.label(class="form-label") }}
-                  {{ form.password_expiration_days(class="form-control") }}
+                  {{ form.password_expiration_days(class="form-control" + (" is-invalid" if form.password_expiration_days.errors else "")) }}
                   <small class="form-text text-muted">Number of days until users must change their password. Use 0 for no expiration.</small>
                   {% if form.password_expiration_days.errors %}
                     <div class="invalid-feedback d-block">
@@ -51,7 +51,7 @@
                 </div>
               </div>
             </div>
-
+            
             <div class="row mb-4">
               <div class="col-md-6">
                 <div class="form-check form-switch">
@@ -68,19 +68,19 @@
                 </div>
               </div>
             </div>
-
+            
             <div class="row mb-4">
               <div class="col-md-12">
                 <h4>Session Management</h4>
                 <hr>
               </div>
             </div>
-
+            
             <div class="row mb-3">
               <div class="col-md-6">
                 <div class="form-group">
                   {{ form.session_timeout_minutes.label(class="form-label") }}
-                  {{ form.session_timeout_minutes(class="form-control") }}
+                  {{ form.session_timeout_minutes(class="form-control" + (" is-invalid" if form.session_timeout_minutes.errors else "")) }}
                   <small class="form-text text-muted">Number of minutes until a user session expires due to inactivity.</small>
                   {% if form.session_timeout_minutes.errors %}
                     <div class="invalid-feedback d-block">
@@ -94,7 +94,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   {{ form.max_concurrent_sessions.label(class="form-label") }}
-                  {{ form.max_concurrent_sessions(class="form-control") }}
+                  {{ form.max_concurrent_sessions(class="form-control" + (" is-invalid" if form.max_concurrent_sessions.errors else "")) }}
                   <small class="form-text text-muted">Maximum number of active sessions per user. Use 0 for unlimited.</small>
                   {% if form.max_concurrent_sessions.errors %}
                     <div class="invalid-feedback d-block">
@@ -106,14 +106,14 @@
                 </div>
               </div>
             </div>
-
+            
             <div class="row mb-4">
               <div class="col-md-12">
                 <h4>Logging Configuration</h4>
                 <hr>
               </div>
             </div>
-
+            
             <div class="row mb-3">
               <div class="col-md-6">
                 <div class="form-group">
@@ -137,12 +137,13 @@
                 </div>
               </div>
             </div>
-
+            
             <div class="row mt-4">
               <div class="col-md-12">
-                <div class="float-end">
-                  <a href="{{ url_for('admin.list_users') }}" class="btn btn-secondary">Cancel</a>
-                  <button type="submit" class="btn btn-primary">Save Settings</button>
+                <div id="save-animation-container" class="float-end">
+                  <button type="submit" class="btn btn-primary action-button btn-animate-press">
+                    <i class="fas fa-save me-2"></i>Save Settings
+                  </button>
                 </div>
               </div>
             </div>
@@ -152,5 +153,59 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation to cards when page loads
+    document.querySelectorAll('.card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s var(--animation-spring)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 + (index * 150)); // Staggered animation
+    });
+    
+    // Animate button when settings are saved
+    const settingsForm = document.querySelector('form[action="{{ url_for("admin.settings") }}"]');
+    if (settingsForm) {
+        // We'll use the regular form submission without AJAX
+        settingsForm.addEventListener('submit', function(e) {
+            // Do not prevent default - let the form submit normally
+            
+            const submitButton = this.querySelector('button[type="submit"]');
+            
+            // Show loading state
+            if (typeof window.setButtonLoading === 'function') {
+                window.setButtonLoading(submitButton, true);
+            } else {
+                submitButton.disabled = true;
+            }
+            
+            // Save animation will appear on page reload if successful
+        });
+        
+        // Check if URL has success parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            // Show animation for settings saved
+            const saveContainer = document.getElementById('save-animation-container');
+            if (typeof window.showSaveAnimation === 'function' && saveContainer) {
+                window.showSaveAnimation(saveContainer);
+            }
+            
+            // Show success toast
+            if (typeof window.showToast === 'function') {
+                window.showToast('success', 'Success', 'Settings saved successfully');
+            }
+        }
+    }
+});
+</script>
 {% endblock %}
 
