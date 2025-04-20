@@ -2,51 +2,145 @@
    2. BUTTON STYLING
    ============================================= */
 
-/* Standard button styles with gradients */
+/* Standard button styles with enhanced rounded corners */
+.btn {
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.btn-lg {
+  border-radius: 1rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+}
+
+.btn-sm {
+  border-radius: 0.5rem;
+}
+
+/* Primary and accent buttons */
 .btn-primary,
 .btn-accent {
-  background: linear-gradient(180deg, #ff9579 0%, #ff7e5f 100%);
+  background: linear-gradient(135deg, #ff9579 0%, #ff7e5f 100%);
   border-color: transparent;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 5px 15px rgba(255, 126, 95, 0.2);
   color: white;
-  transition: var(--transition-default);
 }
 
 .btn-primary:hover,
 .btn-accent:hover {
-  background: linear-gradient(180deg, #ffa589 0%, #ff8c70 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(255, 126, 95, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #ffa589 10%, #ff8c70 90%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 126, 95, 0.25);
 }
 
 .btn-primary:active,
 .btn-accent:active {
-  background: linear-gradient(180deg, #f7764f 0%, #f56746 100%);
+  background: linear-gradient(135deg, #f7764f 0%, #f56746 100%);
   transform: translateY(1px);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(0, 0, 0, 0.1);
-  transition: var(--transition-active);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: 0.1s;
+}
+
+/* Circular buttons */
+.btn-circle {
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-circle.btn-lg {
+  width: 60px;
+  height: 60px;
+  font-size: 1.4rem;
+}
+
+.btn-circle.btn-sm {
+  width: 40px;
+  height: 40px;
+  font-size: 0.9rem;
+}
+
+/* Button press animation */
+.btn-animate-press {
+  transition: transform var(--animation-timing-fast) var(--animation-easing);
+}
+
+.btn-animate-press:active {
+  transform: scale(0.96);
+}
+
+/* Pill-shaped buttons */
+.btn-pill {
+  border-radius: 50rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* Status-colored buttons */
+.btn-online {
+  background: linear-gradient(135deg, var(--success-color), #50c878);
+  color: white;
+  border: none;
+  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-online:hover {
+  background: linear-gradient(135deg, #34c759, #4cd964);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+  transform: translateY(-3px);
+}
+
+.btn-offline {
+  background: linear-gradient(135deg, var(--danger-color), #ff5757);
+  color: white;
+  border: none;
+  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-offline:hover {
+  background: linear-gradient(135deg, #ff3b30, #ff4b4b);
+  box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+  transform: translateY(-3px);
+}
+
+.btn-unknown {
+  background: linear-gradient(135deg, var(--secondary-color), #8d98a3);
+  color: white;
+  border: none;
+  box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-unknown:hover {
+  background: linear-gradient(135deg, #6c757d, #7a8793);
+  box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+  transform: translateY(-3px);
 }
 
 /* Secondary buttons */
 .btn-secondary {
-  background: linear-gradient(180deg, #1891b3 0%, #0d6e8c 100%);
+  background: linear-gradient(135deg, #1891b3 0%, #0d6e8c 100%);
   border-color: transparent;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 5px 15px rgba(13, 110, 140, 0.2);
   color: white;
-  transition: var(--transition-default);
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(180deg, #1490b2 0%, #0f7c9c 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(13, 110, 140, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #1490b2 0%, #0f7c9c 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(13, 110, 140, 0.25);
 }
 
 .btn-secondary:active {
-  background: linear-gradient(180deg, #0c678a 0%, #095980 100%);
+  background: linear-gradient(135deg, #0c678a 0%, #095980 100%);
   transform: translateY(1px);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(0, 0, 0, 0.05);
-  transition-duration: 0.05s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: 0.1s;
 }
 
 /* Success, Warning, and Danger buttons */
@@ -54,65 +148,65 @@
 .btn-warning,
 .btn-danger {
   border-color: transparent;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 /* Success button */
 .btn-success {
-  background: linear-gradient(180deg, #31c98d 0%, #28b485 100%);
+  background: linear-gradient(135deg, #31c98d 0%, #28b485 100%);
   color: white;
 }
 
 .btn-success:hover {
-  background: linear-gradient(180deg, #3dd4a2 0%, #2fc693 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(var(--success-color-rgb), 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #3dd4a2 0%, #2fc693 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(var(--success-color-rgb), 0.25);
 }
 
 .btn-success:active {
-  background: linear-gradient(180deg, #25a477 0%, #219e6d 100%);
+  background: linear-gradient(135deg, #25a477 0%, #219e6d 100%);
   transform: translateY(1px);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(0, 0, 0, 0.1);
-  transition-duration: 0.05s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: 0.1s;
 }
 
 /* Warning button */
 .btn-warning {
-  background: linear-gradient(180deg, #f9ae56 0%, #f8a643 100%);
+  background: linear-gradient(135deg, #f9ae56 0%, #f8a643 100%);
   color: #212529;
 }
 
 .btn-warning:hover {
-  background: linear-gradient(180deg, #fbc67d 0%, #facb6c 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(var(--warning-color-rgb), 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #fbc67d 0%, #facb6c 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(var(--warning-color-rgb), 0.25);
 }
 
 .btn-warning:active {
-  background: linear-gradient(180deg, #f8a643 0%, #f79c32 100%);
+  background: linear-gradient(135deg, #f8a643 0%, #f79c32 100%);
   transform: translateY(1px);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(0, 0, 0, 0.1);
-  transition-duration: 0.05s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: 0.1s;
 }
 
 /* Danger button */
 .btn-danger {
-  background: linear-gradient(180deg, #e25563 0%, #df364a 100%);
+  background: linear-gradient(135deg, #e25563 0%, #df364a 100%);
   color: white;
 }
 
 .btn-danger:hover {
-  background: linear-gradient(180deg, #e9828c 0%, #e5697a 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(var(--danger-color-rgb), 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #e9828c 0%, #e5697a 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(var(--danger-color-rgb), 0.25);
 }
 
 .btn-danger:active {
-  background: linear-gradient(180deg, #de4857 0%, #db3546 100%);
+  background: linear-gradient(135deg, #de4857 0%, #db3546 100%);
   transform: translateY(1px);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(0, 0, 0, 0.1);
-  transition-duration: 0.05s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: 0.1s;
 }
 
 /* Dark theme button overrides */

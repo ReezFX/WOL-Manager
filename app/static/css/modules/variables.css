@@ -12,12 +12,12 @@
   --breakpoint-xxl: 1400px;
   
   /* Transition variables */
-  --transition-default: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
-  --transition-hover: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-  --transition-active: all 0.05s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-default: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-hover: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-active: all 0.1s cubic-bezier(0.25, 0.1, 0.25, 1);
   --transition-fast: all 0.15s ease;
   --transition-slow: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
-  --apple-transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --apple-transition: all 0.3s ease;
   
   /* Brand colors - consistent across themes */
   --primary-color: #17a2b8; /* Main turquoise color */
@@ -37,10 +37,10 @@
   
   /* Common variables */
   --transition-speed: 0.3s;
-  --border-radius: 8px;
-  --border-radius-sm: 6px;
-  --border-radius-lg: 12px;
-  --apple-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --apple-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --apple-shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --border-radius: 1rem;
+  --border-radius-sm: 0.75rem;
+  --border-radius-lg: 1.25rem;
+  --apple-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --apple-shadow-sm: 0 5px 15px rgba(0, 0, 0, 0.05);
+  --apple-shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.12);
 }

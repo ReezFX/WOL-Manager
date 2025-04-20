@@ -64,6 +64,22 @@
   }
 }
 
+/* Wake button pulse animation */
+@keyframes wake-button-pulse {
+  0% {
+    opacity: 0.1;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  50% {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    opacity: 0.1;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
 /* Enhanced Status indicator animations - using more specific selectors */
 .badge.status-badge[data-status="online"] {
   position: relative !important;
@@ -196,6 +212,24 @@
   transform: translateX(-20px);
   transition: opacity var(--animation-timing-medium),
               transform var(--animation-timing-medium) var(--animation-easing);
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.3s var(--animation-spring);
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+}
+
+/* Subtle shadow increase on hover */
+.hover-shadow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 /* Remove animations for users who prefer reduced motion */

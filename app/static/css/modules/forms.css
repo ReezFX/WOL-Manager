@@ -7,19 +7,23 @@
   border-color: var(--input-border);
   background-color: var(--input-bg);
   color: var(--text-primary);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  border-radius: var(--border-radius-sm);
+  transition: all 0.3s ease;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1rem;
+  border-width: 1px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .form-control:focus {
   border-color: var(--input-focus-border);
   box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
+  transform: translateY(-1px);
   outline: none;
 }
 
 .form-control::placeholder {
   color: var(--input-placeholder);
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 /* Form labels */
@@ -29,19 +33,39 @@
   margin-bottom: 0.5rem;
 }
 
+/* Enhanced form labels with icons */
+.form-label-with-icon {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.form-label-with-icon .icon-container {
+  margin-right: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.form-label-with-icon .label-text {
+  font-weight: 500;
+}
+
 /* Select controls */
 .form-select {
   border-color: var(--input-border);
   background-color: var(--input-bg);
   color: var(--text-primary);
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  border-radius: var(--border-radius-sm);
+  transition: all 0.3s ease;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1rem;
+  border-width: 1px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .form-select:focus {
   border-color: var(--input-focus-border);
   box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
+  transform: translateY(-1px);
   outline: none;
 }
 
@@ -54,6 +78,9 @@
 .form-check-input {
   border-color: var(--input-border);
   background-color: var(--input-bg);
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .form-check-input:checked {
@@ -69,18 +96,49 @@
 
 .form-check-label {
   color: var(--text-primary);
+  font-weight: 500;
 }
 
 /* File input controls */
 .form-control[type="file"] {
   border-color: var(--input-border);
   background-color: var(--input-bg);
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
 }
 
 .form-control[type="file"]:focus {
   border-color: var(--input-focus-border);
   box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
+  transform: translateY(-1px);
   outline: none;
+}
+
+/* Form floating labels - enhanced */
+.form-floating > label {
+  padding: 0.75rem 1rem;
+}
+
+.form-floating > .form-control,
+.form-floating > .form-select {
+  height: calc(3.5rem + 2px);
+  padding: 1rem 1rem;
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label,
+.form-floating > .form-select ~ label {
+  transform: scale(0.8) translateY(-0.75rem) translateX(0.25rem);
+  background-color: var(--bg-primary);
+  padding: 0 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Info text and helper text styling */
+.form-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
 }
 
 /* Valid input styles */

@@ -162,9 +162,33 @@
             alertDiv.remove();
         }, 5000);
     }
-    // Simple page initialization
+    
+    // Maintain scroll position when navigating pagination
     document.addEventListener('DOMContentLoaded', function() {
-        // No additional initialization needed since we've removed the refresh functionality
+        // Restore scroll position if it exists
+        const savedScrollPosition = sessionStorage.getItem('logsScrollPosition');
+        if (savedScrollPosition) {
+            window.scrollTo(0, parseInt(savedScrollPosition));
+            // Clear the saved position after using it
+            sessionStorage.removeItem('logsScrollPosition');
+        }
+        
+        // Save scroll position when clicking pagination links
+        const paginationLinks = document.querySelectorAll('.pagination a.page-link');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Save current scroll position before navigating
+                sessionStorage.setItem('logsScrollPosition', window.scrollY);
+            });
+        });
+        
+        // Also handle form submission to maintain position
+        const filterForm = document.getElementById('log-filter-form');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function() {
+                sessionStorage.setItem('logsScrollPosition', window.scrollY);
+            });
+        }
     });
 </script>
 {% endblock %}
