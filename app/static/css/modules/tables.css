@@ -1,0 +1,71 @@
+/* =============================================
+   5. TABLE STYLING
+   ============================================= */
+
+/* Theme-friendly table styling using CSS nesting */
+.table-theme {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  
+  & thead,
+  & tbody tr {
+    border-color: var(--border-color);
+  }
+}
+
+/* Table hover effects - light theme */
+.table-hover tbody tr:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.05);
+  
+  /* Dark theme hover effect override */
+  .dark-theme & {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+  }
+}
+
+/* Table accent style for highlighting rows */
+.table-accent {
+  background-color: rgba(var(--accent-color-rgb), 0.15);
+  
+  /* Dark theme override */
+  .dark-theme & {
+    background-color: rgba(var(--accent-color-rgb), 0.25);
+  }
+  
+  /* Hover state */
+  .table-hover &:hover {
+    background-color: rgba(var(--accent-color-rgb), 0.25);
+    
+    /* Dark theme hover state */
+    .dark-theme & {
+      background-color: rgba(var(--accent-color-rgb), 0.35);
+    }
+  }
+}
+
+/* =============================================
+   6. HOST ROW STYLING
+   ============================================= */
+
+/* Host row styling based on status */
+.host-row-offline {
+  background-color: rgba(var(--danger-color-rgb), 0.1);
+  border-left: 2px solid var(--danger-color);
+  color: var(--danger-color);
+  
+  /* Dark theme override */
+  .dark-theme & {
+    background-color: rgba(var(--danger-color-rgb), 0.15);
+    color: var(--text-primary);
+  }
+  
+  /* Hover state */
+  .table-hover &:hover {
+    background-color: rgba(var(--danger-color-rgb), 0.15);
+    
+    /* Dark theme hover state */
+    .dark-theme & {
+      background-color: rgba(var(--danger-color-rgb), 0.2);
+    }
+  }
+}

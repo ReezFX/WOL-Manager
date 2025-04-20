@@ -13,8 +13,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Custom CSS (Modularized) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/main.css') }}">
     <style>
         /* Apple-like navigation bar styles - Highest specificity */
         body nav.navbar.navbar-expand-lg.apple-navbar {
@@ -209,12 +209,12 @@
                 <ul class="navbar-nav me-auto">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
+                        <a class="nav-link hover-elevate" href="{{ url_for('main.dashboard') }}">
                             <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('host.list_hosts') }}">
+                        <a class="nav-link hover-elevate" href="{{ url_for('host.list_hosts') }}">
                             <i class="fas fa-laptop me-1"></i>Hosts
                         </a>
                     </li>
@@ -268,7 +268,7 @@
                     </li>
                     {% endif %}
                     <li class="nav-item ms-2">
-                        <button class="theme-toggle-btn btn nav-link py-1 px-2 rounded-circle" id="theme-toggle">
+                        <button class="theme-toggle-btn btn nav-link py-1 px-2 rounded-circle action-button btn-animate-press" id="theme-toggle">
                             <i class="fas fa-moon" id="theme-icon"></i>
                             <span class="d-lg-none ms-1">Toggle Theme</span>
                         </button>
@@ -287,9 +287,9 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ category }} alert-dismissible fade show card-animate-in" role="alert">
                 {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-animate-press" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             {% endfor %}
         {% endif %}
@@ -304,7 +304,7 @@
             <div class="row py-1 justify-content-center">
                 <!-- About WoL Manager -->
                 <div class="col-md-4 mb-1 mb-md-0 text-center">
-                    <div class="mb-2">
+                    <div class="mb-2 hover-elevate">
                         <img src="{{ url_for('static', filename='img/wol-manager-title.png') }}" alt="WoL Manager" height="20">
                     </div>
                     <p class="footer-text small mb-1">A powerful and intuitive tool to remotely wake up and manage your devices on the local network using Wake-on-LAN technology.</p>
@@ -319,11 +319,11 @@
                         <div class="col-12">
                             <h6 class="text-accent mb-1">Resources</h6>
                             <ul class="list-unstyled small mb-0 text-center">
-                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/wiki" class="footer-link" target="_blank"><i class="fas fa-book me-1"></i>Documentation</a></li>
-                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/wiki/User-Guides" class="footer-link" target="_blank"><i class="fas fa-users me-1"></i>User Guides</a></li>
-                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/wiki/Troubleshooting" class="footer-link" target="_blank"><i class="fas fa-wrench me-1"></i>Troubleshooting</a></li>
-                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/wiki/FAQ" class="footer-link" target="_blank"><i class="fas fa-question me-1"></i>FAQ</a></li>
-                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/issues" class="footer-link" target="_blank"><i class="fas fa-bug me-1"></i>Report an Issue</a></li>
+                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/wiki" class="footer-link hover-elevate" target="_blank"><i class="fas fa-book me-1"></i>Documentation</a></li>
+                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/wiki/User-Guides" class="footer-link hover-elevate" target="_blank"><i class="fas fa-users me-1"></i>User Guides</a></li>
+                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/wiki/Troubleshooting" class="footer-link hover-elevate" target="_blank"><i class="fas fa-wrench me-1"></i>Troubleshooting</a></li>
+                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/wiki/FAQ" class="footer-link hover-elevate" target="_blank"><i class="fas fa-question me-1"></i>FAQ</a></li>
+                                <li class="d-inline-block mx-2 mb-2"><a href="https://github.com/ReezFX/WOL-Manager/issues" class="footer-link hover-elevate" target="_blank"><i class="fas fa-bug me-1"></i>Report an Issue</a></li>
                             </ul>
                         </div>
                     </div>
@@ -386,6 +386,9 @@
     
     <!-- Ping.js should be loaded after CSRF token setup -->
     <script src="{{ url_for('static', filename='js/ping.js') }}"></script>
+    
+    <!-- Animation enhancements -->
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
     
     <!-- Scripts Block -->
     {% block scripts %}{% endblock %}

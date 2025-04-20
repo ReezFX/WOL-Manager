@@ -1,0 +1,62 @@
+/* =============================================
+   WOL-Manager Main CSS
+   ============================================= */
+
+/* Import all CSS modules */
+@import 'variables.css';
+@import 'themes.css';
+@import 'animations.css';
+@import 'layout.css';
+@import 'buttons.css';
+@import 'components.css';
+@import 'forms.css';
+@import 'tables.css';
+@import 'responsive.css';
+
+/* =============================================
+   0. BASE STYLES
+   ============================================= */
+
+/* Apple System Font Stack */
+html, body, button, input, select, textarea {
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, 
+    "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", 
+    "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Apply theme transition to all elements */
+* {
+  transition: var(--theme-transition);
+}
+
+/* Base styling for body */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Typography base styles */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+p {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--secondary-color);
+  text-decoration: underline;
+}

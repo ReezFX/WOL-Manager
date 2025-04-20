@@ -1,0 +1,46 @@
+/* =============================================
+   1. GLOBAL VARIABLES
+   ============================================= */
+
+:root {
+  /* Breakpoint variables */
+  --breakpoint-xs: 0;  
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --breakpoint-xxl: 1400px;
+  
+  /* Transition variables */
+  --transition-default: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-hover: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-active: all 0.05s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-fast: all 0.15s ease;
+  --transition-slow: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --apple-transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  
+  /* Brand colors - consistent across themes */
+  --primary-color: #17a2b8; /* Main turquoise color */
+  --primary-color-rgb: 23, 162, 184;
+  --secondary-color: #0d6e8c; /* Deeper blue-teal */
+  --secondary-color-rgb: 13, 110, 140;
+  --accent-color: #ff7e5f; /* Complementary coral-orange */
+  --accent-color-rgb: 255, 126, 95;
+  --success-color: #28b485; /* Distinct green */
+  --success-color-rgb: 40, 180, 133;
+  --info-color: #5bc0de; /* Lighter blue */
+  --info-color-rgb: 91, 192, 222;
+  --warning-color: #f9ae56; /* Warm amber */
+  --warning-color-rgb: 249, 174, 86;
+  --danger-color: #e25563; /* Clear red */
+  --danger-color-rgb: 226, 85, 99;
+  
+  /* Common variables */
+  --transition-speed: 0.3s;
+  --border-radius: 8px;
+  --border-radius-sm: 6px;
+  --border-radius-lg: 12px;
+  --apple-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --apple-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --apple-shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.1);
+}

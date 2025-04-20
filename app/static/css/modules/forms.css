@@ -1,0 +1,148 @@
+/* =============================================
+   7. FORM STYLING
+   ============================================= */
+
+/* Form controls */
+.form-control {
+  border-color: var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: var(--border-radius-sm);
+}
+
+.form-control:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: var(--input-placeholder);
+  opacity: 0.8;
+}
+
+/* Form labels */
+.form-label {
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* Select controls */
+.form-select {
+  border-color: var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: var(--border-radius-sm);
+}
+
+.form-select:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
+  outline: none;
+}
+
+/* Dark theme form select control - override background image for better contrast */
+.dark-theme .form-select {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23f8f9fa' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Checkbox controls */
+.form-check-input {
+  border-color: var(--input-border);
+  background-color: var(--input-bg);
+}
+
+.form-check-input:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.form-check-input:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
+  outline: none;
+}
+
+.form-check-label {
+  color: var(--text-primary);
+}
+
+/* File input controls */
+.form-control[type="file"] {
+  border-color: var(--input-border);
+  background-color: var(--input-bg);
+}
+
+.form-control[type="file"]:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
+  outline: none;
+}
+
+/* Valid input styles */
+.form-control.is-valid,
+.was-validated .form-control:valid {
+  border-color: var(--success-color);
+  
+  &:focus {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--success-color-rgb), 0.25);
+  }
+}
+
+/* Invalid input styles */
+.form-control.is-invalid,
+.was-validated .form-control:invalid {
+  border-color: var(--danger-color);
+  
+  &:focus {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--danger-color-rgb), 0.25);
+  }
+}
+
+/* Valid select controls */
+.form-select.is-valid,
+.was-validated .form-select:valid {
+  border-color: var(--success-color);
+  
+  &:focus {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--success-color-rgb), 0.25);
+  }
+}
+
+/* Invalid select controls */
+.form-select.is-invalid,
+.was-validated .form-select:invalid {
+  border-color: var(--danger-color);
+  
+  &:focus {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--danger-color-rgb), 0.25);
+  }
+}
+
+/* Valid checkbox inputs */
+.form-check-input.is-valid,
+.was-validated .form-check-input:valid {
+  border-color: var(--success-color);
+  
+  &:checked {
+    background-color: var(--success-color);
+  }
+}
+
+/* Invalid checkbox inputs */
+.form-check-input.is-invalid,
+.was-validated .form-check-input:invalid {
+  border-color: var(--danger-color);
+}
+
+/* Note: The dark theme validation styles are redundant since they use the same CSS variables 
+   and therefore have been removed. Using CSS variables eliminates the need for separate 
+   theme-specific validation styles. */
