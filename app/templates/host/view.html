@@ -4,6 +4,48 @@
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Wake animation overlay -->
+    <div class="wake-animation-overlay" id="wakeAnimationOverlay">
+        <div class="wake-animation-container">
+            <!-- Close button -->
+            <button class="wake-close-button" id="wakeCloseButton">
+                <i class="fas fa-times"></i>
+            </button>
+            <!-- Animation area -->
+            <div class="animation-area">
+                <div class="signal-waves">
+                    <div class="wave wave1"></div>
+                    <div class="wave wave2"></div>
+                    <div class="wave wave3"></div>
+                    <div class="wave wave4"></div>
+                </div>
+                <div class="pulse-circle"></div>
+                <div class="packet-container">
+                    <div class="packet packet1"></div>
+                    <div class="packet packet2"></div>
+                    <div class="packet packet3"></div>
+                </div>
+            </div>
+            <!-- Text area - completely separate from animation -->
+            <div class="wake-text">
+                <div class="wake-text-title">Waking Up Host</div>
+                <div class="wake-text-subtitle">Sending Magic Packet</div>
+                <div class="wake-text-status">Waiting for response...</div>
+                <div class="wake-progress-container">
+                    <div class="wake-progress-bar"></div>
+                </div>
+                <div class="wake-result success">
+                    <i class="fas fa-check-circle wake-icon-success"></i>
+                    <div class="wake-result-text">Host Online</div>
+                </div>
+                <div class="wake-result failure">
+                    <i class="fas fa-exclamation-triangle wake-icon-failure"></i>
+                    <div class="wake-result-text">Wake Failed</div>
+                    <div class="wake-retry-button">Try Again</div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="card">
         <div class="card-header bg-primary text-white">
             <h4>Host Details</h4>
@@ -60,9 +102,12 @@
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>
                 <div>
-                    <a href="{{ url_for('wol.wol_send', host_id=host.id) }}" class="btn btn-success me-2">
-                        <i class="fas fa-power-off"></i> Wake Host
-                    </a>
+                    <form id="wakeForm-{{ host.id }}" action="{{ url_for('wol.wol_send', host_id=host.id) }}" method="post" class="d-inline wake-host-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="button" class="btn btn-success me-2 wake-host-btn" data-host-id="{{ host.id }}">
+                            <i class="fas fa-power-off"></i> Wake Host
+                        </button>
+                    </form>
                     {% if current_user.has_permission('edit_hosts') or host.created_by == current_user.id or current_user.is_admin %}
                     <a href="{{ url_for('host.edit_host', host_id=host.id) }}" class="btn btn-primary">
                         <i class="fas fa-edit"></i> Edit
@@ -91,5 +136,307 @@ function copyPublicUrl() {
         copyBtn.innerHTML = originalHtml;
     }, 2000);
 }
+
+// Wake animation overlay functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const wakeButtons = document.querySelectorAll('.wake-host-btn');
+    const overlay = document.getElementById('wakeAnimationOverlay');
+    const closeButton = document.getElementById('wakeCloseButton');
+    
+    // Add click event to all wake buttons
+    wakeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const hostId = this.getAttribute('data-host-id');
+            const form = document.getElementById(`wakeForm-${hostId}`);
+            
+            // First check if the host is already online
+            checkHostStatus(hostId, function(isOnline) {
+                if (isOnline) {
+                    // If already online, show success immediately
+                    showWakeAnimationForAlreadyOnlineHost(hostId);
+                } else {
+                    // If offline, proceed with normal wake animation
+                    showWakeAnimation(form, hostId);
+                }
+            });
+        });
+    });
+    
+    // Check host status first
+    function checkHostStatus(hostId, callback) {
+        fetch(`/hosts/api/status`)
+            .then(response => response.json())
+            .then(data => {
+                // Find this specific host in the list
+                const hostStatus = data.statuses.find(status => status.host_id == hostId);
+                if (hostStatus && hostStatus.status === 'online') {
+                    callback(true); // Host is online
+                } else {
+                    callback(false); // Host is offline or unknown
+                }
+            })
+            .catch(error => {
+                console.error('Error checking initial host status:', error);
+                callback(false); // Assume offline on error
+            });
+    }
+    
+    // Show a modified animation for already online hosts
+    function showWakeAnimationForAlreadyOnlineHost(hostId) {
+        if (overlay) {
+            overlay.classList.add('active');
+            
+            // Update text content
+            const titleElement = document.querySelector('.wake-text-title');
+            const subtitleElement = document.querySelector('.wake-text-subtitle');
+            const statusElement = document.querySelector('.wake-text-status');
+            
+            if (titleElement) titleElement.textContent = 'Host Already Online';
+            if (subtitleElement) subtitleElement.textContent = 'No need to send wake packet';
+            if (statusElement) statusElement.style.display = 'none';
+            
+            // Hide progress bar
+            const progressContainer = document.querySelector('.wake-progress-container');
+            if (progressContainer) progressContainer.style.display = 'none';
+            
+            // Show success immediately
+            setTimeout(() => {
+                showWakeResult('success');
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                    resetWakeAnimation();
+                }, 3000);
+            }, 1000);
+        }
+    }
+    
+    // Close button functionality
+    if (closeButton) {
+        closeButton.addEventListener('click', function() {
+            overlay.classList.remove('active');
+            resetWakeAnimation();
+        });
+    }
+    
+    // Function to show the wake animation
+    function showWakeAnimation(form, hostId) {
+        if (overlay) {
+            overlay.classList.add('active');
+            
+            // Start the progress bar animation
+            const progressBar = document.querySelector('.wake-progress-bar');
+            if (progressBar) {
+                progressBar.style.width = '0%';
+                setTimeout(() => {
+                    // Make the progress bar fill over 60 seconds to match the status check timeout
+                    progressBar.style.width = '100%';
+                    progressBar.style.transition = 'width 60s linear';
+                }, 100);
+            }
+            
+            // Submit the wake request via AJAX to prevent page refresh
+            setTimeout(() => {
+                // Get form data
+                const formData = new FormData(form);
+                
+                // Make AJAX request instead of form submission
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('Wake request sent successfully');
+                    // Start polling for status changes
+                    startStatusPolling(hostId);
+                })
+                .catch(error => {
+                    console.error('Error sending wake request:', error);
+                    // Still start polling in case the packet was sent despite the error
+                    startStatusPolling(hostId);
+                });
+            }, 1000);
+        }
+    }
+    
+    // Function to poll the host status after wake command
+    function startStatusPolling(hostId) {
+        const statusText = document.querySelector('.wake-text-status');
+        let attempts = 0;
+        const maxAttempts = 12; // Check for about 60 seconds (12 attempts, 5 seconds each)
+        
+        console.log('Starting status polling for host:', hostId);
+        
+        // Start polling
+        const statusInterval = setInterval(() => {
+            console.log('Polling attempt:', attempts + 1);
+            
+            // Update status text with attempts count
+            if (statusText) {
+                const timeRemaining = (maxAttempts - attempts) * 5;
+                statusText.textContent = `Checking host status... ${timeRemaining}s remaining`;
+            }
+            
+            // Fetch the current status using the same endpoint as initial check
+            fetch('/hosts/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Status response:', data);
+                    attempts++;
+                    
+                    // Find this specific host in the list
+                    const hostStatus = data.statuses.find(status => status.host_id == hostId);
+                    
+                    // If host is online, show success and stop polling
+                    if (hostStatus && hostStatus.status === 'online') {
+                        console.log('Host is online, showing success');
+                        clearInterval(statusInterval);
+                        showWakeResult('success');
+                        
+                        // Keep the success message visible for 3 seconds before hiding
+                        setTimeout(() => {
+                            overlay.classList.remove('active');
+                            resetWakeAnimation();
+                        }, 3000);
+                    }
+                    
+                    // If max attempts reached, show failure
+                    if (attempts >= maxAttempts) {
+                        console.log('Max attempts reached, showing failure');
+                        clearInterval(statusInterval);
+                        showWakeResult('failure');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking host status:', error);
+                    attempts++;
+                    
+                    // If max attempts reached, show failure
+                    if (attempts >= maxAttempts) {
+                        clearInterval(statusInterval);
+                        showWakeResult('failure');
+                    }
+                });
+        }, 5000); // Check every 5 seconds
+        
+        // Safety timeout to prevent infinite checking
+        setTimeout(() => {
+            console.log('Safety timeout reached');
+            clearInterval(statusInterval);
+            // If overlay is still active, show failure
+            if (overlay.classList.contains('active')) {
+                showWakeResult('failure');
+            }
+        }, 62000); // Stop after 62 seconds (slightly more than maxAttempts * polling interval)
+    }
+    
+    // Function to show success or failure result
+    function showWakeResult(result) {
+        console.log('Showing wake result:', result);
+        const successElement = document.querySelector('.wake-result.success');
+        const failureElement = document.querySelector('.wake-result.failure');
+        const waves = document.querySelectorAll('.wave');
+        const packets = document.querySelectorAll('.packet');
+        const progressContainer = document.querySelector('.wake-progress-container');
+        const statusText = document.querySelector('.wake-text-status');
+        const title = document.querySelector('.wake-text-title');
+        const subtitle = document.querySelector('.wake-text-subtitle');
+        
+        // Hide status elements
+        if (statusText) statusText.style.display = 'none';
+        if (progressContainer) progressContainer.style.display = 'none';
+        if (title) title.style.opacity = '0.5';
+        if (subtitle) subtitle.style.opacity = '0.5';
+        
+        // Stop animations
+        waves.forEach(wave => {
+            wave.style.animationPlayState = 'paused';
+            wave.style.opacity = '0.2';
+        });
+        
+        packets.forEach(packet => {
+            packet.style.animationPlayState = 'paused';
+            packet.style.opacity = '0';
+        });
+        
+        // Show appropriate result
+        if (result === 'success') {
+            if (successElement) {
+                successElement.style.display = 'flex';
+                // Add success animations
+                document.querySelector('.pulse-circle').classList.add('success-pulse');
+            }
+        } else {
+            if (failureElement) {
+                failureElement.style.display = 'flex';
+                // Add failure animations
+                document.querySelector('.pulse-circle').classList.add('failure-pulse');
+                
+                // Setup retry button
+                const retryButton = document.querySelector('.wake-retry-button');
+                if (retryButton) {
+                    // Remove any existing event listeners to prevent duplicates
+                    const newRetryButton = retryButton.cloneNode(true);
+                    retryButton.parentNode.replaceChild(newRetryButton, retryButton);
+                    
+                    newRetryButton.addEventListener('click', () => {
+                        resetWakeAnimation();
+                        overlay.classList.remove('active');
+                        
+                        // Optional: trigger wake again on retry
+                        const hostId = document.querySelector('.wake-host-btn').getAttribute('data-host-id');
+                        const form = document.getElementById(`wakeForm-${hostId}`);
+                        setTimeout(() => {
+                            showWakeAnimation(form, hostId);
+                        }, 500);
+                    });
+                }
+            }
+        }
+    }
+    
+    // Function to reset the wake animation state
+    function resetWakeAnimation() {
+        const successElement = document.querySelector('.wake-result.success');
+        const failureElement = document.querySelector('.wake-result.failure');
+        const statusText = document.querySelector('.wake-text-status');
+        const progressContainer = document.querySelector('.wake-progress-container');
+        const title = document.querySelector('.wake-text-title');
+        const subtitle = document.querySelector('.wake-text-subtitle');
+        const pulseCircle = document.querySelector('.pulse-circle');
+        
+        // Reset elements
+        if (successElement) successElement.style.display = 'none';
+        if (failureElement) failureElement.style.display = 'none';
+        if (statusText) {
+            statusText.style.display = 'block';
+            statusText.textContent = 'Waiting for response...';
+        }
+        if (progressContainer) progressContainer.style.display = 'block';
+        if (title) {
+            title.style.opacity = '1';
+            title.textContent = 'Waking Up Host';
+        }
+        if (subtitle) {
+            subtitle.style.opacity = '1';
+            subtitle.textContent = 'Sending Magic Packet';
+        }
+        
+        // Reset animations
+        if (pulseCircle) {
+            pulseCircle.classList.remove('success-pulse', 'failure-pulse');
+        }
+        
+        // Reset wave and packet animations
+        document.querySelectorAll('.wave, .packet').forEach(el => {
+            el.style.animationPlayState = '';
+            el.style.opacity = '';
+        });
+    }
+});
 </script>
 {% endblock %}
