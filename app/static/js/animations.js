@@ -119,13 +119,44 @@ document.addEventListener('DOMContentLoaded', function() {
    */
   function enhanceStatusBadges() {
     statusBadges.forEach(badge => {
+      // Get the current status directly from the element's data attribute
       const status = badge.getAttribute('data-status');
       
+      console.log("Enhancing badge with status:", status, "for element:", badge.id);
+      
+      // Remove any existing animation classes and reset styles
+      badge.style.animation = '';
+      
+      // Apply appropriate animation based on status
       if (status === 'online') {
-        badge.style.animation = 'pulseOnline 2s infinite';
+        // No animation for online - just set styling
+        badge.style.animation = 'none';
+        badge.style.backgroundColor = 'var(--success-color)';
+        badge.style.color = 'white';
+        // Ensure classes are correct (in case of manual updates)
+        badge.classList.remove('bg-danger', 'bg-secondary');
+        badge.classList.add('bg-success');
       } else if (status === 'offline') {
+        // Only offline status pulsates
         badge.style.animation = 'pulseOffline 2s infinite';
+        badge.style.backgroundColor = 'var(--danger-color)';
+        badge.style.color = 'white';
+        // Ensure classes are correct
+        badge.classList.remove('bg-success', 'bg-secondary');
+        badge.classList.add('bg-danger');
+      } else if (status === 'unknown') {
+        // No animation for unknown - just set styling
+        badge.style.animation = 'none';
+        badge.style.backgroundColor = 'var(--secondary-color)';
+        badge.style.color = 'white';
+        // Ensure classes are correct
+        badge.classList.remove('bg-success', 'bg-danger');
+        badge.classList.add('bg-secondary');
       }
+      
+      // Add text shadow for better visibility
+      badge.style.textShadow = '0 1px 1px rgba(0, 0, 0, 0.2)';
+      badge.style.fontWeight = '600';
     });
   }
   
@@ -136,8 +167,49 @@ document.addEventListener('DOMContentLoaded', function() {
   window.updateStatusBadgeAnimation = function(badgeId, status) {
     const badge = document.getElementById(badgeId);
     if (badge) {
+      console.log("Updating badge animation:", badgeId, "with status:", status);
+      
+      // Update data attribute
       badge.setAttribute('data-status', status);
-      enhanceStatusBadges();
+      
+      // Remove current animation
+      badge.style.animation = '';
+      
+      // Force a reflow to ensure animation restarts
+      void badge.offsetWidth;
+      
+      // Update classes to match status
+      badge.classList.remove('bg-success', 'bg-danger', 'bg-secondary');
+      
+      // Apply styling based on status
+      if (status === 'online') {
+        // No animation for online status
+        badge.style.animation = 'none';
+        badge.style.backgroundColor = 'var(--success-color)';
+        badge.style.color = 'white';
+        badge.classList.add('bg-success');
+      } else if (status === 'offline') {
+        // Only offline status pulsates
+        badge.style.animation = 'pulseOffline 2s infinite';
+        badge.style.backgroundColor = 'var(--danger-color)';
+        badge.style.color = 'white';
+        badge.classList.add('bg-danger');
+      } else if (status === 'unknown') {
+        // No animation for unknown status
+        badge.style.animation = 'none';
+        badge.style.backgroundColor = 'var(--secondary-color)';
+        badge.style.color = 'white';
+        badge.classList.add('bg-secondary');
+      }
+      
+      // Update icon
+      let icon = '<i class="fas fa-circle-question fa-xs me-1"></i>';
+      if (status === 'online') {
+          icon = '<i class="fas fa-circle-check fa-xs me-1"></i>';
+      } else if (status === 'offline') {
+          icon = '<i class="fas fa-circle-xmark fa-xs me-1"></i>';
+      }
+      badge.innerHTML = icon + status;
     }
   };
   

@@ -135,15 +135,15 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
                         {% if host.status == 'online' %}
-                            <span class="badge status-badge badge-success" id="host-{{ host.id }}-status" data-status="online">
+                            <span class="badge bg-success status-badge" id="host-{{ host.id }}-status" data-status="online">
                                 <i class="fas fa-circle-check fa-xs me-1"></i>online
                             </span>
                         {% elif host.status == 'offline' %}
-                            <span class="badge status-badge badge-danger" id="host-{{ host.id }}-status" data-status="offline">
+                            <span class="badge bg-danger status-badge" id="host-{{ host.id }}-status" data-status="offline">
                                 <i class="fas fa-circle-xmark fa-xs me-1"></i>offline
                             </span>
                         {% else %}
-                            <span class="badge status-badge badge-secondary" id="host-{{ host.id }}-status" data-status="unknown">
+                            <span class="badge bg-secondary status-badge" id="host-{{ host.id }}-status" data-status="unknown">
                                 <i class="fas fa-circle-question fa-xs me-1"></i>unknown
                             </span>
                         {% endif %}
@@ -323,17 +323,23 @@
                     data.statuses.forEach(hostStatus => {
                         const statusBadge = document.querySelector(`#host-${hostStatus.host_id}-status`);
                         if (statusBadge) {
-                            // Update status badge
-                            statusBadge.setAttribute('data-status', hostStatus.status);
-                            
-                            // Update icon and text
-                            let icon = '<i class="fas fa-circle-question fa-xs me-1"></i>';
-                            if (hostStatus.status === 'online') {
-                                icon = '<i class="fas fa-circle-check fa-xs me-1"></i>';
-                            } else if (hostStatus.status === 'offline') {
-                                icon = '<i class="fas fa-circle-xmark fa-xs me-1"></i>';
+                            // Update status badge with more obvious animations
+                            if (typeof window.updateStatusBadgeAnimation === 'function') {
+                                // Use the enhanced animation function if available
+                                window.updateStatusBadgeAnimation(`host-${hostStatus.host_id}-status`, hostStatus.status);
+                            } else {
+                                // Fallback to basic update
+                                statusBadge.setAttribute('data-status', hostStatus.status);
+                                
+                                // Update icon and text
+                                let icon = '<i class="fas fa-circle-question fa-xs me-1"></i>';
+                                if (hostStatus.status === 'online') {
+                                    icon = '<i class="fas fa-circle-check fa-xs me-1"></i>';
+                                } else if (hostStatus.status === 'offline') {
+                                    icon = '<i class="fas fa-circle-xmark fa-xs me-1"></i>';
+                                }
+                                statusBadge.innerHTML = icon + hostStatus.status;
                             }
-                            statusBadge.innerHTML = icon + hostStatus.status;
                         }
                     });
                 })

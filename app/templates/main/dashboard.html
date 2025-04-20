@@ -19,15 +19,15 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ host.name }}</h5>
                     {% if host.status == 'online' %}
-                        <span class="badge status-badge badge-success" id="host-{{ host.id }}-status" data-status="online">
+                        <span class="badge bg-success status-badge" id="host-{{ host.id }}-status" data-status="online">
                             <i class="fas fa-circle-check fa-xs me-1"></i>online
                         </span>
                     {% elif host.status == 'offline' %}
-                        <span class="badge status-badge badge-danger" id="host-{{ host.id }}-status" data-status="offline">
+                        <span class="badge bg-danger status-badge" id="host-{{ host.id }}-status" data-status="offline">
                             <i class="fas fa-circle-xmark fa-xs me-1"></i>offline
                         </span>
                     {% else %}
-                        <span class="badge status-badge badge-secondary" id="host-{{ host.id }}-status" data-status="unknown">
+                        <span class="badge bg-secondary status-badge" id="host-{{ host.id }}-status" data-status="unknown">
                             <i class="fas fa-circle-question fa-xs me-1"></i>unknown
                         </span>
                     {% endif %}
@@ -98,23 +98,35 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function updateHostStatuses() {
+        console.log('Fetching host statuses...');
         fetch('/hosts/api/status')
             .then(response => response.json())
             .then(data => {
+                console.log('Host status API response:', data);
                 data.statuses.forEach(hostStatus => {
+                    console.log('Processing host:', hostStatus.host_id, 'with status:', hostStatus.status);
                     const statusBadge = document.querySelector(`#host-${hostStatus.host_id}-status`);
                     if (statusBadge) {
-                        // Update status badge
-                        statusBadge.setAttribute('data-status', hostStatus.status);
-                        
-                        // Update icon and text
-                        let icon = '<i class="fas fa-circle-question fa-xs me-1"></i>';
-                        if (hostStatus.status === 'online') {
-                            icon = '<i class="fas fa-circle-check fa-xs me-1"></i>';
-                        } else if (hostStatus.status === 'offline') {
-                            icon = '<i class="fas fa-circle-xmark fa-xs me-1"></i>';
+                        console.log('Found badge element:', statusBadge.id);
+                        // Update status badge with more obvious animations
+                        if (typeof window.updateStatusBadgeAnimation === 'function') {
+                            // Use the enhanced animation function if available
+                            console.log('Using enhanced animation function');
+                            window.updateStatusBadgeAnimation(`host-${hostStatus.host_id}-status`, hostStatus.status);
+                        } else {
+                            console.log('Using fallback update method');
+                            // Fallback to basic update
+                            statusBadge.setAttribute('data-status', hostStatus.status);
+                            
+                            // Update icon and text
+                            let icon = '<i class="fas fa-circle-question fa-xs me-1"></i>';
+                            if (hostStatus.status === 'online') {
+                                icon = '<i class="fas fa-circle-check fa-xs me-1"></i>';
+                            } else if (hostStatus.status === 'offline') {
+                                icon = '<i class="fas fa-circle-xmark fa-xs me-1"></i>';
+                            }
+                            statusBadge.innerHTML = icon + hostStatus.status;
                         }
-                        statusBadge.innerHTML = icon + hostStatus.status;
                         
                         // Update last check time
                         const lastCheck = document.querySelector(`#host-${hostStatus.host_id}-last-check`);
@@ -122,6 +134,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             const date = new Date(hostStatus.last_check);
                             lastCheck.textContent = `Last status check: ${date.toLocaleString()}`;
                         }
+                    } else {
+                        console.log('Badge element not found for host:', hostStatus.host_id);
                     }
                 });
             })
