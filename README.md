@@ -46,6 +46,20 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 
 ## Release Notes
 
+### Version 1.4.0 (2025-03-25)
+- Enhanced UI with advanced animations and visual feedback:
+  - Implemented wake animation overlay with animated circuit paths for host wake requests
+  - Added AJAX functionality for host management operations without page reloads
+  - Enhanced theme transitions with smoother color changes and improved visual consistency
+- Improved user experience with interactive elements:
+  - Redesigned host cards with animated backgrounds and modern styling
+  - Added responsive animations for user interactions across the application
+  - Implemented improved wake button with dynamic visual feedback based on host status
+- Optimized frontend performance:
+  - Enhanced JavaScript components for better responsiveness
+  - Improved mobile compatibility with optimized animations
+  - Implemented debounced event handlers to prevent performance issues
+
 ### Version 1.3.0 (2025-03-21)
 - Added public API endpoint for host status updates with token-based authentication
 - Enhanced database management with optimized initialization and upgrades

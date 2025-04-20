@@ -16,7 +16,428 @@
     </div>
 </div>
 
+<!-- Version 1.4.0 Advertisement Banner -->
+<div class="update-banner-container">
+    <div class="update-banner">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <div class="update-content pe-lg-4">
+                        <div class="badge bg-primary mb-2 fw-semibold">New in v1.4.0</div>
+                        <h2 class="update-title mb-2">Visual Experience Reimagined</h2>
+                        <p class="update-description mb-3">Experience our most responsive and visually stunning update yet with dynamic animations and seamless interactions.</p>
+                        <ul class="update-features">
+                            <li><i class="fas fa-bolt text-primary me-2"></i>New wake animation overlay</li>
+                            <li><i class="fas fa-exchange-alt text-primary me-2"></i>Instant AJAX management</li>
+                            <li><i class="fas fa-palette text-primary me-2"></i>Improved theme transitions</li>
+                        </ul>
+                        <button class="btn btn-primary mt-3 btn-lg play-animation-btn">
+                            <i class="fas fa-play-circle me-2"></i>Preview Animation
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="animation-preview-container">
+                        <div class="animation-preview">
+                            <!-- Animation preview mockup -->
+                            <div class="device-mockup">
+                                <div class="device-frame">
+                                    <div class="wake-preview-content">
+                                        <div class="wake-preview-bg"></div>
+                                        <div class="wake-preview-waves">
+                                            <div class="preview-wave w1"></div>
+                                            <div class="preview-wave w2"></div>
+                                            <div class="preview-wave w3"></div>
+                                        </div>
+                                        <div class="wake-preview-circuit">
+                                            <div class="circuit-path p1"></div>
+                                            <div class="circuit-path p2"></div>
+                                            <div class="circuit-path p3"></div>
+                                            <div class="circuit-node n1"></div>
+                                            <div class="circuit-node n2"></div>
+                                            <div class="circuit-node n3"></div>
+                                        </div>
+                                        <div class="wake-preview-pulse"></div>
+                                        <div class="wake-preview-text">
+                                            <div class="preview-text-line"></div>
+                                            <div class="preview-text-line"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="device-stripe">
+                                    <span>WOL Manager 1.4.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
+    /* Update Banner Styling */
+    .update-banner-container {
+        margin-bottom: 3rem;
+        overflow: hidden;
+    }
+    
+    .update-banner {
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.1), rgba(var(--accent-color-rgb), 0.1));
+        border-radius: 16px;
+        padding: 2.5rem 0;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(var(--primary-color-rgb), 0.15);
+    }
+    
+    .update-title {
+        font-weight: 700;
+        font-size: 2.2rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    .update-description {
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        opacity: 0.9;
+    }
+    
+    .update-features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .update-features li {
+        padding: 8px 0;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+    
+    .dark-theme .update-banner {
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.2), rgba(var(--accent-color-rgb), 0.2));
+        border-color: rgba(var(--primary-color-rgb), 0.25);
+    }
+    
+    /* Animation Preview Styling */
+    .animation-preview-container {
+        position: relative;
+        perspective: 1000px;
+    }
+    
+    .animation-preview {
+        transform: rotateY(-5deg) rotateX(5deg);
+        transition: transform 0.5s ease;
+    }
+    
+    .animation-preview:hover {
+        transform: rotateY(0deg) rotateX(0deg);
+    }
+    
+    .device-mockup {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 24px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        background: #000;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .device-frame {
+        aspect-ratio: 16/9;
+        width: 100%;
+        background: #000;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .device-stripe {
+        background: #111;
+        padding: 10px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        text-align: center;
+        font-family: monospace;
+    }
+    
+    /* Wake Animation Preview Elements */
+    .wake-preview-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    
+    .wake-preview-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.85);
+    }
+    
+    .wake-preview-pulse {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        border-radius: 50%;
+        z-index: 2;
+        box-shadow: 0 0 30px var(--primary-color);
+        animation: previewPulse 1.5s infinite alternate;
+    }
+    
+    .wake-preview-waves {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
+    
+    .preview-wave {
+        position: absolute;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        opacity: 0;
+        transform: scale(0);
+        animation: previewWaves 3s infinite ease-out;
+    }
+    
+    .w1 {
+        width: 60px;
+        height: 60px;
+        border-color: var(--primary-color);
+        animation-delay: 0s;
+    }
+    
+    .w2 {
+        width: 120px;
+        height: 120px;
+        border-color: var(--accent-color);
+        animation-delay: 0.4s;
+    }
+    
+    .w3 {
+        width: 180px;
+        height: 180px;
+        border-color: var(--primary-color);
+        animation-delay: 0.8s;
+    }
+    
+    .wake-preview-circuit {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+    
+    .circuit-path {
+        position: absolute;
+        background: transparent;
+        border: none;
+        height: 2px;
+        opacity: 0.7;
+    }
+    
+    .p1 {
+        width: 120px;
+        top: 40%;
+        left: 10%;
+        background: linear-gradient(90deg, transparent, var(--primary-color));
+        animation: pathAnimate 2s infinite;
+        transform-origin: left center;
+    }
+    
+    .p2 {
+        width: 80px;
+        top: 50%;
+        right: 15%;
+        background: linear-gradient(90deg, var(--accent-color), transparent);
+        animation: pathAnimate 1.7s infinite 0.3s;
+        transform-origin: right center;
+    }
+    
+    .p3 {
+        width: 100px;
+        bottom: 30%;
+        left: 30%;
+        background: linear-gradient(90deg, transparent, var(--primary-color));
+        animation: pathAnimate 2.1s infinite 0.6s;
+        transform-origin: left center;
+    }
+    
+    .circuit-node {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: var(--accent-color);
+        opacity: 0;
+        animation: nodeFlash 2s infinite alternate;
+    }
+    
+    .n1 {
+        top: 40%;
+        left: 10%;
+        animation-delay: 0.2s;
+    }
+    
+    .n2 {
+        top: 50%;
+        right: 15%;
+        animation-delay: 0.7s;
+    }
+    
+    .n3 {
+        bottom: 30%;
+        left: 30%;
+        animation-delay: 1.2s;
+    }
+    
+    .wake-preview-text {
+        position: absolute;
+        bottom: 15%;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        z-index: 3;
+    }
+    
+    .preview-text-line {
+        height: 10px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+        border-radius: 5px;
+        margin: 10px auto;
+        width: 60%;
+        opacity: 0.7;
+        animation: textPulse 2s infinite alternate;
+    }
+    
+    .preview-text-line:last-child {
+        width: 40%;
+        animation-delay: 0.3s;
+    }
+    
+    /* Animation Keyframes */
+    @keyframes previewPulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 20px var(--primary-color);
+        }
+        100% {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px var(--primary-color);
+        }
+    }
+    
+    @keyframes previewWaves {
+        0% {
+            opacity: 0.8;
+            transform: scale(0);
+        }
+        70% {
+            opacity: 0.2;
+        }
+        100% {
+            opacity: 0;
+            transform: scale(1);
+        }
+    }
+    
+    @keyframes pathAnimate {
+        0% {
+            transform: scaleX(0);
+            opacity: 1;
+        }
+        50% {
+            transform: scaleX(1);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scaleX(0);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes nodeFlash {
+        0% {
+            opacity: 0;
+            transform: scale(0);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.5);
+        }
+        100% {
+            opacity: 0;
+            transform: scale(0);
+        }
+    }
+    
+    @keyframes textPulse {
+        0% {
+            opacity: 0.4;
+            transform: scaleX(0.9);
+        }
+        100% {
+            opacity: 0.7;
+            transform: scaleX(1);
+        }
+    }
+    
+    /* Mobile Optimizations */
+    @media (max-width: 991.98px) {
+        .update-banner {
+            padding: 2rem 0;
+            border-radius: 12px;
+        }
+        
+        .update-title {
+            font-size: 1.8rem;
+        }
+        
+        .animation-preview {
+            transform: none;
+        }
+        
+        .device-mockup {
+            max-width: 100%;
+            border-radius: 16px;
+        }
+    }
+    
+    @media (max-width: 767.98px) {
+        .update-banner-container {
+            margin-bottom: 2rem;
+        }
+        
+        .update-title {
+            font-size: 1.5rem;
+        }
+        
+        .update-description {
+            font-size: 1rem;
+        }
+    }
+    
     .branding-header {
         position: relative;
         overflow: hidden;
@@ -43,9 +464,7 @@
         z-index: -1;
     }
     
-    .dark-theme .branding-bg {
-        /* Removed gradient background for dark theme as well */
-    }
+    /* Removed gradient background for dark theme as well */
     
     .brand-container {
         padding: 1rem;
@@ -69,6 +488,7 @@
     }
     */
     
+    .brand-logo {
         /* filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.25)); */
         transition: transform 0.3s ease;
         margin-bottom: 2rem;
@@ -81,13 +501,6 @@
             max-width: 80%;
         }
     }
-    }
-    
-    /* Hover effect for logo removed as requested
-    .brand-container:hover .brand-logo {
-        transform: scale(1.05);
-    }
-    */
     
     .brand-title-wrapper {
         padding: 0.5rem 0 0.5rem;
@@ -107,6 +520,118 @@
     */
     
 </style>
+
+<!-- JS to handle animation preview button -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const previewBtn = document.querySelector('.play-animation-btn');
+    
+    if (previewBtn) {
+        previewBtn.addEventListener('click', function() {
+            // Create the actual wake animation overlay
+            showWakeAnimationDemo();
+        });
+    }
+    
+    function showWakeAnimationDemo() {
+        // Create a demo of the actual wake animation that looks like the real one
+        const overlay = document.createElement('div');
+        overlay.className = 'wake-animation-overlay';
+        document.body.appendChild(overlay);
+        
+        // Add the rest of the wake animation markup
+        overlay.innerHTML = `
+            <button class="wake-close-button">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="wake-animation-container">
+                <div class="animation-area">
+                    <div class="signal-waves">
+                        <div class="wave wave1"></div>
+                        <div class="wave wave2"></div>
+                        <div class="wave wave3"></div>
+                        <div class="wave wave4"></div>
+                    </div>
+                    <div class="pulse-circle"></div>
+                    <div class="packet-container">
+                        <div class="packet packet1"></div>
+                        <div class="packet packet2"></div>
+                        <div class="packet packet3"></div>
+                    </div>
+                </div>
+                <div class="wake-text">
+                    <div class="wake-text-title">Waking Host...</div>
+                    <div class="wake-text-subtitle">Sending magic packet to device</div>
+                    <div class="wake-text-status">Please wait while we attempt to wake your device</div>
+                    <div class="wake-progress-container">
+                        <div class="wake-progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Show the overlay with animation
+        setTimeout(() => {
+            overlay.classList.add('active');
+            // Animate progress bar
+            const progressBar = overlay.querySelector('.wake-progress-bar');
+            if (progressBar) {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 1;
+                    progressBar.style.width = `${progress}%`;
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        // Show success message after completion
+                        const wakeText = overlay.querySelector('.wake-text');
+                        if (wakeText) {
+                            const result = document.createElement('div');
+                            result.className = 'wake-result';
+                            result.style.display = 'flex';
+                            result.innerHTML = `
+                                <div class="wake-icon-success">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="wake-result-text">Wake request sent successfully!</div>
+                            `;
+                            wakeText.appendChild(result);
+                            
+                            // Also change the pulse circle to success
+                            const pulseCircle = overlay.querySelector('.pulse-circle');
+                            if (pulseCircle) {
+                                pulseCircle.classList.add('success-pulse');
+                            }
+                        }
+                    }
+                }, 50);
+            }
+        }, 100);
+        
+        // Close button functionality
+        const closeButton = overlay.querySelector('.wake-close-button');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.remove();
+                }, 300);
+            });
+        }
+        
+        // Also allow closing by clicking outside
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.remove();
+                }, 300);
+            }
+        });
+    }
+});
+</script>
+
 <div class="container pt-md-5 pt-3 pb-5">
     <div class="row justify-content-center">
         <div class="col-md-10">

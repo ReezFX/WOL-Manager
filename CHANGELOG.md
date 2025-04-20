@@ -5,6 +5,43 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-03-25
+
+### Added
+- Wake animation overlay system:
+  - Implemented SVG-based animated circuit paths during host wake operations
+  - Added dynamic animation generation based on host status and viewport size
+  - Created responsive animation timing with proper CSS transitions
+  - Developed animated nodes and connection points that respond to user actions
+- AJAX functionality for seamless host management:
+  - Implemented asynchronous host wake requests without page reloads
+  - Added real-time status updates during wake operations
+  - Enhanced form submission with proper CSRF token handling for security
+  - Improved error handling and user feedback during failed operations
+
+### Changed
+- Enhanced user interface components:
+  - Redesigned host cards with animated backgrounds and improved visual hierarchy
+  - Updated theme transition system for smoother color changes throughout the application
+  - Modified theme application to ensure both HTML and body elements are consistently styled
+  - Improved theme preloading to prevent flash of unstyled content when loading pages
+  - Enhanced responsive design for better mobile compatibility
+- Upgraded animation system:
+  - Implemented CSS custom properties for consistent animation timing and easing
+  - Added spring physics-based animations for more natural movement
+  - Improved transition timing for smoother UI interactions
+  - Optimized animation performance for mobile devices
+
+### Fixed
+- Resolved flash of incorrect theme during initial page load:
+  - Added theme preload script to apply stored theme before any content renders
+  - Fixed inconsistent theme application between HTML and body elements
+  - Improved theme transition timing to prevent visual glitches
+- Enhanced UI consistency across different viewports:
+  - Fixed card animation issues on mobile devices
+  - Corrected spacing and alignment in host management interfaces
+  - Improved border radius consistency across different components
+
 ## [1.3.0] - 2025-03-21
 
 ### Added
