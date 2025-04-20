@@ -32,7 +32,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const cardHeaders = document.querySelectorAll('.card-header.bg-tertiary-theme');
     
     if (theme === DARK_THEME) {
-      // Apply dark theme
+      // Apply dark theme to both html and body
+      document.documentElement.classList.remove('light-theme');
+      document.documentElement.classList.add('dark-theme');
+      document.documentElement.setAttribute('data-bs-theme', 'dark');
+      
       document.body.classList.remove('light-theme');
       document.body.classList.add('dark-theme');
       document.body.setAttribute('data-bs-theme', 'dark');
@@ -54,7 +58,11 @@ document.addEventListener('DOMContentLoaded', function() {
         header.style.color = 'var(--text-primary)';
       });
     } else {
-      // Apply light theme
+      // Apply light theme to both html and body
+      document.documentElement.classList.remove('dark-theme');
+      document.documentElement.classList.add('light-theme');
+      document.documentElement.setAttribute('data-bs-theme', 'light');
+      
       document.body.classList.remove('dark-theme');
       document.body.classList.add('light-theme');
       document.body.setAttribute('data-bs-theme', 'light');

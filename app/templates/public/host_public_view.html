@@ -3,39 +3,93 @@
 {% block title %}{{ host.name }} - Public View{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">{{ host.name }}</h5>
-            {% if host.status == 'online' %}
-                <span class="badge bg-success status-badge" id="host-{{ host.id }}-status" data-status="online">
-                    <i class="fas fa-circle-check fa-xs me-1"></i>online
-                </span>
-            {% elif host.status == 'offline' %}
-                <span class="badge bg-danger status-badge" id="host-{{ host.id }}-status" data-status="offline">
-                    <i class="fas fa-circle-xmark fa-xs me-1"></i>offline
-                </span>
-            {% else %}
-                <span class="badge bg-secondary status-badge" id="host-{{ host.id }}-status" data-status="unknown">
-                    <i class="fas fa-circle-question fa-xs me-1"></i>unknown
-                </span>
-            {% endif %}
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col">
-                    <p class="mb-1"><strong>MAC Address:</strong> {{ host.mac_address }}</p>
-                    {% if host.description %}
-                    <p class="mb-3"><em>{{ host.description }}</em></p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card host-card shadow-lg border-0">
+                <div class="card-header d-flex justify-content-between align-items-center bg-gradient-primary text-white py-3">
+                    <h4 class="card-title mb-0 fw-bold">
+                        <i class="fas fa-server me-2"></i>{{ host.name }}
+                    </h4>
+                    {% if host.status == 'online' %}
+                        <span class="badge bg-success status-badge" id="host-{{ host.id }}-status" data-status="online">
+                            <i class="fas fa-circle-check fa-xs me-1"></i>online
+                        </span>
+                    {% elif host.status == 'offline' %}
+                        <span class="badge bg-danger status-badge" id="host-{{ host.id }}-status" data-status="offline">
+                            <i class="fas fa-circle-xmark fa-xs me-1"></i>offline
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary status-badge" id="host-{{ host.id }}-status" data-status="unknown">
+                            <i class="fas fa-circle-question fa-xs me-1"></i>unknown
+                        </span>
                     {% endif %}
-                    
-                    <form method="post" action="{{ url_for('public.wake_host') }}" class="mt-3">
-                        <input type="hidden" name="host_id" value="{{ host.id }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-power-off me-2"></i>Wake Host
-                        </button>
-                    </form>
+                </div>
+                <div class="card-body p-4">
+                    <div class="host-info mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="info-item mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-container me-3 icon-mac">
+                                            <i class="fas fa-network-wired"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-muted fw-semibold">MAC Address</h6>
+                                            <p class="mb-0 mac-address fw-bold">{{ host.mac_address }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if host.description %}
+                                <div class="info-item mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-container me-3 icon-info">
+                                            <i class="fas fa-info-circle"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-muted fw-semibold">Description</h6>
+                                            <p class="mb-0">{{ host.description }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="info-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-container me-3 icon-time">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-muted fw-semibold">Last Check</h6>
+                                            <p class="mb-0" id="host-{{ host.id }}-last-check">
+                                                Checking status...
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex flex-column align-items-center justify-content-center mt-4 mt-md-0">
+                                <form method="post" action="{{ url_for('public.wake_host') }}" id="wakeHostForm" class="text-center">
+                                    <input type="hidden" name="host_id" value="{{ host.id }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="wake-button-container">
+                                        <button type="button" id="wakeHostBtn" 
+                                            class="wake-button-circle btn-animate-press {% if host.status == 'online' %}online{% elif host.status == 'offline' %}offline{% else %}unknown{% endif %}"
+                                            data-status="{{ host.status }}" data-host-id="{{ host.id }}">
+                                            <div class="button-inner">
+                                                <i class="fas fa-power-off power-icon"></i>
+                                                <span class="button-text">Wake Host</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light py-3 text-center">
+                    <small class="text-muted">Powered by WOL Manager</small>
                 </div>
             </div>
         </div>
@@ -56,6 +110,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 const statusBadge = document.querySelector(`#host-${data.host_id}-status`);
+                const wakeButton = document.querySelector('#wakeHostBtn');
+                
                 if (statusBadge) {
                     // Update status badge with more obvious animations
                     if (typeof window.updateStatusBadgeAnimation === 'function') {
@@ -64,6 +120,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         // Fallback to basic update
                         statusBadge.setAttribute('data-status', data.status);
+                        
+                        // Update badge background classes
+                        statusBadge.classList.remove('bg-success', 'bg-danger', 'bg-secondary');
+                        if (data.status === 'online') {
+                            statusBadge.classList.add('bg-success');
+                        } else if (data.status === 'offline') {
+                            statusBadge.classList.add('bg-danger');
+                        } else {
+                            statusBadge.classList.add('bg-secondary');
+                        }
                         
                         // Update icon and text
                         let icon = '<i class="fas fa-circle-question fa-xs me-1"></i>';
@@ -75,11 +141,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         statusBadge.innerHTML = icon + data.status;
                     }
                     
+                    // Update wake button status
+                    if (wakeButton) {
+                        wakeButton.classList.remove('online', 'offline', 'unknown');
+                        wakeButton.classList.add(data.status);
+                        wakeButton.setAttribute('data-status', data.status);
+                    }
+                    
                     // Update last check time
                     const lastCheck = document.querySelector(`#host-${data.host_id}-last-check`);
                     if (lastCheck && data.last_check) {
                         const date = new Date(data.last_check);
-                        lastCheck.textContent = `Last status check: ${date.toLocaleString()}`;
+                        lastCheck.textContent = date.toLocaleString();
                     }
                 }
             })
@@ -88,9 +161,238 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    // Add a subtle entrance animation to the card
+    const hostCard = document.querySelector('.host-card');
+    if (hostCard) {
+        hostCard.style.animation = 'cardEntrance 0.6s var(--animation-spring) forwards';
+    }
+
     // Update initially and then every 15 seconds
     updateHostStatuses();
     setInterval(updateHostStatuses, 15000);
+    
+    // Handle wake button click with confirmation dialog
+    const wakeHostBtn = document.querySelector('#wakeHostBtn');
+    const wakeHostForm = document.querySelector('#wakeHostForm');
+    
+    if (wakeHostBtn && wakeHostForm) {
+        wakeHostBtn.addEventListener('click', function() {
+            const status = this.getAttribute('data-status');
+            
+            if (status === 'online') {
+                // Show confirmation dialog for online hosts
+                if (confirm('This host appears to be online already. Do you still want to wake it?')) {
+                    wakeHostForm.submit();
+                }
+            } else {
+                // No confirmation needed for offline hosts
+                wakeHostForm.submit();
+            }
+        });
+    }
 });
 </script>
+
+<style>
+/* Public host page custom styles */
+.host-card {
+    overflow: hidden;
+    border-radius: 1rem;
+    transform: translateY(30px);
+    opacity: 0;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+}
+
+.icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.icon-mac {
+    background-color: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.icon-info {
+    background-color: var(--accent-color);
+    box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.2);
+}
+
+.icon-time {
+    background-color: var(--secondary-color);
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.2);
+}
+
+.dark-theme .icon-container {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mac-address {
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+.status-indicator {
+    display: none;
+}
+
+.status-circle {
+    display: none;
+}
+
+.wake-button {
+    display: none;
+}
+
+/* Merged wake button with status indicator */
+.wake-button-container {
+    margin: 20px 0;
+    position: relative;
+}
+
+.wake-button-circle {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: none;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.wake-button-circle::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    z-index: 1;
+}
+
+.wake-button-circle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 75%;
+    height: 75%;
+    border-radius: 50%;
+    z-index: 0;
+    opacity: 0.15;
+    transition: all 0.5s ease;
+}
+
+.button-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+.power-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.button-text {
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+}
+
+/* Status variations */
+.wake-button-circle.online {
+    background: linear-gradient(135deg, var(--success-color), #50c878);
+    box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+}
+
+.wake-button-circle.online::after {
+    background-color: var(--success-color);
+    animation: wake-button-pulse 2s infinite ease-in-out;
+}
+
+.wake-button-circle.offline {
+    background: linear-gradient(135deg, var(--danger-color), #ff5757);
+    box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
+}
+
+.wake-button-circle.offline::after {
+    background-color: var(--danger-color);
+    animation: wake-button-pulse 2s infinite ease-in-out;
+}
+
+.wake-button-circle.unknown {
+    background: linear-gradient(135deg, var(--secondary-color), #8d98a3);
+    box-shadow: 0 5px 20px rgba(108, 117, 125, 0.4);
+}
+
+.wake-button-circle.unknown::after {
+    background-color: var(--secondary-color);
+}
+
+.wake-button-circle:hover {
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.wake-button-circle:active {
+    transform: translateY(2px) scale(0.98);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.wake-button-circle:hover .power-icon {
+    transform: scale(1.2);
+}
+
+@keyframes wake-button-pulse {
+    0% {
+        opacity: 0.1;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    50% {
+        opacity: 0.2;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+    100% {
+        opacity: 0.1;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+}
+
+/* Dark theme adjustments */
+.dark-theme .host-card {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .card-footer {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+}
+</style>
 {% endblock %}

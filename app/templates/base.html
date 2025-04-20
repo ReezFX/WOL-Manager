@@ -1,9 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light-theme" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}WoL Manager{% endblock %}</title>
+    
+    <!-- Theme preload script to prevent flash -->
+    <script>
+      // Immediately apply the stored theme before any content renders
+      (function() {
+        const THEME_STORAGE_KEY = 'preferred-theme';
+        const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        // Determine which theme to use
+        let initialTheme = 'light';
+        if (storedTheme) {
+          initialTheme = storedTheme;
+        } else if (systemPrefersDark) {
+          initialTheme = 'dark';
+        }
+        
+        // Apply theme classes immediately to HTML element
+        if (initialTheme === 'dark') {
+          document.documentElement.classList.remove('light-theme');
+          document.documentElement.classList.add('dark-theme');
+          document.documentElement.setAttribute('data-bs-theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark-theme');
+          document.documentElement.classList.add('light-theme');
+          document.documentElement.setAttribute('data-bs-theme', 'light');
+        }
+      })();
+    </script>
+    
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
@@ -194,7 +224,7 @@
     </style>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
-<body class="light-theme d-flex flex-column min-vh-100" data-bs-theme="light">
+<body class="d-flex flex-column min-vh-100">
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg apple-navbar" id="main-navbar">
         <div class="container">
