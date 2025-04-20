@@ -5,6 +5,48 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
+        <!-- Wake animation overlay -->
+        <div class="wake-animation-overlay" id="wakeAnimationOverlay">
+            <div class="wake-animation-container">
+                <!-- Close button -->
+                <button class="wake-close-button" id="wakeCloseButton">
+                    <i class="fas fa-times"></i>
+                </button>
+                <!-- Animation area -->
+                <div class="animation-area">
+                    <div class="signal-waves">
+                        <div class="wave wave1"></div>
+                        <div class="wave wave2"></div>
+                        <div class="wave wave3"></div>
+                        <div class="wave wave4"></div>
+                    </div>
+                    <div class="pulse-circle"></div>
+                    <div class="packet-container">
+                        <div class="packet packet1"></div>
+                        <div class="packet packet2"></div>
+                        <div class="packet packet3"></div>
+                    </div>
+                </div>
+                <!-- Text area - completely separate from animation -->
+                <div class="wake-text">
+                    <div class="wake-text-title">Waking Up Host</div>
+                    <div class="wake-text-subtitle">Sending Magic Packet</div>
+                    <div class="wake-text-status">Waiting for response...</div>
+                    <div class="wake-progress-container">
+                        <div class="wake-progress-bar"></div>
+                    </div>
+                    <div class="wake-result success">
+                        <i class="fas fa-check-circle wake-icon-success"></i>
+                        <div class="wake-result-text">Host Online</div>
+                    </div>
+                    <div class="wake-result failure">
+                        <i class="fas fa-exclamation-triangle wake-icon-failure"></i>
+                        <div class="wake-result-text">Wake Failed</div>
+                        <div class="wake-retry-button">Try Again</div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="col-md-8">
             <div class="card host-card shadow-lg border-0">
                 <!-- Animated background -->
@@ -183,17 +225,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const wakeHostForm = document.querySelector('#wakeHostForm');
     
     if (wakeHostBtn && wakeHostForm) {
-        wakeHostBtn.addEventListener('click', function() {
+        // Remove any existing event listeners and create a new one
+        const newWakeHostBtn = wakeHostBtn.cloneNode(true);
+        wakeHostBtn.parentNode.replaceChild(newWakeHostBtn, wakeHostBtn);
+        
+        newWakeHostBtn.addEventListener('click', function() {
             const status = this.getAttribute('data-status');
             
             if (status === 'online') {
                 // Show confirmation dialog for online hosts
                 if (confirm('This host appears to be online already. Do you still want to wake it?')) {
-                    wakeHostForm.submit();
+                    showWakeAnimation();
                 }
             } else {
                 // No confirmation needed for offline hosts
-                wakeHostForm.submit();
+                showWakeAnimation();
             }
         });
     }
@@ -578,6 +624,263 @@ document.addEventListener('DOMContentLoaded', function() {
             }, wait);
         };
     }
+
+    // Function to show the wake animation
+    function showWakeAnimation() {
+        const overlay = document.getElementById('wakeAnimationOverlay');
+        if (overlay) {
+            overlay.classList.add('active');
+            
+            // Setup close button
+            const closeButton = document.getElementById('wakeCloseButton');
+            if (closeButton) {
+                closeButton.addEventListener('click', function() {
+                    overlay.classList.remove('active');
+                    resetWakeAnimation();
+                });
+            }
+            
+            // Start the progress bar animation
+            const progressBar = document.querySelector('.wake-progress-bar');
+            if (progressBar) {
+                progressBar.style.width = '0%';
+                setTimeout(() => {
+                    // Make the progress bar fill over 60 seconds to match the status check timeout
+                    progressBar.style.width = '100%';
+                    progressBar.style.transition = 'width 60s linear';
+                }, 100);
+            }
+            
+            // Submit the wake request via AJAX to prevent page refresh
+            setTimeout(() => {
+                // Get form data
+                const formData = new FormData(wakeHostForm);
+                const hostId = formData.get('host_id');
+                const csrfToken = formData.get('csrf_token');
+                
+                // Make AJAX request instead of form submission
+                fetch(wakeHostForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('Wake request sent successfully');
+                    // Start polling for status changes
+                    startStatusPolling();
+                })
+                .catch(error => {
+                    console.error('Error sending wake request:', error);
+                    // Still start polling in case the packet was sent despite the error
+                    startStatusPolling();
+                });
+            }, 1000);
+        }
+    }
+
+    // Function to poll the host status after wake command
+    function startStatusPolling() {
+        const overlay = document.getElementById('wakeAnimationOverlay');
+        const hostId = document.querySelector('#wakeHostBtn').getAttribute('data-host-id');
+        const statusText = document.querySelector('.wake-text-status');
+        let attempts = 0;
+        const maxAttempts = 12; // Check for about 60 seconds (12 attempts, 5 seconds each)
+        
+        // Extract the token from the current URL
+        const pathSegments = window.location.pathname.split('/');
+        const token = pathSegments[pathSegments.length - 1];
+        
+        console.log('Starting status polling for host:', hostId);
+        
+        // Start polling
+        const statusInterval = setInterval(() => {
+            console.log('Polling attempt:', attempts + 1);
+            
+            // Update status text with attempts count
+            if (statusText) {
+                const timeRemaining = (maxAttempts - attempts) * 5;
+                statusText.textContent = `Checking host status... ${timeRemaining}s remaining`;
+            }
+            
+            // Fetch the current status
+            fetch(`/public/host/${token}/status`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Status response:', data);
+                    attempts++;
+                    
+                    // If host is online, show success and stop polling
+                    if (data.status === 'online') {
+                        console.log('Host is online, showing success');
+                        clearInterval(statusInterval);
+                        showWakeResult('success');
+                        
+                        // Update the page's status indicator without refreshing
+                        const statusBadge = document.querySelector(`#host-${data.host_id}-status`);
+                        if (statusBadge) {
+                            statusBadge.setAttribute('data-status', 'online');
+                            statusBadge.classList.remove('bg-danger', 'bg-secondary');
+                            statusBadge.classList.add('bg-success');
+                            statusBadge.innerHTML = '<i class="fas fa-circle-check fa-xs me-1"></i>online';
+                        }
+                        
+                        // Update wake button status
+                        const wakeButton = document.querySelector('#wakeHostBtn');
+                        if (wakeButton) {
+                            wakeButton.classList.remove('offline', 'unknown');
+                            wakeButton.classList.add('online');
+                            wakeButton.setAttribute('data-status', 'online');
+                        }
+                        
+                        // Regenerate animation background based on new status
+                        if (typeof generateAnimatedPaths === 'function') {
+                            setTimeout(generateAnimatedPaths, 1000);
+                        }
+                        
+                        // Keep the success message visible for 3 seconds before hiding
+                        setTimeout(() => {
+                            overlay.classList.remove('active');
+                            resetWakeAnimation();
+                        }, 3000);
+                    }
+                    
+                    // If max attempts reached, show failure
+                    if (attempts >= maxAttempts && data.status !== 'online') {
+                        console.log('Max attempts reached, showing failure');
+                        clearInterval(statusInterval);
+                        showWakeResult('failure');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking host status:', error);
+                    attempts++;
+                    
+                    // If max attempts reached, show failure
+                    if (attempts >= maxAttempts) {
+                        clearInterval(statusInterval);
+                        showWakeResult('failure');
+                    }
+                });
+        }, 5000); // Check every 5 seconds
+        
+        // Safety timeout to prevent infinite checking
+        setTimeout(() => {
+            console.log('Safety timeout reached');
+            clearInterval(statusInterval);
+            // If overlay is still active, show failure
+            if (overlay.classList.contains('active')) {
+                showWakeResult('failure');
+            }
+        }, 62000); // Stop after 62 seconds (slightly more than maxAttempts * polling interval)
+    }
+
+    // Function to show success or failure result
+    function showWakeResult(result) {
+        console.log('Showing wake result:', result);
+        const overlay = document.getElementById('wakeAnimationOverlay');
+        const successElement = document.querySelector('.wake-result.success');
+        const failureElement = document.querySelector('.wake-result.failure');
+        const waves = document.querySelectorAll('.wave');
+        const packets = document.querySelectorAll('.packet');
+        const progressContainer = document.querySelector('.wake-progress-container');
+        const statusText = document.querySelector('.wake-text-status');
+        const title = document.querySelector('.wake-text-title');
+        const subtitle = document.querySelector('.wake-text-subtitle');
+        
+        // Hide status elements
+        if (statusText) statusText.style.display = 'none';
+        if (progressContainer) progressContainer.style.display = 'none';
+        if (title) title.style.opacity = '0.5';
+        if (subtitle) subtitle.style.opacity = '0.5';
+        
+        // Stop animations
+        waves.forEach(wave => {
+            wave.style.animationPlayState = 'paused';
+            wave.style.opacity = '0.2';
+        });
+        
+        packets.forEach(packet => {
+            packet.style.animationPlayState = 'paused';
+            packet.style.opacity = '0';
+        });
+        
+        // Show appropriate result
+        if (result === 'success') {
+            if (successElement) {
+                successElement.style.display = 'flex';
+                // Add success animations
+                document.querySelector('.pulse-circle').classList.add('success-pulse');
+            }
+        } else {
+            if (failureElement) {
+                failureElement.style.display = 'flex';
+                // Add failure animations
+                document.querySelector('.pulse-circle').classList.add('failure-pulse');
+                
+                // Setup retry button
+                const retryButton = document.querySelector('.wake-retry-button');
+                if (retryButton) {
+                    // Remove any existing event listeners to prevent duplicates
+                    const newRetryButton = retryButton.cloneNode(true);
+                    retryButton.parentNode.replaceChild(newRetryButton, retryButton);
+                    
+                    newRetryButton.addEventListener('click', () => {
+                        resetWakeAnimation();
+                        overlay.classList.remove('active');
+                        setTimeout(() => {
+                            showWakeAnimation();
+                        }, 500);
+                    });
+                }
+            }
+        }
+    }
+
+    // Function to reset the wake animation state
+    function resetWakeAnimation() {
+        const successElement = document.querySelector('.wake-result.success');
+        const failureElement = document.querySelector('.wake-result.failure');
+        const statusText = document.querySelector('.wake-text-status');
+        const progressContainer = document.querySelector('.wake-progress-container');
+        const title = document.querySelector('.wake-text-title');
+        const subtitle = document.querySelector('.wake-text-subtitle');
+        const pulseCircle = document.querySelector('.pulse-circle');
+        
+        // Reset elements
+        if (successElement) successElement.style.display = 'none';
+        if (failureElement) failureElement.style.display = 'none';
+        if (statusText) {
+            statusText.style.display = 'block';
+            statusText.textContent = 'Waiting for response...';
+        }
+        if (progressContainer) progressContainer.style.display = 'block';
+        if (title) title.style.opacity = '1';
+        if (subtitle) subtitle.style.opacity = '1';
+        
+        // Reset animations
+        if (pulseCircle) {
+            pulseCircle.classList.remove('success-pulse', 'failure-pulse');
+        }
+        
+        // Reset wave and packet animations
+        document.querySelectorAll('.wave, .packet').forEach(el => {
+            el.style.animationPlayState = '';
+            el.style.opacity = '';
+        });
+    }
+
+    // Optional: Hide the animation if the form submission takes too long
+    // This is a safety measure in case something goes wrong
+    setTimeout(() => {
+        const overlay = document.getElementById('wakeAnimationOverlay');
+        if (overlay && overlay.classList.contains('active')) {
+            setTimeout(() => {
+                overlay.classList.remove('active');
+            }, 70000); // Safety timeout after 70 seconds (more than the 60s check)
+        }
+    }, 70000);
 });
 </script>
 
@@ -913,6 +1216,452 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .card-footer {
         border-radius: 0 0 0.75rem 0.75rem !important;
+    }
+}
+
+/* Wake Animation Overlay */
+.wake-animation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+/* Close button */
+.wake-close-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.wake-close-button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.wake-close-button:active {
+    transform: scale(0.95);
+}
+
+.wake-close-button i {
+    opacity: 0.8;
+}
+
+.wake-animation-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.wake-animation-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    min-height: 500px;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    flex-direction: column;
+    padding: 40px 20px;
+}
+
+/* Animation area - contains all animated elements */
+.animation-area {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Pulsing signal waves */
+.signal-waves {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.wave {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    opacity: 0;
+    transform: scale(0);
+}
+
+.wake-animation-overlay.active .wave {
+    animation: waveAnimation 3s infinite ease-out;
+}
+
+.wave1 {
+    width: 60px;
+    height: 60px;
+    border-color: var(--primary-color);
+    animation-delay: 0s !important;
+}
+
+.wave2 {
+    width: 120px;
+    height: 120px;
+    border-color: var(--accent-color);
+    animation-delay: 0.4s !important;
+}
+
+.wave3 {
+    width: 180px;
+    height: 180px;
+    border-color: var(--primary-color);
+    animation-delay: 0.8s !important;
+}
+
+.wave4 {
+    width: 240px;
+    height: 240px;
+    border-color: var(--accent-color);
+    animation-delay: 1.2s !important;
+}
+
+/* Center pulse circle - now directly in animation area */
+.pulse-circle {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 50%;
+    z-index: 2;
+    box-shadow: 0 0 30px var(--primary-color);
+}
+
+.wake-animation-overlay.active .pulse-circle {
+    animation: pulseCircle 1.5s infinite alternate;
+}
+
+/* Flying packets animation */
+.packet-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+}
+
+.packet {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: white;
+    border-radius: 50%;
+    opacity: 0;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}
+
+.wake-animation-overlay.active .packet {
+    animation: packetFly 2s infinite linear;
+}
+
+.packet1 {
+    top: 50%;
+    left: 50%;
+    animation-delay: 0.2s !important;
+}
+
+.packet2 {
+    top: 50%;
+    left: 50%;
+    animation-delay: 0.8s !important;
+}
+
+.packet3 {
+    top: 50%;
+    left: 50%;
+    animation-delay: 1.4s !important;
+}
+
+/* Wake text */
+.wake-text {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: white;
+    width: 100%;
+    z-index: 5; /* Ensure text is above all other elements */
+    padding: 0 20px;
+}
+
+.wake-text-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.wake-text-subtitle {
+    font-size: 16px;
+    margin-bottom: 15px;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.wake-text-status {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 10px;
+}
+
+.wake-animation-overlay.active .wake-text-title {
+    animation: fadeInUp 0.5s forwards;
+}
+
+.wake-animation-overlay.active .wake-text-subtitle {
+    animation: fadeInUp 0.5s 0.2s forwards;
+}
+
+.wake-animation-overlay.active .wake-text-status {
+    animation: fadeInUp 0.5s 0.3s forwards;
+}
+
+/* Success and failure states */
+.wake-result {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 15px;
+    animation: fadeInUp 0.5s forwards;
+    position: relative;
+    z-index: 6; /* Ensure result content is above all elements */
+}
+
+.wake-icon-success, .wake-icon-failure {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.wake-icon-success {
+    color: #4ade80; /* Success green */
+}
+
+.wake-icon-failure {
+    color: #f87171; /* Failure red */
+}
+
+.wake-result-text {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.wake-retry-button {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 10px;
+    transition: all 0.2s ease;
+    box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+}
+
+.wake-retry-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+}
+
+.wake-retry-button:active {
+    transform: translateY(1px);
+}
+
+/* Success and failure pulse animations */
+.pulse-circle.success-pulse {
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    box-shadow: 0 0 30px #22c55e;
+    animation: successPulse 1.5s infinite alternate;
+}
+
+.pulse-circle.failure-pulse {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    box-shadow: 0 0 30px #ef4444;
+    animation: failurePulse 1.5s infinite alternate;
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 20px #22c55e;
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px #22c55e;
+    }
+}
+
+@keyframes failurePulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 20px #ef4444;
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px #ef4444;
+    }
+}
+
+/* Progress bar */
+.wake-progress-container {
+    width: 100%;
+    height: 6px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.wake-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    border-radius: 3px;
+    transition: width 0.3s ease; /* Initial transition is quick, then modified to 60s in JS */
+}
+
+/* Animation keyframes */
+@keyframes waveAnimation {
+    0% {
+        opacity: 0.8;
+        transform: scale(0);
+    }
+    70% {
+        opacity: 0.2;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulseCircle {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 20px var(--primary-color);
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px var(--primary-color);
+    }
+}
+
+@keyframes packetFly {
+    0% {
+        transform: translate(0, 0) scale(0.5);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(calc(cos(var(--angle, 0deg)) * 150px), calc(sin(var(--angle, 90deg)) * 150px)) scale(0.5);
+        opacity: 0;
+    }
+}
+
+.packet1 {
+    --angle: 45deg;
+}
+
+.packet2 {
+    --angle: 180deg;
+}
+
+.packet3 {
+    --angle: 300deg;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark theme adjustments for the wake animation */
+.dark-theme .wake-animation-overlay {
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Mobile optimizations for wake animation */
+@media (max-width: 576px) {
+    .wake-animation-container {
+        width: 100%;
+        max-width: 320px;
+        min-height: 450px;
+        padding: 30px 15px;
+    }
+    
+    .animation-area {
+        height: 240px;
+        top: 50px;
+    }
+    
+    .wave4 {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .wake-text {
+        bottom: 30px;
+    }
+    
+    .wake-text-title {
+        font-size: 20px;
+    }
+}
+
+/* Animation for users who prefer reduced motion */
+@media (prefers-reduced-motion) {
+    .wake-animation-overlay {
+        display: none;
     }
 }
 </style>
