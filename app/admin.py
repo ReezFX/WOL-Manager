@@ -1068,6 +1068,42 @@ def view_logs():
             # Generate URL for download link
             download_url = url_for('admin.download_log', file=selected_file)
             
+            # Check if this is an AJAX request and return JSON response if it is
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                # Ensure log content is properly escaped for HTML
+                escaped_log_content = html.escape(log_content)
+                
+                # For AJAX requests, return JSON data
+                response_data = {
+                    'log_content': escaped_log_content,
+                    'pagination': pagination,
+                    'selected_file': selected_file,
+                    'log_level': log_level,
+                    'search_text': search_text,
+                    'start_date': start_date.strftime('%Y-%m-%d') if start_date else None,
+                    'end_date': end_date.strftime('%Y-%m-%d') if end_date else None
+                }
+                
+                try:
+                    # Create JSON string with ensure_ascii=False to handle non-ASCII characters
+                    json_response = json.dumps(response_data, ensure_ascii=False)
+                    # Only log if debug is enabled to improve performance
+                    if logger.isEnabledFor(logging.DEBUG):
+                        request_id = request.headers.get('X-Request-ID', 'N/A')
+                        logger.debug("Sending JSON response (truncated): response=%s, request_id=%s", 
+                                   json_response[:200] + "..." if len(json_response) > 200 else json_response,
+                                   request_id)
+                    return current_app.response_class(
+                        response=json_response,
+                        status=200,
+                        mimetype='application/json'
+                    )
+                except Exception as e:
+                    request_id = request.headers.get('X-Request-ID', 'N/A')
+                    logger.error("Error creating JSON response: error=%s, request_id=%s", 
+                               str(e), request_id, exc_info=True)
+                    return jsonify({'error': 'Internal server error'}), 500
+            
             return render_template(
                 'admin/logs.html',
                 log_content=log_content,
