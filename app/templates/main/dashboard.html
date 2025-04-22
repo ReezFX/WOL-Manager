@@ -286,9 +286,9 @@
     </style>
 
     {% if hosts %}
-    <div class="row">
+    <div class="row" id="dashboard-host-grid">
         {% for host in hosts %}
-        <div class="col-md-4 mb-4">
+        <div class="col-md-4 mb-4 host-column" id="host-column-{{ host.id }}">
             <div class="card h-100 card-animate-in hover-elevate" data-host-id="{{ host.id }}">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ host.name }}</h5>
@@ -343,7 +343,10 @@
                         <form action="{{ url_for('host.delete_host', host_id=host.id) }}" method="POST" style="display: inline;">
                             {{ csrf_form.hidden_tag() }}
                             <button type="submit" class="btn btn-outline-danger btn-animate-press action-button" 
-                                   onclick="return confirm('Are you sure you want to delete this host?');">
+                                   data-delete-target="Host"
+                                   data-item-name="{{ host.name }}"
+                                   data-delete-endpoint="{{ url_for('host.delete_host', host_id=host.id) }}"
+                                   data-remove-element="#host-column-{{ host.id }}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>

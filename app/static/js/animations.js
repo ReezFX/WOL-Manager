@@ -364,7 +364,7 @@ function checkReducedMotion() {
  * @param {number} duration - Duration in ms
  * @returns {HTMLElement} - The toast element
  */
-function showToast(type, title, message, duration = 3000) {
+function showToast(type, title, message, duration = 4000) {
     // Create toast container if it doesn't exist
     let toastContainer = document.querySelector('.toast-container');
     if (!toastContainer) {
@@ -382,6 +382,7 @@ function showToast(type, title, message, duration = 3000) {
     if (type === 'success') iconClass = 'fa-check-circle';
     if (type === 'error') iconClass = 'fa-exclamation-circle';
     if (type === 'warning') iconClass = 'fa-exclamation-triangle';
+    if (type === 'info') iconClass = 'fa-info-circle';
     
     toast.innerHTML = `
         <div class="toast-icon">
@@ -391,17 +392,21 @@ function showToast(type, title, message, duration = 3000) {
             <div class="toast-title">${title}</div>
             <div class="toast-message">${message}</div>
         </div>
+        <div class="toast-progress">
+            <div class="toast-progress-bar"></div>
+        </div>
     `;
-    
-    // Add to container
-    toastContainer.appendChild(toast);
     
     // Get all existing toasts and apply staggered animation if needed
     const allToasts = toastContainer.querySelectorAll('.toast');
-    const toastIndex = Array.from(allToasts).indexOf(toast);
+    const toastIndex = allToasts.length;
     
-    // Force a reflow (to ensure animation works)
-    void toast.offsetWidth;
+    // Add to container - prepend instead of append to show newest on top
+    if (toastContainer.firstChild) {
+        toastContainer.insertBefore(toast, toastContainer.firstChild);
+    } else {
+        toastContainer.appendChild(toast);
+    }
     
     // Add a close button to the toast
     const closeBtn = document.createElement('button');
@@ -412,20 +417,39 @@ function showToast(type, title, message, duration = 3000) {
     });
     toast.appendChild(closeBtn);
     
+    // Force a reflow (to ensure animation works)
+    void toast.offsetWidth;
+    
     // Apply entrance animation with staggered delay for multiple toasts
     setTimeout(() => {
+        // First add the show-animate class for animation
         toast.classList.add('show-animate');
-        // Apply show class for non-animated fallback and for CSS transitions
+        
+        // Apply show class for CSS transitions
         setTimeout(() => {
             toast.classList.add('show');
+            
+            // Start progress bar animation if there's a duration
+            if (duration) {
+                const progressBar = toast.querySelector('.toast-progress-bar');
+                if (progressBar) {
+                    progressBar.style.transition = `transform ${duration}ms linear`;
+                    setTimeout(() => {
+                        progressBar.style.transform = 'scaleX(1)';
+                    }, 100);
+                }
+            }
         }, 50);
-    }, toastIndex * 150); // Stagger by 150ms
+    }, Math.min(toastIndex * 150, 300)); // Cap stagger delay
+    
+    // Create a sound effect for the toast (optional - uncomment if desired)
+    // playToastSound(type);
     
     // Auto hide after duration
     if (duration) {
         const hideTimeout = setTimeout(() => {
             removeToast(toast);
-        }, duration + (toastIndex * 150)); // Adjust timeout based on staggered entrance
+        }, duration + (Math.min(toastIndex * 150, 300))); // Adjust timeout based on staggered entrance
         
         // Store timeout ID to cancel if needed
         toast.dataset.timeoutId = hideTimeout;
@@ -433,12 +457,33 @@ function showToast(type, title, message, duration = 3000) {
         // Cancel auto-hide on hover
         toast.addEventListener('mouseenter', () => {
             clearTimeout(parseInt(toast.dataset.timeoutId));
+            
+            // Also pause progress bar animation
+            const progressBar = toast.querySelector('.toast-progress-bar');
+            if (progressBar) {
+                const computedStyle = window.getComputedStyle(progressBar);
+                const currentWidth = computedStyle.getPropertyValue('transform');
+                progressBar.style.transition = 'none';
+                progressBar.style.transform = currentWidth;
+            }
         });
         
         toast.addEventListener('mouseleave', () => {
+            // Calculate remaining time (proportional to progress bar width)
+            const progressBar = toast.querySelector('.toast-progress-bar');
+            const remainingTime = duration / 2;
+            
+            // Resume progress bar animation
+            if (progressBar) {
+                progressBar.style.transition = `transform ${remainingTime}ms linear`;
+                progressBar.style.transform = 'scaleX(1)';
+            }
+            
+            // Set new timeout
             const newTimeout = setTimeout(() => {
                 removeToast(toast);
-            }, duration / 2);
+            }, remainingTime);
+            
             toast.dataset.timeoutId = newTimeout;
         });
     }
@@ -463,7 +508,53 @@ function showToast(type, title, message, duration = 3000) {
         }, {once: true});
     }
     
+    // Optionally vibrate the device for mobile (uncomment if desired)
+    // if (navigator.vibrate && window.innerWidth <= 768) {
+    //    navigator.vibrate(50);
+    // }
+    
     return toast;
+}
+
+/**
+ * Play a sound effect for the toast notification
+ * @param {string} type - The type of toast
+ */
+function playToastSound(type) {
+    // Check if Web Audio API is supported
+    if (!window.AudioContext && !window.webkitAudioContext) return;
+    
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const context = new AudioContext();
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    // Connect the nodes
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    
+    // Set frequency based on toast type
+    switch (type) {
+        case 'success':
+            oscillator.frequency.setValueAtTime(1046.50, context.currentTime); // C6
+            break;
+        case 'error':
+            oscillator.frequency.setValueAtTime(196.00, context.currentTime); // G3
+            break;
+        case 'warning':
+            oscillator.frequency.setValueAtTime(523.25, context.currentTime); // C5
+            break;
+        default:
+            oscillator.frequency.setValueAtTime(783.99, context.currentTime); // G5
+    }
+    
+    // Set volume (very subtle)
+    gainNode.gain.setValueAtTime(0.1, context.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.5);
+    
+    // Play sound
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.5);
 }
 
 /**
@@ -755,7 +846,7 @@ function initAllAnimations() {
               if (endpoint) {
                   setButtonLoading(this, true);
                   fetch(endpoint, {
-                      method: 'DELETE',
+                      method: 'POST',
                       headers: {
                           'Content-Type': 'application/json',
                           'X-Requested-With': 'XMLHttpRequest',
@@ -775,9 +866,53 @@ function initAllAnimations() {
                           // If we should remove an element from DOM
                           const removeSelector = this.getAttribute('data-remove-element');
                           if (removeSelector) {
-                              const elementToRemove = document.querySelector(removeSelector);
-                              if (elementToRemove) {
-                                  elementToRemove.remove();
+                              // Find all elements matching the selector
+                              const elementsToRemove = document.querySelectorAll(removeSelector);
+                              if (elementsToRemove.length > 0) {
+                                  // Remove all matching elements
+                                  elementsToRemove.forEach(el => {
+                                      // Get the grid container before removing the element
+                                      const gridContainer = el.closest('#host-grid, #dashboard-host-grid, .row');
+                                      
+                                      // Store the parent's scroll position
+                                      const scrollParent = gridContainer ? gridContainer.parentElement : document.documentElement;
+                                      const scrollTop = scrollParent.scrollTop;
+                                      
+                                      // Remove the element
+                                      el.remove();
+                                      
+                                      // Force grid reflow after element removal
+                                      if (gridContainer) {
+                                          // Simple approach: use flex layout update trick
+                                          setTimeout(() => {
+                                              // Force a repaint by modifying a property
+                                              gridContainer.style.display = 'none';
+                                              
+                                              // Force browser to process the style change
+                                              void gridContainer.offsetHeight;
+                                              
+                                              // Restore display property
+                                              gridContainer.style.display = '';
+                                              
+                                              // Restore scroll position
+                                              scrollParent.scrollTop = scrollTop;
+                                              
+                                              // Add a very small timeout for browsers to handle the change
+                                              setTimeout(() => {
+                                                  // Apply a slight visual change to highlight the layout update
+                                                  document.querySelectorAll('.host-column').forEach(col => {
+                                                      col.style.transition = 'all 0.3s ease';
+                                                      col.style.opacity = '0.8';
+                                                      setTimeout(() => {
+                                                          col.style.opacity = '1';
+                                                      }, 50);
+                                                  });
+                                              }, 10);
+                                          }, 50);
+                                      }
+                                  });
+                              } else {
+                                  console.warn('Element to remove not found:', removeSelector);
                               }
                           }
                       } else {

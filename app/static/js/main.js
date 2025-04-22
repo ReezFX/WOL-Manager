@@ -173,7 +173,96 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Expose toggle function globally so it can be called from other scripts or inline handlers
   window.toggleTheme = toggleTheme;
+
+  // Check for toast messages in session
+  checkForToastMessages();
 });
+
+/**
+ * Checks for toast messages in the session and displays them
+ */
+function checkForToastMessages() {
+  // Check URL parameters for toast messages
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  // Handle success messages
+  if (urlParams.get('success') === '1' || urlParams.get('success') === 'true') {
+    const message = urlParams.get('message') || 'Operation completed successfully';
+    showToast('success', 'Success', message);
+    
+    // Clean up URL
+    if (window.history && window.history.replaceState) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('success');
+      url.searchParams.delete('message');
+      window.history.replaceState({}, document.title, url);
+    }
+  } 
+  // Handle error messages
+  else if (urlParams.get('error') === '1' || urlParams.get('error') === 'true') {
+    const message = urlParams.get('message') || 'An error occurred';
+    showToast('error', 'Error', message);
+    
+    // Clean up URL
+    if (window.history && window.history.replaceState) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('error');
+      url.searchParams.delete('message');
+      window.history.replaceState({}, document.title, url);
+    }
+  }
+  
+  // Convert existing flash messages to toasts
+  convertFlashMessagesToToasts();
+}
+
+/**
+ * Converts existing flash messages to toast notifications
+ */
+function convertFlashMessagesToToasts() {
+  const flashContainer = document.getElementById('flash-message-container');
+  if (!flashContainer) return;
+  
+  const alerts = flashContainer.querySelectorAll('.alert');
+  if (alerts.length === 0) return;
+  
+  // Process each alert and convert to toast
+  alerts.forEach((alert, index) => {
+    // Extract category
+    let category = 'info';
+    if (alert.classList.contains('alert-success')) category = 'success';
+    if (alert.classList.contains('alert-danger')) category = 'error';
+    if (alert.classList.contains('alert-warning')) category = 'warning';
+    
+    // Extract message
+    const message = alert.textContent.trim().replace('×', '').trim();
+    
+    // Create toast with staggered delay
+    setTimeout(() => {
+      showToast(category, getToastTitle(category), message);
+      
+      // Hide the original alert
+      alert.style.display = 'none';
+    }, index * 200);
+  });
+  
+  // Optional: hide the container
+  setTimeout(() => {
+    flashContainer.style.display = 'none';
+  }, 100);
+}
+
+/**
+ * Returns an appropriate title for toast based on category
+ */
+function getToastTitle(category) {
+  switch (category) {
+    case 'success': return 'Success';
+    case 'error': return 'Error';
+    case 'warning': return 'Warning';
+    default: return 'Information';
+  }
+}
 
 // JavaScript to enforce proper text color in modal pre elements
 document.addEventListener('DOMContentLoaded', function() {

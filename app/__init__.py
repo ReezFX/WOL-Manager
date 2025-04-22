@@ -186,6 +186,27 @@ def create_app(config_name=None):
         from datetime import datetime
         return {'now': datetime.utcnow()}
     
+    # Add context processor for toast system
+    @app.context_processor
+    def inject_toast_flash():
+        """Override Flask's flash with toast functionality.
+        
+        This adds a toast_flash function to templates only.
+        Note: This function is NOT available in Python code,
+        so route handlers should continue to use the regular flash().
+        Our JavaScript will automatically convert flash messages to toasts.
+        """
+        def toast_flash(message, category="info", use_toast=True):
+            """Enhanced flash function that supports toast notifications."""
+            # Always set a flash message for server-side handling
+            flash(message, category)
+            # Pass additional data to indicate this should be a toast
+            if use_toast:
+                session['_toast_message'] = message
+                session['_toast_category'] = category
+        
+        return {'toast_flash': toast_flash}
+    
     # Initialize production-specific settings if needed
     if not app.debug and not app.testing and config_name == 'production':
         config[config_name].init_app(app)

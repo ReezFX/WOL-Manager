@@ -756,12 +756,14 @@
         {% if not hide_base_flash_messages|default(false) %}
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
+            <div id="flash-message-container">
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show card-animate-in" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close btn-animate-press" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+                <div class="alert alert-{{ category }} alert-dismissible fade show card-animate-in" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close btn-animate-press" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             {% endfor %}
+            </div>
         {% endif %}
         {% endwith %}
         {% endif %}
