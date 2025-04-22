@@ -44,23 +44,14 @@
                                 <div class="device-frame">
                                     <div class="wake-preview-content">
                                         <div class="wake-preview-bg"></div>
-                                        <div class="wake-preview-waves">
-                                            <div class="preview-wave w1"></div>
-                                            <div class="preview-wave w2"></div>
-                                            <div class="preview-wave w3"></div>
+                                        <div class="preview-pulse"></div>
+                                        <div class="preview-waves">
+                                            <div class="preview-wave"></div>
+                                            <div class="preview-wave"></div>
                                         </div>
-                                        <div class="wake-preview-circuit">
-                                            <div class="circuit-path p1"></div>
-                                            <div class="circuit-path p2"></div>
-                                            <div class="circuit-path p3"></div>
-                                            <div class="circuit-node n1"></div>
-                                            <div class="circuit-node n2"></div>
-                                            <div class="circuit-node n3"></div>
-                                        </div>
-                                        <div class="wake-preview-pulse"></div>
-                                        <div class="wake-preview-text">
-                                            <div class="preview-text-line"></div>
-                                            <div class="preview-text-line"></div>
+                                        <div class="preview-packets">
+                                            <div class="preview-packet"></div>
+                                            <div class="preview-packet"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -190,167 +181,89 @@
         background-color: rgba(0, 0, 0, 0.85);
     }
     
-    .wake-preview-pulse {
-        width: 80px;
-        height: 80px;
+    .preview-pulse {
+        width: 50px;
+        height: 50px;
         background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
         border-radius: 50%;
         z-index: 2;
-        box-shadow: 0 0 30px var(--primary-color);
+        box-shadow: 0 0 20px var(--primary-color);
         animation: previewPulse 1.5s infinite alternate;
     }
     
-    .wake-preview-waves {
+    .preview-waves {
         position: absolute;
         width: 100%;
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 1;
     }
     
     .preview-wave {
         position: absolute;
         border-radius: 50%;
-        border: 2px solid transparent;
+        border: 2px solid var(--primary-color);
         opacity: 0;
         transform: scale(0);
         animation: previewWaves 3s infinite ease-out;
     }
     
-    .w1 {
-        width: 60px;
-        height: 60px;
-        border-color: var(--primary-color);
+    .preview-wave:nth-child(1) {
+        width: 80px;
+        height: 80px;
         animation-delay: 0s;
     }
     
-    .w2 {
+    .preview-wave:nth-child(2) {
         width: 120px;
         height: 120px;
         border-color: var(--accent-color);
-        animation-delay: 0.4s;
+        animation-delay: 0.5s;
     }
     
-    .w3 {
-        width: 180px;
-        height: 180px;
-        border-color: var(--primary-color);
-        animation-delay: 0.8s;
-    }
-    
-    .wake-preview-circuit {
+    .preview-packets {
         position: absolute;
-        top: 0;
-        left: 0;
         width: 100%;
         height: 100%;
-        z-index: 1;
     }
     
-    .circuit-path {
-        position: absolute;
-        background: transparent;
-        border: none;
-        height: 2px;
-        opacity: 0.7;
-    }
-    
-    .p1 {
-        width: 120px;
-        top: 40%;
-        left: 10%;
-        background: linear-gradient(90deg, transparent, var(--primary-color));
-        animation: pathAnimate 2s infinite;
-        transform-origin: left center;
-    }
-    
-    .p2 {
-        width: 80px;
-        top: 50%;
-        right: 15%;
-        background: linear-gradient(90deg, var(--accent-color), transparent);
-        animation: pathAnimate 1.7s infinite 0.3s;
-        transform-origin: right center;
-    }
-    
-    .p3 {
-        width: 100px;
-        bottom: 30%;
-        left: 30%;
-        background: linear-gradient(90deg, transparent, var(--primary-color));
-        animation: pathAnimate 2.1s infinite 0.6s;
-        transform-origin: left center;
-    }
-    
-    .circuit-node {
+    .preview-packet {
         position: absolute;
         width: 6px;
         height: 6px;
+        background: white;
         border-radius: 50%;
-        background-color: var(--accent-color);
-        opacity: 0;
-        animation: nodeFlash 2s infinite alternate;
-    }
-    
-    .n1 {
-        top: 40%;
-        left: 10%;
-        animation-delay: 0.2s;
-    }
-    
-    .n2 {
         top: 50%;
-        right: 15%;
-        animation-delay: 0.7s;
+        left: 50%;
+        opacity: 0;
+        box-shadow: 0 0 8px white;
+        animation: previewPacket 2s infinite linear;
     }
     
-    .n3 {
-        bottom: 30%;
-        left: 30%;
-        animation-delay: 1.2s;
+    .preview-packet:nth-child(1) {
+        animation-delay: 0s;
     }
     
-    .wake-preview-text {
-        position: absolute;
-        bottom: 15%;
-        left: 0;
-        width: 100%;
-        text-align: center;
-        z-index: 3;
-    }
-    
-    .preview-text-line {
-        height: 10px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-        border-radius: 5px;
-        margin: 10px auto;
-        width: 60%;
-        opacity: 0.7;
-        animation: textPulse 2s infinite alternate;
-    }
-    
-    .preview-text-line:last-child {
-        width: 40%;
-        animation-delay: 0.3s;
+    .preview-packet:nth-child(2) {
+        animation-delay: 1s;
     }
     
     /* Animation Keyframes */
     @keyframes previewPulse {
         0% {
             transform: scale(0.95);
-            box-shadow: 0 0 20px var(--primary-color);
+            box-shadow: 0 0 10px var(--primary-color);
         }
         100% {
             transform: scale(1.05);
-            box-shadow: 0 0 40px var(--primary-color);
+            box-shadow: 0 0 20px var(--primary-color);
         }
     }
     
     @keyframes previewWaves {
         0% {
-            opacity: 0.8;
+            opacity: 0.7;
             transform: scale(0);
         }
         70% {
@@ -362,44 +275,20 @@
         }
     }
     
-    @keyframes pathAnimate {
+    @keyframes previewPacket {
         0% {
-            transform: scaleX(0);
+            transform: translate(0, 0);
+            opacity: 0;
+        }
+        20% {
             opacity: 1;
         }
-        50% {
-            transform: scaleX(1);
-            opacity: 0.7;
-        }
-        100% {
-            transform: scaleX(0);
-            opacity: 0;
-        }
-    }
-    
-    @keyframes nodeFlash {
-        0% {
-            opacity: 0;
-            transform: scale(0);
-        }
-        50% {
+        80% {
             opacity: 1;
-            transform: scale(1.5);
         }
         100% {
+            transform: translate(40px, -20px);
             opacity: 0;
-            transform: scale(0);
-        }
-    }
-    
-    @keyframes textPulse {
-        0% {
-            opacity: 0.4;
-            transform: scaleX(0.9);
-        }
-        100% {
-            opacity: 0.7;
-            transform: scaleX(1);
         }
     }
     
@@ -519,6 +408,51 @@
     }
     */
     
+    /* Wake Animation Overlay Additional Styles */
+    .wake-result.success, 
+    .wake-result.failure {
+        display: none;
+        align-items: center;
+        margin-top: 1rem;
+        font-weight: 500;
+        opacity: 0;
+        animation: fadeIn 0.5s ease-in-out forwards;
+    }
+    
+    .wake-icon-success, 
+    .wake-icon-failure {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    
+    .wake-icon-success {
+        color: var(--success-color, #28a745);
+    }
+    
+    .wake-icon-failure {
+        color: var(--danger-color, #dc3545);
+    }
+    
+    .wake-retry-button {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 5px 15px;
+        background-color: rgba(var(--primary-color-rgb), 0.9);
+        color: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .wake-retry-button:hover {
+        background-color: var(--primary-color);
+    }
+    
+    @keyframes fadeIn {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    
 </style>
 
 <!-- JS to handle animation preview button -->
@@ -539,12 +473,14 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.className = 'wake-animation-overlay';
         document.body.appendChild(overlay);
         
-        // Add the rest of the wake animation markup
+        // Add the rest of the wake animation markup to match dashboard.html exactly
         overlay.innerHTML = `
-            <button class="wake-close-button">
-                <i class="fas fa-times"></i>
-            </button>
             <div class="wake-animation-container">
+                <!-- Close button -->
+                <button class="wake-close-button">
+                    <i class="fas fa-times"></i>
+                </button>
+                <!-- Animation area -->
                 <div class="animation-area">
                     <div class="signal-waves">
                         <div class="wave wave1"></div>
@@ -559,12 +495,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="packet packet3"></div>
                     </div>
                 </div>
+                <!-- Text area - completely separate from animation -->
                 <div class="wake-text">
-                    <div class="wake-text-title">Waking Host...</div>
-                    <div class="wake-text-subtitle">Sending magic packet to device</div>
-                    <div class="wake-text-status">Please wait while we attempt to wake your device</div>
+                    <div class="wake-text-title">Waking Up Host</div>
+                    <div class="wake-text-subtitle">Sending Magic Packet</div>
+                    <div class="wake-text-status">Waiting for response...</div>
                     <div class="wake-progress-container">
                         <div class="wake-progress-bar"></div>
+                    </div>
+                    <div class="wake-result success">
+                        <i class="fas fa-check-circle wake-icon-success"></i>
+                        <div class="wake-result-text">Host Online</div>
+                    </div>
+                    <div class="wake-result failure">
+                        <i class="fas fa-exclamation-triangle wake-icon-failure"></i>
+                        <div class="wake-result-text">Wake Failed</div>
+                        <div class="wake-retry-button">Try Again</div>
                     </div>
                 </div>
             </div>
@@ -577,34 +523,41 @@ document.addEventListener('DOMContentLoaded', function() {
             const progressBar = overlay.querySelector('.wake-progress-bar');
             if (progressBar) {
                 let progress = 0;
-                const interval = setInterval(() => {
-                    progress += 1;
-                    progressBar.style.width = `${progress}%`;
-                    if (progress >= 100) {
-                        clearInterval(interval);
+                progressBar.style.width = '0%';
+                progressBar.style.transition = 'width 3s linear'; // shorter time for demo
+                
+                setTimeout(() => {
+                    progressBar.style.width = '100%';
+                    
+                    // Show success after animation completes
+                    setTimeout(() => {
+                        // Hide progress elements
+                        const statusText = overlay.querySelector('.wake-text-status');
+                        const progressContainer = overlay.querySelector('.wake-progress-container');
+                        const title = overlay.querySelector('.wake-text-title');
+                        const subtitle = overlay.querySelector('.wake-text-subtitle');
                         
-                        // Show success message after completion
-                        const wakeText = overlay.querySelector('.wake-text');
-                        if (wakeText) {
-                            const result = document.createElement('div');
-                            result.className = 'wake-result';
-                            result.style.display = 'flex';
-                            result.innerHTML = `
-                                <div class="wake-icon-success">
-                                    <i class="fas fa-check-circle"></i>
-                                </div>
-                                <div class="wake-result-text">Wake request sent successfully!</div>
-                            `;
-                            wakeText.appendChild(result);
-                            
-                            // Also change the pulse circle to success
-                            const pulseCircle = overlay.querySelector('.pulse-circle');
-                            if (pulseCircle) {
-                                pulseCircle.classList.add('success-pulse');
-                            }
-                        }
-                    }
-                }, 50);
+                        if (statusText) statusText.style.display = 'none';
+                        if (progressContainer) progressContainer.style.display = 'none';
+                        if (title) title.style.opacity = '0.5';
+                        if (subtitle) subtitle.style.opacity = '0.5';
+                        
+                        // Show success
+                        const successElement = overlay.querySelector('.wake-result.success');
+                        const pulseCircle = overlay.querySelector('.pulse-circle');
+                        
+                        if (successElement) successElement.style.display = 'flex';
+                        if (pulseCircle) pulseCircle.classList.add('success-pulse');
+                        
+                        // Auto close after a delay
+                        setTimeout(() => {
+                            overlay.classList.remove('active');
+                            setTimeout(() => {
+                                overlay.remove();
+                            }, 300);
+                        }, 3000);
+                    }, 3000);
+                }, 200);
             }
         }, 100);
         
@@ -628,6 +581,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 300);
             }
         });
+        
+        // Setup retry button
+        const retryButton = overlay.querySelector('.wake-retry-button');
+        if (retryButton) {
+            retryButton.addEventListener('click', () => {
+                // For demo purposes, just close the overlay
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.remove();
+                }, 300);
+            });
+        }
     }
 });
 </script>
