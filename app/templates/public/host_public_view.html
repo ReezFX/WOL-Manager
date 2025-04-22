@@ -47,6 +47,24 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Wake confirmation overlay for already online hosts -->
+        <div class="wake-confirm-overlay" id="wakeConfirmOverlay">
+            <div class="wake-confirm-container">
+                <div class="wake-icon-container">
+                    <i class="fas fa-power-off wake-icon"></i>
+                </div>
+                <div class="wake-confirm-title">Host Already Online</div>
+                <div class="wake-confirm-message">
+                    This host appears to be already online. Do you still want to send a wake-up packet?
+                </div>
+                <div class="wake-confirm-buttons">
+                    <button class="wake-cancel-btn" id="wakeCancelBtn">Cancel</button>
+                    <button class="wake-confirm-btn" id="wakeConfirmBtn">Wake Anyway</button>
+                </div>
+            </div>
+        </div>
+        
         <div class="col-md-8">
             <div class="card host-card shadow-lg border-0">
                 <!-- Animated background -->
@@ -231,17 +249,74 @@ document.addEventListener('DOMContentLoaded', function() {
         
         newWakeHostBtn.addEventListener('click', function() {
             const status = this.getAttribute('data-status');
+            const hostName = document.querySelector('.card-title')?.textContent || 'Host';
             
             if (status === 'online') {
-                // Show confirmation dialog for online hosts
-                if (confirm('This host appears to be online already. Do you still want to wake it?')) {
+                // Show custom confirmation dialog for online hosts
+                showWakeConfirm(hostName, () => {
+                    // User confirmed, proceed with wake
                     showWakeAnimation();
-                }
+                });
             } else {
                 // No confirmation needed for offline hosts
                 showWakeAnimation();
             }
         });
+    }
+    
+    // Function to show the wake confirmation overlay
+    function showWakeConfirm(hostName, onConfirm) {
+        // Get overlay
+        const overlay = document.getElementById('wakeConfirmOverlay');
+        
+        if (!overlay) return;
+        
+        // Update host name if provided
+        if (hostName) {
+            const titleElement = overlay.querySelector('.wake-confirm-title');
+            const messageElement = overlay.querySelector('.wake-confirm-message');
+            
+            if (titleElement) {
+                titleElement.textContent = `${hostName} Is Already Online`;
+            }
+            
+            if (messageElement) {
+                messageElement.innerHTML = `This host appears to be <span class="text-success">online</span>. Do you still want to send a wake-up packet?`;
+            }
+        }
+        
+        // Setup event handlers
+        const cancelBtn = overlay.querySelector('#wakeCancelBtn');
+        const confirmBtn = overlay.querySelector('#wakeConfirmBtn');
+        
+        // Remove any existing event listeners
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        
+        if (cancelBtn.parentNode) {
+            cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        }
+        
+        if (confirmBtn.parentNode) {
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        }
+        
+        // Add event listeners to new buttons
+        newCancelBtn.addEventListener('click', closeConfirm);
+        
+        newConfirmBtn.addEventListener('click', () => {
+            if (typeof onConfirm === 'function') {
+                onConfirm();
+            }
+            closeConfirm();
+        });
+        
+        // Show the overlay
+        overlay.classList.add('active');
+        
+        function closeConfirm() {
+            overlay.classList.remove('active');
+        }
     }
     
     // Generate animated SVG paths

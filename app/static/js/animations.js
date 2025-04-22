@@ -998,6 +998,7 @@ function initGlobalAnimations() {
     showToast: showToast,
     showSaveAnimation: showSaveAnimation,
     showDeleteConfirm: showDeleteConfirm,
+    showWakeConfirm: showWakeConfirm,
     showCreateAnimation: showCreateAnimation,
     setButtonLoading: setButtonLoading,
     showSuccessFeedback: showSuccessFeedback,
@@ -1008,6 +1009,7 @@ function initGlobalAnimations() {
   window.showToast = showToast;
   window.showSaveAnimation = showSaveAnimation;
   window.showDeleteConfirm = showDeleteConfirm;
+  window.showWakeConfirm = showWakeConfirm;
   window.showCreateAnimation = showCreateAnimation;
   window.setButtonLoading = setButtonLoading;
   window.showSuccessFeedback = showSuccessFeedback;
@@ -1030,3 +1032,62 @@ window.addEventListener('load', function() {
   setupCardAnimations();
   enhanceStatusBadges();
 });
+
+/**
+ * Shows a wake confirmation dialog for hosts that are already online
+ * @param {string} hostName - Name of the host being woken
+ * @param {Function} onConfirm - Callback function to run if user confirms wake
+ */
+function showWakeConfirm(hostName, onConfirm) {
+  // Get overlay
+  const overlay = document.getElementById('wakeConfirmOverlay');
+  
+  if (!overlay) return;
+  
+  // Update host name if provided
+  if (hostName) {
+    const titleElement = overlay.querySelector('.wake-confirm-title');
+    const messageElement = overlay.querySelector('.wake-confirm-message');
+    
+    if (titleElement) {
+      titleElement.textContent = `${hostName} Is Already Online`;
+    }
+    
+    if (messageElement) {
+      messageElement.innerHTML = `This host appears to be <span class="text-success">online</span>. Do you still want to send a wake-up packet?`;
+    }
+  }
+  
+  // Setup event handlers
+  const cancelBtn = overlay.querySelector('#wakeCancelBtn');
+  const confirmBtn = overlay.querySelector('#wakeConfirmBtn');
+  
+  // Remove any existing event listeners
+  const newCancelBtn = cancelBtn.cloneNode(true);
+  const newConfirmBtn = confirmBtn.cloneNode(true);
+  
+  if (cancelBtn.parentNode) {
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+  }
+  
+  if (confirmBtn.parentNode) {
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+  }
+  
+  // Add event listeners to new buttons
+  newCancelBtn.addEventListener('click', closeConfirm);
+  
+  newConfirmBtn.addEventListener('click', () => {
+    if (typeof onConfirm === 'function') {
+      onConfirm();
+    }
+    closeConfirm();
+  });
+  
+  // Show the overlay
+  overlay.classList.add('active');
+  
+  function closeConfirm() {
+    overlay.classList.remove('active');
+  }
+}

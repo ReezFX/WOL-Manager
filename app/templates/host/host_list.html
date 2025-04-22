@@ -161,6 +161,24 @@
             </div>
         </div>
     </div>
+    
+    <!-- Wake confirmation overlay for already online hosts -->
+    <div class="wake-confirm-overlay" id="wakeConfirmOverlay">
+        <div class="wake-confirm-container">
+            <div class="wake-icon-container">
+                <i class="fas fa-power-off wake-icon"></i>
+            </div>
+            <div class="wake-confirm-title">Host Already Online</div>
+            <div class="wake-confirm-message">
+                This host appears to be already online. Do you still want to send a wake-up packet?
+            </div>
+            <div class="wake-confirm-buttons">
+                <button class="wake-cancel-btn" id="wakeCancelBtn">Cancel</button>
+                <button class="wake-confirm-btn" id="wakeConfirmBtn">Wake Anyway</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h2">Hosts Management</h1>
         <a href="{{ url_for('host.add_host') }}" class="btn btn-primary action-button btn-animate-press" data-animate-create="true">
@@ -484,7 +502,20 @@
             button.addEventListener('click', function() {
                 const hostId = this.getAttribute('data-host-id');
                 const form = document.getElementById(`wakeForm-${hostId}`);
-                showWakeAnimation(form, hostId);
+                const hostStatus = document.querySelector(`#host-${hostId}-status`);
+                const hostName = this.closest('.card').querySelector('.card-title')?.textContent || 'Host';
+                
+                // Check if the host is already online
+                if (hostStatus && hostStatus.getAttribute('data-status') === 'online') {
+                    // Show custom confirmation dialog instead of browser confirm
+                    showWakeConfirm(hostName, () => {
+                        // User confirmed, proceed with wake
+                        showWakeAnimation(form, hostId);
+                    });
+                } else {
+                    // Host is offline or unknown, proceed directly
+                    showWakeAnimation(form, hostId);
+                }
             });
         });
         

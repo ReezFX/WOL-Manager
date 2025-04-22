@@ -983,3 +983,189 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Wake confirmation overlay - styled like delete confirmation */
+.wake-confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9990;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s var(--apple-transition);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.wake-confirm-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.wake-confirm-container {
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 400px;
+    padding: 30px;
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+    transition: all 0.3s var(--apple-transition);
+    box-shadow: var(--apple-shadow);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.wake-confirm-overlay.active .wake-confirm-container {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+.wake-icon-container {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 25px;
+    border-radius: 50%;
+    background-color: rgba(var(--success-color-rgb), 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.wake-icon-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent 70%);
+    opacity: 0.8;
+}
+
+.wake-icon {
+    font-size: 32px;
+    color: var(--success-color);
+    transform: scale(0);
+    position: relative;
+    z-index: 1;
+}
+
+.wake-confirm-overlay.active .wake-icon {
+    animation: powerBounce 0.5s 0.2s forwards;
+}
+
+.wake-confirm-title {
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.wake-confirm-message {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #666;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.wake-confirm-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.wake-cancel-btn, .wake-confirm-btn {
+    padding: 12px 24px;
+    border-radius: calc(var(--border-radius-sm) * 1.2);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s var(--apple-transition);
+    border: none;
+    font-size: 15px;
+}
+
+.wake-cancel-btn {
+    background-color: rgba(230, 230, 230, 0.8);
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.wake-cancel-btn:hover {
+    background-color: rgba(220, 220, 220, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.wake-confirm-btn {
+    background-color: var(--success-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(var(--success-color-rgb), 0.2);
+}
+
+.wake-confirm-btn:hover {
+    background-color: var(--success-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--success-color-rgb), 0.3);
+    filter: brightness(1.05);
+}
+
+@keyframes powerBounce {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    30% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    40% {
+        transform: scale(1) rotate(15deg);
+        opacity: 1;
+    }
+    60% {
+        transform: scale(1) rotate(-15deg);
+    }
+    80% {
+        transform: scale(1) rotate(5deg);
+    }
+    100% {
+        transform: scale(1) rotate(0);
+    }
+}
+
+/* Dark theme adjustments for wake confirmation */
+.dark-theme .wake-confirm-container {
+    background-color: rgba(40, 42, 54, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .wake-confirm-title {
+    color: #f8f9fa;
+}
+
+.dark-theme .wake-confirm-message {
+    color: #adb5bd;
+}
+
+.dark-theme .wake-cancel-btn {
+    background-color: rgba(80, 85, 90, 0.8);
+    color: #f8f9fa;
+}
+
+.dark-theme .wake-cancel-btn:hover {
+    background-color: rgba(90, 95, 100, 0.9);
+}
+
+.dark-theme .wake-icon-container::before {
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 70%);
+}
