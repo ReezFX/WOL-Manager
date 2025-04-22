@@ -3,6 +3,7 @@
 {% block head %}
 {{ super() }}
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/toast.css') }}">
 {% endblock %}
 
 {% block title %}Logs{% endblock %}
@@ -13,9 +14,18 @@
         <div class="card-header bg-tertiary-theme">
             <h4 class="mb-0">System Logs</h4>
         </div>
-        <div class="card-body">
+        <div class="card-body position-relative">
+            <!-- Loading Overlay -->
+            <div id="loading-overlay" class="position-absolute w-100 h-100 top-0 start-0 d-none" style="left: 0; z-index: 1000;">
+                <div class="d-flex justify-content-center align-items-center h-100 bg-white bg-opacity-75 dark-overlay">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Filters -->
-            <form method="GET" action="{{ url_for('admin.view_logs') }}" id="log-filter-form" class="mb-4">
+            <form id="logs-filter-form" method="GET" action="{{ url_for('admin.view_logs') }}" class="mb-4">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label for="log_type" class="form-label">Log Type</label>
@@ -50,7 +60,7 @@
                         <input type="text" class="form-control" id="search_text" name="search_text" placeholder="Enter search terms..." value="{{ search_text }}">
                     </div>
                     <div class="col-md-3 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" class="btn btn-primary w-100" id="apply-filter-btn">
                             <i class="fas fa-filter me-2"></i>Apply Filters
                         </button>
                     </div>
@@ -60,50 +70,52 @@
             <!-- Action Buttons -->
             <div class="d-flex justify-content-between mb-3">
                 <div>
-                    <a href="{{ url_for('admin.download_log', file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}" class="btn btn-outline-success">
+                    <a href="{{ url_for('admin.download_log', file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}" id="download-link" class="btn btn-outline-success">
                         <i class="fas fa-download me-1"></i> Download
                     </a>
                 </div>
                 <div>
-                    <span class="text-muted">Showing {{ pagination.total_entries }} entries</span>
+                    <span class="text-muted" id="entries-counter">Showing {{ pagination.total_entries }} entries</span>
                 </div>
             </div>
 
             <!-- Log Display Area -->
             <div class="log-container mb-4">
-                <pre class="log-content p-3 bg-light-theme border rounded" style="max-height: 600px; overflow-y: auto;">{% if log_content %}{{ log_content }}{% else %}<span class="text-muted">No logs match the current filter criteria.</span>{% endif %}</pre>
+                <pre id="log-content" class="log-content p-3 bg-light-theme border rounded" style="max-height: 600px; overflow-y: auto;">{% if log_content %}{{ log_content }}{% else %}<span class="text-muted">No logs match the current filter criteria.</span>{% endif %}</pre>
             </div>
 
             <!-- Pagination -->
-            {% if pagination.total_pages > 1 %}
-            <nav aria-label="Log pagination">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item {% if pagination.current_page == 1 %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin.view_logs', page=pagination.prev_page, file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                    
-                    {% for p in range(1, pagination.total_pages + 1) %}
-                        {% if p == pagination.current_page %}
-                            <li class="page-item active"><span class="page-link">{{ p }}</span></li>
-                        {% elif p <= 3 or p >= pagination.total_pages - 2 or (p >= pagination.current_page - 1 and p <= pagination.current_page + 1) %}
-                            <li class="page-item"><a class="page-link" href="{{ url_for('admin.view_logs', page=p, file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}">{{ p }}</a></li>
-                        {% elif p == 4 and pagination.current_page > 4 %}
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-                        {% elif p == pagination.total_pages - 3 and pagination.current_page < pagination.total_pages - 3 %}
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin.view_logs', page=pagination.next_page, file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            {% endif %}
+            <div id="pagination-container">
+                {% if pagination.total_pages > 1 %}
+                <nav aria-label="Log pagination">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item {% if pagination.current_page == 1 %}disabled{% endif %}">
+                            <a class="page-link" href="#" data-page="{{ pagination.prev_page }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        
+                        {% for p in range(1, pagination.total_pages + 1) %}
+                            {% if p == pagination.current_page %}
+                                <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                            {% elif p <= 3 or p >= pagination.total_pages - 2 or (p >= pagination.current_page - 1 and p <= pagination.current_page + 1) %}
+                                <li class="page-item"><a class="page-link" href="#" data-page="{{ p }}">{{ p }}</a></li>
+                            {% elif p == 4 and pagination.current_page > 4 %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% elif p == pagination.total_pages - 3 and pagination.current_page < pagination.total_pages - 3 %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="#" data-page="{{ pagination.next_page }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
@@ -145,50 +157,195 @@
     [data-bs-theme="dark"] .text-warning {
         color: #ffe066 !important;
     }
-</style>
-
-<script>
-    // Show alert function for error messages
-    function showAlert(type, message) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type}`;
-        alertDiv.textContent = message;
-        
-        const container = document.querySelector('.container');
-        container.insertBefore(alertDiv, container.firstChild);
-        
-        // Remove alert after 5 seconds
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
+    
+    #loading-overlay {
+        backdrop-filter: blur(1px);
     }
     
-    // Maintain scroll position when navigating pagination
+    [data-bs-theme="dark"] .dark-overlay {
+        background-color: rgba(33, 37, 41, 0.75) !important;
+    }
+</style>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Restore scroll position if it exists
-        const savedScrollPosition = sessionStorage.getItem('logsScrollPosition');
-        if (savedScrollPosition) {
-            window.scrollTo(0, parseInt(savedScrollPosition));
-            // Clear the saved position after using it
-            sessionStorage.removeItem('logsScrollPosition');
+        // Get DOM elements
+        const filterForm = document.getElementById('logs-filter-form');
+        const applyBtn = document.getElementById('apply-filter-btn');
+        const logContent = document.getElementById('log-content');
+        const paginationContainer = document.getElementById('pagination-container');
+        const entriesCounter = document.getElementById('entries-counter');
+        const downloadLink = document.getElementById('download-link');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Save original button HTML to restore later
+        const originalBtnHtml = applyBtn.innerHTML;
+        
+        // Function to handle all log loading operations
+        function fetchLogs(page, formData) {
+            // Show loading overlay
+            loadingOverlay.classList.remove('d-none');
+            
+            // Create URL params
+            const params = new URLSearchParams(formData || new FormData(filterForm));
+            if (page && page > 1) {
+                params.set('page', page);
+            }
+            
+            // Update URL for bookmarking
+            history.pushState(
+                { page: page || 1 }, 
+                '', 
+                `${window.location.pathname}?${params.toString()}`
+            );
+            
+            // Update download link
+            downloadLink.href = `{{ url_for('admin.download_log') }}?${params.toString()}`;
+            
+            // Make the request
+            fetch(`${window.location.pathname}?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update log content
+                logContent.innerHTML = data.log_content || 
+                    '<span class="text-muted">No logs match the current filter criteria.</span>';
+                
+                // Update entry count
+                entriesCounter.textContent = `Showing ${data.pagination.total_entries} entries`;
+                
+                // Update pagination
+                updatePagination(data.pagination);
+                
+                // Show success toast
+                toastSuccess(`Successfully loaded ${data.pagination.total_entries} log entries`);
+            })
+            .catch(error => {
+                console.error('Error loading logs:', error);
+                logContent.innerHTML = '<div class="text-muted">Failed to load logs. Please try again.</div>';
+                
+                // Show error toast
+                toastError('Failed to load logs. Please try again.', 'Load Error');
+            })
+            .finally(() => {
+                // ALWAYS hide loading state and reset button
+                loadingOverlay.classList.add('d-none');
+                applyBtn.innerHTML = originalBtnHtml;
+                applyBtn.disabled = false;
+            });
         }
         
-        // Save scroll position when clicking pagination links
-        const paginationLinks = document.querySelectorAll('.pagination a.page-link');
-        paginationLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                // Save current scroll position before navigating
-                sessionStorage.setItem('logsScrollPosition', window.scrollY);
-            });
+        // Handle form submission
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Store the original button HTML
+            const originalHtml = applyBtn.innerHTML;
+            
+            // Update button to loading state
+            applyBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+            applyBtn.disabled = true;
+            
+            // Get form data and fetch logs
+            const formData = new FormData(this);
+            fetchLogs(1, formData);
         });
         
-        // Also handle form submission to maintain position
-        const filterForm = document.getElementById('log-filter-form');
-        if (filterForm) {
-            filterForm.addEventListener('submit', function() {
-                sessionStorage.setItem('logsScrollPosition', window.scrollY);
+        // Update pagination UI
+        function updatePagination(pagination) {
+            if (!pagination || pagination.total_pages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <nav aria-label="Log pagination">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item ${pagination.has_prev ? '' : 'disabled'}">
+                            <a class="page-link" href="#" data-page="${pagination.prev_page}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+            `;
+            
+            for (let p = 1; p <= pagination.total_pages; p++) {
+                if (p === pagination.current_page) {
+                    html += `<li class="page-item active"><span class="page-link">${p}</span></li>`;
+                } else if (p <= 3 || p >= pagination.total_pages - 2 || 
+                          (p >= pagination.current_page - 1 && p <= pagination.current_page + 1)) {
+                    html += `<li class="page-item"><a class="page-link" href="#" data-page="${p}">${p}</a></li>`;
+                } else if (p === 4 && pagination.current_page > 4) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                } else if (p === pagination.total_pages - 3 && pagination.current_page < pagination.total_pages - 3) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+            
+            html += `
+                        <li class="page-item ${pagination.has_next ? '' : 'disabled'}">
+                            <a class="page-link" href="#" data-page="${pagination.next_page}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            `;
+            
+            paginationContainer.innerHTML = html;
+            
+            // Attach click handlers to pagination links
+            document.querySelectorAll('#pagination-container .page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    if (page && !this.parentElement.classList.contains('disabled')) {
+                        fetchLogs(parseInt(page));
+                        logContent.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
             });
         }
+        
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(e) {
+            const params = new URLSearchParams(window.location.search);
+            const page = params.get('page') || 1;
+            
+            // Update form fields with values from URL
+            document.getElementById('log_type').value = params.get('file') || 'app.log';
+            document.getElementById('log_level').value = params.get('level') || 'all';
+            document.getElementById('search_text').value = params.get('search_text') || '';
+            
+            if (params.get('start_date')) {
+                document.getElementById('start_date').value = params.get('start_date');
+            }
+            
+            if (params.get('end_date')) {
+                document.getElementById('end_date').value = params.get('end_date');
+            }
+            
+            // Load logs with these parameters
+            fetchLogs(parseInt(page), params);
+        });
+        
+        // Initialize pagination handlers
+        document.querySelectorAll('#pagination-container .page-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                if (page && !this.parentElement.classList.contains('disabled')) {
+                    fetchLogs(parseInt(page));
+                    logContent.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
     });
 </script>
 {% endblock %}
