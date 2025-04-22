@@ -357,79 +357,113 @@ function checkReducedMotion() {
 }
 
 /**
- * Shows a toast notification
- * @param {string} type - Type of toast: 'success', 'error', or 'warning'
- * @param {string} title - Toast title
- * @param {string} message - Toast message
- * @param {number} duration - Time in ms before toast auto-closes (default: 3000ms)
- * @returns {HTMLElement} The toast element
+ * Shows a toast notification using the modern glass design
+ * @param {string} type - The type of toast (success, error, warning, info)
+ * @param {string} title - The title of the toast
+ * @param {string} message - The message to show
+ * @param {number} duration - Duration in ms
+ * @returns {HTMLElement} - The toast element
  */
 function showToast(type, title, message, duration = 3000) {
-  // Create toast container if it doesn't exist
-  let toastContainer = document.querySelector('.toast-container');
-  if (!toastContainer) {
-      toastContainer = document.createElement('div');
-      toastContainer.className = 'toast-container';
-      document.body.appendChild(toastContainer);
-  }
-  
-  // Create toast element
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  
-  // Create toast content
-  let iconClass = 'fa-bell';
-  if (type === 'success') iconClass = 'fa-check-circle';
-  if (type === 'error') iconClass = 'fa-exclamation-circle';
-  if (type === 'warning') iconClass = 'fa-exclamation-triangle';
-  
-  toast.innerHTML = `
-      <div class="toast-icon">
-          <i class="fas ${iconClass}"></i>
-      </div>
-      <div class="toast-content">
-          <div class="toast-title">${title}</div>
-          <div class="toast-message">${message}</div>
-      </div>
-      <button class="toast-close">
-          <i class="fas fa-times"></i>
-      </button>
-  `;
-  
-  // Add to container
-  toastContainer.appendChild(toast);
-  
-  // Show toast with animation
-  setTimeout(() => {
-      toast.classList.add('show');
-  }, 10);
-  
-  // Handle close button
-  const closeBtn = toast.querySelector('.toast-close');
-  closeBtn.addEventListener('click', () => {
-      removeToast(toast);
-  });
-  
-  // Auto hide after duration
-  if (duration) {
-      setTimeout(() => {
-          removeToast(toast);
-      }, duration);
-  }
-  
-  // Helper to remove toast
-  function removeToast(toastElement) {
-      toastElement.classList.remove('show');
-      setTimeout(() => {
-          toastElement.remove();
-          // Remove container if empty
-          if (toastContainer.children.length === 0) {
-              toastContainer.remove();
-          }
-      }, 300);
-  }
-  
-  return toast;
+    // Create toast container if it doesn't exist
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    // Create toast content
+    let iconClass = 'fa-bell';
+    if (type === 'success') iconClass = 'fa-check-circle';
+    if (type === 'error') iconClass = 'fa-exclamation-circle';
+    if (type === 'warning') iconClass = 'fa-exclamation-triangle';
+    
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i class="fas ${iconClass}"></i>
+        </div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+    `;
+    
+    // Add to container
+    toastContainer.appendChild(toast);
+    
+    // Get all existing toasts and apply staggered animation if needed
+    const allToasts = toastContainer.querySelectorAll('.toast');
+    const toastIndex = Array.from(allToasts).indexOf(toast);
+    
+    // Force a reflow (to ensure animation works)
+    void toast.offsetWidth;
+    
+    // Add a close button to the toast
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close-btn';
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.addEventListener('click', () => {
+        removeToast(toast);
+    });
+    toast.appendChild(closeBtn);
+    
+    // Apply entrance animation with staggered delay for multiple toasts
+    setTimeout(() => {
+        toast.classList.add('show-animate');
+        // Apply show class for non-animated fallback and for CSS transitions
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 50);
+    }, toastIndex * 150); // Stagger by 150ms
+    
+    // Auto hide after duration
+    if (duration) {
+        const hideTimeout = setTimeout(() => {
+            removeToast(toast);
+        }, duration + (toastIndex * 150)); // Adjust timeout based on staggered entrance
+        
+        // Store timeout ID to cancel if needed
+        toast.dataset.timeoutId = hideTimeout;
+        
+        // Cancel auto-hide on hover
+        toast.addEventListener('mouseenter', () => {
+            clearTimeout(parseInt(toast.dataset.timeoutId));
+        });
+        
+        toast.addEventListener('mouseleave', () => {
+            const newTimeout = setTimeout(() => {
+                removeToast(toast);
+            }, duration / 2);
+            toast.dataset.timeoutId = newTimeout;
+        });
+    }
+    
+    // Helper to remove toast with exit animation
+    function removeToast(toastElement) {
+        // First remove show class and add exit animation
+        toastElement.classList.remove('show');
+        toastElement.classList.remove('show-animate');
+        toastElement.classList.add('hide-animate');
+        
+        // Wait for animation to finish before removing
+        toastElement.addEventListener('animationend', () => {
+            if (toastContainer.contains(toastElement)) {
+                toastElement.remove();
+                
+                // Remove container if empty
+                if (toastContainer.children.length === 0) {
+                    toastContainer.remove();
+                }
+            }
+        }, {once: true});
+    }
+    
+    return toast;
 }
 
 /**

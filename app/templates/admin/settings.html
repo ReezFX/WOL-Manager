@@ -2,6 +2,9 @@
 
 {% block title %}Application Settings{% endblock %}
 
+{# Set this variable to tell base template not to show flash messages #}
+{% set hide_base_flash_messages = true %}
+
 {% block content %}
 <div class="container">
   <div class="row">
@@ -11,7 +14,7 @@
           <h2 class="card-title">Application Settings</h2>
         </div>
         <div class="card-body">
-          <form method="POST" action="{{ url_for('admin.settings') }}" data-animate="true" data-show-success="true">
+          <form id="settingsForm" method="POST" action="{{ url_for('admin.settings') }}" data-animate="true" data-show-success="true">
             {{ form.hidden_tag() }}
             
             <div class="row mb-4">
@@ -124,7 +127,7 @@
                     <i class="fas fa-info-circle"></i>
                     <div class="profile-indicator-content">
                       <span class="profile-indicator-label">Current active profile from environment</span>
-                      <span class="profile-indicator-value">{{ current_log_profile }}</span>
+                      <span id="current-log-profile" class="profile-indicator-value">{{ current_log_profile }}</span>
                     </div>
                   </div>
                   {% if form.log_profile.errors %}
@@ -171,14 +174,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100 + (index * 150)); // Staggered animation
     });
     
-    // Animate button when settings are saved
-    const settingsForm = document.querySelector('form[action="{{ url_for("admin.settings") }}"]');
+    // Handle form submission via AJAX
+    const settingsForm = document.getElementById('settingsForm');
     if (settingsForm) {
-        // We'll use the regular form submission without AJAX
         settingsForm.addEventListener('submit', function(e) {
-            // Do not prevent default - let the form submit normally
+            e.preventDefault(); // Prevent default form submission
             
             const submitButton = this.querySelector('button[type="submit"]');
+            const saveContainer = document.getElementById('save-animation-container');
             
             // Show loading state
             if (typeof window.setButtonLoading === 'function') {
@@ -187,23 +190,93 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.disabled = true;
             }
             
-            // Save animation will appear on page reload if successful
-        });
-        
-        // Check if URL has success parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('success')) {
-            // Show animation for settings saved
-            const saveContainer = document.getElementById('save-animation-container');
-            if (typeof window.showSaveAnimation === 'function' && saveContainer) {
-                window.showSaveAnimation(saveContainer);
-            }
+            // Create FormData object
+            const formData = new FormData(this);
             
-            // Show success toast
-            if (typeof window.showToast === 'function') {
-                window.showToast('success', 'Success', 'Settings saved successfully');
-            }
-        }
+            // Send AJAX request
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Store button HTML to restore it later
+                const buttonHTML = saveContainer.innerHTML;
+                
+                if (data.success) {
+                    // Show animation for settings saved
+                    if (typeof window.showSaveAnimation === 'function' && saveContainer) {
+                        // Empty the container and show animation
+                        saveContainer.innerHTML = '';
+                        window.showSaveAnimation(saveContainer, function() {
+                            // When animation is complete, restore the button
+                            saveContainer.innerHTML = buttonHTML;
+                            
+                            // Make sure the button is not in loading state after restoration
+                            const restoredButton = saveContainer.querySelector('button');
+                            if (restoredButton && typeof window.setButtonLoading === 'function') {
+                                window.setButtonLoading(restoredButton, false);
+                            }
+                        });
+                    }
+                    
+                    // Show success toast
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('success', 'Success', 'Settings saved successfully');
+                    }
+                    
+                    // Update current log profile display if it was changed
+                    if (data.current_log_profile) {
+                        const profileDisplay = document.getElementById('current-log-profile');
+                        if (profileDisplay) {
+                            profileDisplay.textContent = data.current_log_profile;
+                        }
+                    }
+                } else {
+                    // For errors, just restore the button without animation
+                    saveContainer.innerHTML = buttonHTML;
+                    
+                    // Show error messages
+                    if (data.errors) {
+                        Object.entries(data.errors).forEach(([field, errors]) => {
+                            errors.forEach(error => {
+                                if (typeof window.showToast === 'function') {
+                                    window.showToast('error', 'Error', `${field}: ${error}`);
+                                }
+                            });
+                        });
+                    } else if (data.message) {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('error', 'Error', data.message);
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Reset button state
+                if (typeof window.setButtonLoading === 'function') {
+                    window.setButtonLoading(submitButton, false);
+                } else {
+                    submitButton.disabled = false;
+                }
+                
+                // Show error toast
+                if (typeof window.showToast === 'function') {
+                    window.showToast('error', 'Error', 'Failed to save settings. Please try again.');
+                }
+            });
+        });
     }
 });
 </script>

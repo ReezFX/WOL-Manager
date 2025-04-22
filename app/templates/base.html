@@ -753,6 +753,7 @@
     <!-- Main Content -->
     <main class="container py-4 flex-grow-1">
         <!-- Flash Messages -->
+        {% if not hide_base_flash_messages|default(false) %}
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -763,6 +764,7 @@
             {% endfor %}
         {% endif %}
         {% endwith %}
+        {% endif %}
 
         <!-- Content Block -->
         {% block content %}{% endblock %}

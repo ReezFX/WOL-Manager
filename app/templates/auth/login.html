@@ -1,72 +1,802 @@
 {% extends "base.html" %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Login | WOL Manager{% endblock %}
+
+{# Set this variable to tell base template not to show flash messages #}
+{% set hide_base_flash_messages = true %}
 
 {% block content %}
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-      <div class="card mt-5">
-        <div class="card-header">
-          <h3 class="text-center">Login</h3>
+<style>
+  /* Reset and Base Styles */
+  .login-wrapper * {
+    box-sizing: border-box;
+  }
+  
+  /* Login Page Layout */
+  .login-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f0f5fa 0%, #dae7f3 100%);
+    margin: -1.5rem -1.5rem; /* Expand beyond container padding */
+    padding: 0;
+    position: relative;
+    width: 100vw; /* Full viewport width */
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    overflow-x: hidden;
+  }
+  
+  .dark-theme .login-wrapper {
+    background: linear-gradient(135deg, #2b2d3e 0%, #1a1c2c 100%);
+  }
+  
+  .login-container {
+    width: 100%;
+    max-width: 1100px;
+    min-height: 600px;
+    display: flex;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    background: white;
+    position: relative;
+    margin: 2rem;
+  }
+  
+  .dark-theme .login-container {
+    background: #242535;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+  }
+  
+  /* Left Panel - Branding */
+  .login-left {
+    flex: 1;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .login-left::before {
+    content: '';
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+    top: -25%;
+    left: -25%;
+    animation: panGlow 15s infinite alternate ease-in-out;
+  }
+  
+  @keyframes panGlow {
+    0% { transform: translate(-5%, -5%); }
+    100% { transform: translate(5%, 5%); }
+  }
+  
+  .wol-brand {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .wol-logo-container {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .wol-logo {
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  }
+  
+  .wol-logo i {
+    font-size: 3.5rem;
+    color: white;
+    animation: pulse 2s infinite;
+  }
+  
+  .power-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    animation: ripple 2s infinite;
+  }
+  
+  .ring-2 {
+    animation-delay: 0.3s;
+  }
+  
+  .ring-3 {
+    animation-delay: 0.6s;
+  }
+  
+  @keyframes ripple {
+    0% {
+      transform: scale(0.9);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1.4);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+  }
+  
+  .wol-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    letter-spacing: -0.03em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .wol-title span {
+    display: block;
+    font-weight: 400;
+    font-size: 1.8rem;
+    opacity: 0.9;
+  }
+  
+  .wol-tagline {
+    text-align: center;
+    font-size: 1.1rem;
+    margin-bottom: 3rem;
+    opacity: 1;
+    font-weight: 500;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+  
+  .wol-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  
+  .feature-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+  
+  .feature-item:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateX(5px);
+  }
+  
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+  }
+  
+  .feature-icon i {
+    font-size: 1.25rem;
+  }
+  
+  .feature-text {
+    font-weight: 500;
+    font-size: 1.1rem;
+  }
+  
+  /* Right Panel - Login Form */
+  .login-right {
+    flex: 1;
+    padding: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .login-form-container {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .login-header {
+    margin-bottom: 2.5rem;
+    text-align: center;
+  }
+  
+  .login-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+  }
+  
+  .dark-theme .login-header h2 {
+    color: white;
+  }
+  
+  .login-header p {
+    color: #4a5568;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  
+  .dark-theme .login-header p {
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  /* Form Styles */
+  .form-field {
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  
+  .form-field-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4a5568;
+    font-size: 1.1rem;
+    z-index: 1;
+    transition: all 0.3s ease;
+  }
+  
+  .dark-theme .form-field-icon {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    font-size: 1rem;
+    border: 2px solid #cbd5e0;
+    border-radius: 12px;
+    background-color: #fff;
+    color: #1a202c;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+  
+  .dark-theme .form-input {
+    background-color: rgba(30, 30, 35, 0.5);
+    border-color: rgba(80, 80, 85, 0.3);
+    color: white;
+  }
+  
+  .form-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.15);
+    outline: none;
+  }
+  
+  .dark-theme .form-input:focus {
+    box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.25);
+  }
+  
+  .form-input.is-invalid {
+    border-color: #e53e3e;
+  }
+  
+  .form-field:focus-within .form-field-icon {
+    color: var(--primary-color);
+  }
+  
+  .error-message {
+    color: #e53e3e;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background-color: rgba(229, 62, 62, 0.1);
+    border-radius: 8px;
+    border-left: 3px solid #e53e3e;
+    font-weight: 500;
+  }
+  
+  /* Remember Checkbox */
+  .remember-field {
+    display: flex;
+    align-items: center;
+  }
+  
+  .remember-checkbox {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 35px;
+    cursor: pointer;
+    font-size: 1rem;
+    user-select: none;
+    color: #1a202c;
+    font-weight: 500;
+  }
+  
+  .dark-theme .remember-checkbox {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .remember-checkbox .remember-input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+  }
+  
+  .remember-checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 22px;
+    width: 22px;
+    background-color: #fff;
+    border: 2px solid #a0aec0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+  
+  .dark-theme .remember-checkmark {
+    background-color: rgba(30, 30, 35, 0.5);
+    border-color: rgba(80, 80, 85, 0.4);
+  }
+  
+  .remember-checkbox:hover .remember-checkmark {
+    border-color: var(--primary-color);
+  }
+  
+  .remember-input:checked ~ .remember-checkmark {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  
+  .remember-checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 7px;
+    top: 3px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  
+  .remember-input:checked ~ .remember-checkmark:after {
+    display: block;
+    animation: checkmark 0.2s ease-in-out;
+  }
+  
+  @keyframes checkmark {
+    0% { opacity: 0; transform: scale(0) rotate(45deg); }
+    100% { opacity: 1; transform: scale(1) rotate(45deg); }
+  }
+  
+  /* Submit Button */
+  .login-button {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.03em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+  
+  .login-button:hover {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(var(--primary-color-rgb), 0.4);
+  }
+  
+  .login-button:active {
+    transform: translateY(0);
+  }
+  
+  .button-text {
+    transition: all 0.3s ease;
+    margin-right: 8px;
+  }
+  
+  .button-icon {
+    opacity: 0;
+    width: 0;
+    transition: all 0.3s ease;
+  }
+  
+  .login-button:hover .button-icon {
+    opacity: 1;
+    width: 20px;
+  }
+  
+  .button-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .login-button.loading .button-text,
+  .login-button.loading .button-icon {
+    opacity: 0;
+  }
+  
+  .login-button.loading .button-loader {
+    opacity: 1;
+  }
+  
+  .spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Footer */
+  .login-footer {
+    margin-top: 2rem;
+    text-align: center;
+  }
+  
+  .login-footer p {
+    color: #718096;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .dark-theme .login-footer p {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  /* Alert Styling */
+  .login-alert {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    animation: fadeInUp 0.5s ease;
+    font-weight: 500;
+  }
+  
+  .login-alert-success {
+    background-color: rgba(40, 180, 133, 0.15);
+    color: #28b485;
+    border-left: 4px solid #28b485;
+  }
+  
+  .login-alert-danger {
+    background-color: rgba(226, 85, 99, 0.15);
+    color: #e25563;
+    border-left: 4px solid #e25563;
+  }
+  
+  .login-alert-warning {
+    background-color: rgba(249, 174, 86, 0.15);
+    color: #f9ae56;
+    border-left: 4px solid #f9ae56;
+  }
+  
+  .login-alert-info {
+    background-color: rgba(91, 192, 222, 0.15);
+    color: #5bc0de;
+    border-left: 4px solid #5bc0de;
+  }
+  
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 992px) {
+    .login-container {
+      flex-direction: column;
+      max-width: 500px;
+      margin: 1.5rem;
+    }
+    
+    .login-left, .login-right {
+      padding: 2rem;
+    }
+    
+    .wol-logo {
+      width: 100px;
+      height: 100px;
+    }
+    
+    .wol-logo i {
+      font-size: 3rem;
+    }
+    
+    .wol-title {
+      font-size: 2rem;
+    }
+    
+    .wol-title span {
+      font-size: 1.5rem;
+    }
+    
+    .wol-tagline {
+      margin-bottom: 2rem;
+    }
+    
+    .wol-features {
+      gap: 1rem;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .login-container {
+      margin: 1rem;
+    }
+    
+    .login-left, .login-right {
+      padding: 1.5rem;
+    }
+    
+    .wol-logo-container {
+      margin-bottom: 1.5rem;
+    }
+    
+    .wol-logo {
+      width: 80px;
+      height: 80px;
+    }
+    
+    .wol-logo i {
+      font-size: 2.5rem;
+    }
+    
+    .wol-title {
+      font-size: 1.8rem;
+    }
+    
+    .wol-title span {
+      font-size: 1.3rem;
+    }
+    
+    .feature-item {
+      padding: 0.8rem 1.2rem;
+    }
+    
+    .feature-icon {
+      width: 36px;
+      height: 36px;
+    }
+    
+    .feature-text {
+      font-size: 1rem;
+    }
+    
+    .login-header h2 {
+      font-size: 1.8rem;
+    }
+  }
+</style>
+
+<div class="login-wrapper">
+  <div class="login-container">
+    <div class="login-left">
+      <div class="wol-brand">
+        <div class="wol-logo-container">
+          <div class="wol-logo">
+            <i class="fas fa-power-off"></i>
+            <span class="power-ring"></span>
+            <span class="power-ring ring-2"></span>
+            <span class="power-ring ring-3"></span>
+          </div>
         </div>
-        <div class="card-body">
+        <h1 class="wol-title">Wake on LAN <span>Manager</span></h1>
+        <p class="wol-tagline">Control your network devices from anywhere</p>
+        
+        <div class="wol-features">
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-wifi"></i>
+            </div>
+            <div class="feature-text">Remote Power Control</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-laptop"></i>
+            </div>
+            <div class="feature-text">Device Management</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="feature-text">Status Monitoring</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="login-right">
+      <div class="login-form-container">
+        <div class="login-header">
+          <h2>Sign In</h2>
+          <p>Login to access your WOL dashboard</p>
+        </div>
+        
+        <!-- Show all flash messages in our custom styled format -->
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
               {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+              <div class="login-alert login-alert-{{ category }}">{{ message }}</div>
               {% endfor %}
             {% endif %}
           {% endwith %}
 
-          <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
-            <!-- Adding CSRF token field to fix form submission validation -->
+        <form method="POST" action="{{ url_for('auth.login') }}" id="login-form" class="login-form">
+          <!-- CSRF token field -->
             {{ form.csrf_token }}
             
-            <div class="mb-3">
-              {{ form.username.label(class="form-label") }}
+          <div class="form-field">
+            <div class="form-field-icon">
+              <i class="fas fa-user"></i>
+            </div>
               {% if form.username.errors %}
-                {{ form.username(class="form-control is-invalid") }}
-                <div class="invalid-feedback">
+              {{ form.username(class="form-input is-invalid", placeholder="Username") }}
+              <div class="error-message">
                   {% for error in form.username.errors %}
                     <span>{{ error }}</span>
                   {% endfor %}
                 </div>
               {% else %}
-                {{ form.username(class="form-control") }}
+              {{ form.username(class="form-input", placeholder="Username") }}
               {% endif %}
             </div>
             
-            <div class="mb-3">
-              {{ form.password.label(class="form-label") }}
+          <div class="form-field">
+            <div class="form-field-icon">
+              <i class="fas fa-lock"></i>
+            </div>
               {% if form.password.errors %}
-                {{ form.password(class="form-control is-invalid") }}
-                <div class="invalid-feedback">
+              {{ form.password(class="form-input is-invalid", placeholder="Password") }}
+              <div class="error-message">
                   {% for error in form.password.errors %}
                     <span>{{ error }}</span>
                   {% endfor %}
                 </div>
               {% else %}
-                {{ form.password(class="form-control") }}
+              {{ form.password(class="form-input", placeholder="Password") }}
               {% endif %}
             </div>
             
-            <div class="mb-3 form-check">
-              {{ form.remember(class="form-check-input") }}
-              {{ form.remember.label(class="form-check-label") }}
+          <div class="form-field remember-field">
+            <label class="remember-checkbox">
+              {{ form.remember(class="remember-input") }}
+              <span class="remember-checkmark"></span>
+              <span class="remember-label">{{ form.remember.label.text }}</span>
+            </label>
             </div>
             
-            <div class="d-grid gap-2">
-              {{ form.submit(class="btn btn-primary") }}
+          <div class="form-field">
+            <button type="submit" class="login-button">
+              <span class="button-text">Sign In</span>
+              <span class="button-icon"><i class="fas fa-arrow-right"></i></span>
+              <div class="button-loader">
+                <div class="spinner"></div>
+              </div>
+            </button>
             </div>
           </form>
-        </div>
-        <div class="card-footer text-center">
-          <small class="text-muted">User accounts are created and managed by administrators. Please contact your system administrator for access.</small>
+        
+        <div class="login-footer">
+          <p>Need access? Contact your system administrator.</p>
         </div>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Form submission animation
+    const loginForm = document.getElementById('login-form');
+    const loginButton = document.querySelector('.login-button');
+    
+    if (loginForm && loginButton) {
+      loginForm.addEventListener('submit', function(e) {
+        loginButton.classList.add('loading');
+        // Form submits naturally
+      });
+    }
+    
+    // Focus animation for input fields
+    const formInputs = document.querySelectorAll('.form-input');
+    
+    formInputs.forEach(input => {
+      const iconParent = input.parentElement.querySelector('.form-field-icon');
+      
+      input.addEventListener('focus', function() {
+        if (iconParent) {
+          iconParent.style.color = 'var(--primary-color)';
+        }
+      });
+      
+      input.addEventListener('blur', function() {
+        if (iconParent && !this.value) {
+          iconParent.style.color = '';
+        }
+      });
+      
+      // Initialize if field already has a value
+      if (input.value && iconParent) {
+        iconParent.style.color = 'var(--primary-color)';
+      }
+    });
+  });
+</script>
 {% endblock %}
 

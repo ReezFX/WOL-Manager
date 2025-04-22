@@ -484,17 +484,43 @@ def settings():
             
             db_session.commit()
             
+            # Check if request is AJAX
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({
+                    'success': True, 
+                    'message': 'Application settings have been updated successfully.',
+                    'current_log_profile': form.log_profile.data
+                })
+            
+            # For regular requests, continue with flash message and redirect
             flash('Application settings have been updated successfully.', 'success')
             # Add success parameter to redirect for JS animations
             return redirect(url_for('admin.settings', success=1))
         except SQLAlchemyError as e:
             db_session.rollback()
+            
+            # Check if request is AJAX
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': False, 'message': f'Error updating settings: {str(e)}'})
+            
+            # For regular requests, continue with flash message
             flash(f'Error updating settings: {str(e)}', 'danger')
     elif request.method == 'POST':
         # Handle validation errors
-        for field, errors in form.errors.items():
-            for error in errors:
-                flash(f'{getattr(form, field).label.text}: {error}', 'danger')
+        errors = {}
+        for field, field_errors in form.errors.items():
+            # Convert field name to human-readable format
+            field_label = getattr(form, field).label.text if hasattr(getattr(form, field), 'label') else field
+            errors[field_label] = field_errors
+            
+            # Add flash messages for regular requests
+            if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+                for error in field_errors:
+                    flash(f'{field_label}: {error}', 'danger')
+        
+        # Return JSON response for AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'errors': errors})
     
     return render_template('admin/settings.html', form=form, current_log_profile=current_log_profile)
 
