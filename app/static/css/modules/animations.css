@@ -1169,3 +1169,459 @@
 .dark-theme .wake-icon-container::before {
     background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 70%);
 }
+
+/* Wake Animation Overlay */
+.wake-animation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+/* Close button */
+.wake-close-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.wake-close-button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.wake-close-button:active {
+    transform: scale(0.95);
+}
+
+.wake-close-button i {
+    opacity: 0.8;
+}
+
+.wake-animation-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.wake-animation-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    min-height: 500px;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    flex-direction: column;
+    padding: 40px 20px;
+}
+
+/* Animation area - contains all animated elements */
+.animation-area {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Pulsing signal waves */
+.signal-waves {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.wave {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    opacity: 0;
+    transform: scale(0);
+}
+
+.wake-animation-overlay.active .wave {
+    animation: waveAnimation 3s infinite ease-out;
+}
+
+.wave1 {
+    width: 60px;
+    height: 60px;
+    border-color: var(--primary-color);
+    animation-delay: 0s !important;
+}
+
+.wave2 {
+    width: 120px;
+    height: 120px;
+    border-color: var(--accent-color);
+    animation-delay: 0.4s !important;
+}
+
+.wave3 {
+    width: 180px;
+    height: 180px;
+    border-color: var(--primary-color);
+    animation-delay: 0.8s !important;
+}
+
+.wave4 {
+    width: 240px;
+    height: 240px;
+    border-color: var(--accent-color);
+    animation-delay: 1.2s !important;
+}
+
+/* Center pulse circle - now directly in animation area */
+.pulse-circle {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 50%;
+    z-index: 2;
+    box-shadow: 0 0 30px var(--primary-color);
+}
+
+.wake-animation-overlay.active .pulse-circle {
+    animation: pulseCircle 1.5s infinite alternate;
+}
+
+/* Flying packets animation */
+.packet-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+}
+
+.packet {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: white;
+    border-radius: 50%;
+    opacity: 0;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}
+
+.wake-animation-overlay.active .packet {
+    animation: packetFly 2s infinite linear;
+}
+
+.packet1 {
+    top: 50%;
+    left: 50%;
+    animation-delay: 0.2s !important;
+    --angle: 45deg;
+}
+
+.packet2 {
+    top: 50%;
+    left: 50%;
+    animation-delay: 0.8s !important;
+    --angle: 180deg;
+}
+
+.packet3 {
+    top: 50%;
+    left: 50%;
+    animation-delay: 1.4s !important;
+    --angle: 300deg;
+}
+
+/* Wake text */
+.wake-text {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: white;
+    width: 100%;
+    z-index: 5; /* Ensure text is above all other elements */
+    padding: 0 20px;
+}
+
+/* Hide elements initially */
+.wake-text-title,
+.wake-text-subtitle,
+.wake-text-status,
+.wake-result,
+.wake-progress-container {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.wake-result {
+    display: none; /* Keep hidden by default */
+}
+
+/* Show elements when overlay is active */
+.wake-animation-overlay.active .wake-text-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s forwards;
+    visibility: visible;
+    opacity: 1;
+}
+
+.wake-animation-overlay.active .wake-text-subtitle {
+    font-size: 16px;
+    margin-bottom: 15px;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s 0.2s forwards;
+    visibility: visible;
+    opacity: 1;
+}
+
+.wake-animation-overlay.active .wake-text-status {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 10px;
+    animation: fadeInUp 0.5s 0.3s forwards;
+    visibility: visible;
+    opacity: 1;
+}
+
+.wake-animation-overlay.active .wake-progress-container {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s ease 0.3s;
+}
+
+/* Success and failure states */
+.wake-result {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 15px;
+    animation: fadeInUp 0.5s forwards;
+    position: relative;
+    z-index: 6; /* Ensure result content is above all elements */
+}
+
+/* Show result when its class is added */
+.wake-animation-overlay.active .wake-result.success,
+.wake-animation-overlay.active .wake-result.failure {
+    display: flex;
+    visibility: visible;
+    opacity: 1;
+}
+
+
+.wake-icon-success, .wake-icon-failure {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.wake-icon-success {
+    color: #4ade80; /* Success green */
+}
+
+.wake-icon-failure {
+    color: #f87171; /* Failure red */
+}
+
+.wake-result-text {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.wake-retry-button {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 10px;
+    transition: all 0.2s ease;
+    box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+}
+
+.wake-retry-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+}
+
+.wake-retry-button:active {
+    transform: translateY(1px);
+}
+
+/* Success and failure pulse animations */
+.pulse-circle.success-pulse {
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    box-shadow: 0 0 30px #22c55e;
+    animation: successPulse 1.5s infinite alternate;
+}
+
+.pulse-circle.failure-pulse {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    box-shadow: 0 0 30px #ef4444;
+    animation: failurePulse 1.5s infinite alternate;
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 20px #22c55e;
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px #22c55e;
+    }
+}
+
+@keyframes failurePulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 20px #ef4444;
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px #ef4444;
+    }
+}
+
+/* Progress bar */
+.wake-progress-container {
+    width: 100%;
+    height: 6px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.wake-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    border-radius: 3px;
+    transition: width 0.3s ease; /* Initial transition is quick, then modified in JS */
+}
+
+/* Animation keyframes */
+@keyframes waveAnimation {
+    0% {
+        opacity: 0.8;
+        transform: scale(0);
+    }
+    70% {
+        opacity: 0.2;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulseCircle {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 20px var(--primary-color);
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px var(--primary-color);
+    }
+}
+
+@keyframes packetFly {
+    0% {
+        transform: translate(0, 0) scale(0.5);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(calc(cos(var(--angle, 0deg)) * 150px), calc(sin(var(--angle, 90deg)) * 150px)) scale(0.5);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark theme adjustments for the wake animation */
+.dark-theme .wake-animation-overlay {
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Mobile optimizations for wake animation */
+@media (max-width: 576px) {
+    .wake-animation-container {
+        width: 100%;
+        max-width: 320px;
+        min-height: 450px;
+        padding: 30px 15px;
+    }
+
+    .animation-area {
+        height: 240px;
+        top: 50px;
+    }
+
+    .wave4 {
+        width: 200px;
+        height: 200px;
+    }
+
+    .wake-text {
+        bottom: 30px;
+    }
+
+    .wake-text-title {
+        font-size: 20px;
+    }
+}
+
+/* End Wake Animation Overlay Styles */

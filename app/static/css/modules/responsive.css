@@ -11,6 +11,107 @@
   /* Navbar adjustments */
   .navbar-brand { font-size: 1.2rem; }
   .navbar-nav .nav-link { padding: 0.4rem 0.6rem; }
+
+  /* -- Mobile Navbar Improvements -- */
+
+  /* Reduce navbar height and adjust body padding */
+  .apple-navbar {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    /* Adjust blur for mobile performance if needed */
+    /* backdrop-filter: saturate(180%) blur(10px) !important; */
+    /* -webkit-backdrop-filter: saturate(180%) blur(10px) !important; */
+  }
+
+  body {
+    /* Match new navbar height (approx 0.5rem + 0.5rem + line-height ~ 60px) */
+    padding-top: 60px;
+  }
+
+  /* Style the expanded mobile menu */
+  .navbar-collapse.collapse.show,
+  .navbar-collapse.collapsing {
+    margin-top: 0.5rem; /* Add some space below navbar */
+    padding: 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color-translucent);
+  }
+
+  .light-theme .navbar-collapse.collapse.show,
+  .light-theme .navbar-collapse.collapsing {
+     background-color: rgba(255, 255, 255, 0.85);
+     backdrop-filter: saturate(180%) blur(15px);
+     -webkit-backdrop-filter: saturate(180%) blur(15px);
+  }
+
+  .dark-theme .navbar-collapse.collapse.show,
+  .dark-theme .navbar-collapse.collapsing {
+     background-color: rgba(40, 40, 40, 0.85);
+     backdrop-filter: saturate(180%) blur(15px);
+     -webkit-backdrop-filter: saturate(180%) blur(15px);
+     border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Ensure nav links stack properly and have padding */
+  .navbar-nav {
+    width: 100%;
+  }
+  .navbar-nav .nav-link {
+    padding: 0.6rem 0.75rem; /* Increased vertical padding */
+    border-radius: 6px;
+  }
+
+  /* Larger touch targets for mobile dropdown items */
+  .dropdown-item {
+      padding: 0.75rem 1.2rem;
+      font-size: 1rem;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+  }
+
+  /* Add space between mobile dropdown items */
+  .dropdown-menu .dropdown-item:not(:last-child) {
+      border-bottom: 1px solid var(--border-color-translucent);
+  }
+  .dark-theme .dropdown-menu .dropdown-item:not(:last-child) {
+      border-bottom-color: rgba(255,255,255,0.08);
+  }
+
+
+  /* Improve touch area of navbar toggler */
+  .navbar-toggler {
+      padding: 0.6rem;
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: 8px; /* Match other elements */
+      border-color: transparent; /* Cleaner look */
+  }
+  .light-theme .navbar-toggler:hover {
+      background-color: rgba(0,0,0,0.05);
+  }
+  .dark-theme .navbar-toggler:hover {
+      background-color: rgba(255,255,255,0.1);
+  }
+
+
+  /* Allow flexible width theme toggle on mobile */
+  .theme-toggle-btn {
+      border-radius: 18px;
+      padding: 0.5rem 0.8rem; /* Adjusted padding */
+      justify-content: flex-start;
+      width: auto; /* Allow natural width */
+      height: auto;
+  }
+
+  /* Ensure dropdown menus also get blur on mobile */
+  .apple-navbar .dropdown-menu {
+      backdrop-filter: saturate(180%) blur(10px) !important;
+      -webkit-backdrop-filter: saturate(180%) blur(10px) !important;
+      margin-top: 0.25rem; /* Add a little space */
+  }
+
 }
 
 @media (max-width: 768px) {
@@ -41,4 +142,9 @@
   /* Button spacing in card footers */
   .card-footer-buttons { gap: 0.25rem; }
   .card-footer-buttons .btn { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+
+  /* Reduce navbar brand logo size on very small screens */
+  .navbar-brand img {
+    height: 28px !important; /* Use !important to override potential inline height */
+  }
 }

@@ -468,131 +468,181 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showWakeAnimationDemo() {
-        // Create a demo of the actual wake animation that looks like the real one
-        const overlay = document.createElement('div');
-        overlay.className = 'wake-animation-overlay';
-        document.body.appendChild(overlay);
-        
-        // Add the rest of the wake animation markup to match dashboard.html exactly
-        overlay.innerHTML = `
-            <div class="wake-animation-container">
-                <!-- Close button -->
-                <button class="wake-close-button">
-                    <i class="fas fa-times"></i>
-                </button>
-                <!-- Animation area -->
-                <div class="animation-area">
-                    <div class="signal-waves">
-                        <div class="wave wave1"></div>
-                        <div class="wave wave2"></div>
-                        <div class="wave wave3"></div>
-                        <div class="wave wave4"></div>
+        // Check if an overlay already exists
+        let overlay = document.querySelector('.wake-animation-overlay');
+        if (overlay) {
+            // If exists but not active, just activate it
+            if (!overlay.classList.contains('active')) {
+                 overlay.classList.add('active');
+                 // Restart demo animation logic if needed
+            } else {
+                // Already active, maybe do nothing or restart?
+                console.log('Demo animation already active.');
+                return; 
+            }
+        } else {
+             // Create the actual wake animation overlay if it doesn't exist
+            overlay = document.createElement('div');
+            overlay.className = 'wake-animation-overlay'; // Use the class styled in animations.css
+            overlay.id = 'wakeAnimationOverlay-demo'; // Give it a unique ID for demo
+            document.body.appendChild(overlay);
+            
+            // Add the correct inner HTML structure matching dashboard.html
+            overlay.innerHTML = `
+                <div class="wake-animation-container">
+                    <!-- Close button -->
+                    <button class="wake-close-button" id="wakeCloseButton-demo">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <!-- Animation area -->
+                    <div class="animation-area">
+                        <div class="signal-waves">
+                            <div class="wave wave1"></div>
+                            <div class="wave wave2"></div>
+                            <div class="wave wave3"></div>
+                            <div class="wave wave4"></div>
+                        </div>
+                        <div class="pulse-circle"></div>
+                        <div class="packet-container">
+                            <div class="packet packet1"></div>
+                            <div class="packet packet2"></div>
+                            <div class="packet packet3"></div>
+                        </div>
                     </div>
-                    <div class="pulse-circle"></div>
-                    <div class="packet-container">
-                        <div class="packet packet1"></div>
-                        <div class="packet packet2"></div>
-                        <div class="packet packet3"></div>
+                    <!-- Text area - must match the structure -->
+                    <div class="wake-text">
+                        <div class="wake-text-title">Waking Up Host</div>
+                        <div class="wake-text-subtitle">Sending Magic Packet</div>
+                        <div class="wake-text-status">Waiting for response...</div>
+                        <div class="wake-progress-container">
+                            <div class="wake-progress-bar"></div>
+                        </div>
+                        <div class="wake-result success">
+                            <i class="fas fa-check-circle wake-icon-success"></i>
+                            <div class="wake-result-text">Host Online</div>
+                        </div>
+                        <div class="wake-result failure">
+                            <i class="fas fa-exclamation-triangle wake-icon-failure"></i>
+                            <div class="wake-result-text">Wake Failed</div>
+                            <div class="wake-retry-button">Try Again</div> 
+                        </div>
                     </div>
                 </div>
-                <!-- Text area - completely separate from animation -->
-                <div class="wake-text">
-                    <div class="wake-text-title">Waking Up Host</div>
-                    <div class="wake-text-subtitle">Sending Magic Packet</div>
-                    <div class="wake-text-status">Waiting for response...</div>
-                    <div class="wake-progress-container">
-                        <div class="wake-progress-bar"></div>
-                    </div>
-                    <div class="wake-result success">
-                        <i class="fas fa-check-circle wake-icon-success"></i>
-                        <div class="wake-result-text">Host Online</div>
-                    </div>
-                    <div class="wake-result failure">
-                        <i class="fas fa-exclamation-triangle wake-icon-failure"></i>
-                        <div class="wake-result-text">Wake Failed</div>
-                        <div class="wake-retry-button">Try Again</div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
+            `;
+        }
+       
+        // --- Animation Logic --- 
+        // Reset state before starting
+        const successElement = overlay.querySelector('.wake-result.success');
+        const failureElement = overlay.querySelector('.wake-result.failure');
+        const statusText = overlay.querySelector('.wake-text-status');
+        const progressContainer = overlay.querySelector('.wake-progress-container');
+        const progressBar = overlay.querySelector('.wake-progress-bar');
+        const title = overlay.querySelector('.wake-text-title');
+        const subtitle = overlay.querySelector('.wake-text-subtitle');
+        const pulseCircle = overlay.querySelector('.pulse-circle');
+        const waves = overlay.querySelectorAll('.wave');
+        const packets = overlay.querySelectorAll('.packet');
+
+        // Reset visual elements
+        if (successElement) successElement.style.display = 'none';
+        if (failureElement) failureElement.style.display = 'none';
+        if (statusText) {
+            statusText.style.display = 'block';
+            statusText.textContent = 'Waiting for response...';
+        }
+        if (progressContainer) progressContainer.style.display = 'block';
+        if (progressBar) {
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '0%';
+        }
+        if (title) title.style.opacity = '1';
+        if (subtitle) subtitle.style.opacity = '1';
+        if (pulseCircle) {
+            pulseCircle.classList.remove('success-pulse', 'failure-pulse');
+            pulseCircle.style.animationPlayState = '';
+        }
+        waves.forEach(el => el.style.animationPlayState = '');
+        packets.forEach(el => el.style.animationPlayState = '');
+
         // Show the overlay with animation
         setTimeout(() => {
             overlay.classList.add('active');
-            // Animate progress bar
-            const progressBar = overlay.querySelector('.wake-progress-bar');
+            // Animate progress bar for demo
             if (progressBar) {
-                let progress = 0;
-                progressBar.style.width = '0%';
-                progressBar.style.transition = 'width 3s linear'; // shorter time for demo
-                
-                setTimeout(() => {
+                progressBar.style.width = '0%'; // Ensure start at 0
+                 progressBar.style.transition = 'none'; // Reset transition
+                setTimeout(() => { // Apply transition after a tick
+                    progressBar.style.transition = 'width 3s linear'; // shorter time for demo
                     progressBar.style.width = '100%';
-                    
-                    // Show success after animation completes
-                    setTimeout(() => {
-                        // Hide progress elements
-                        const statusText = overlay.querySelector('.wake-text-status');
-                        const progressContainer = overlay.querySelector('.wake-progress-container');
-                        const title = overlay.querySelector('.wake-text-title');
-                        const subtitle = overlay.querySelector('.wake-text-subtitle');
-                        
-                        if (statusText) statusText.style.display = 'none';
-                        if (progressContainer) progressContainer.style.display = 'none';
-                        if (title) title.style.opacity = '0.5';
-                        if (subtitle) subtitle.style.opacity = '0.5';
-                        
-                        // Show success
-                        const successElement = overlay.querySelector('.wake-result.success');
-                        const pulseCircle = overlay.querySelector('.pulse-circle');
-                        
-                        if (successElement) successElement.style.display = 'flex';
-                        if (pulseCircle) pulseCircle.classList.add('success-pulse');
-                        
-                        // Auto close after a delay
-                        setTimeout(() => {
-                            overlay.classList.remove('active');
-                            setTimeout(() => {
-                                overlay.remove();
-                            }, 300);
-                        }, 3000);
-                    }, 3000);
-                }, 200);
+                }, 50);
             }
-        }, 100);
-        
-        // Close button functionality
-        const closeButton = overlay.querySelector('.wake-close-button');
-        if (closeButton) {
-            closeButton.addEventListener('click', () => {
-                overlay.classList.remove('active');
+            
+            // Resume animations
+             if (pulseCircle) pulseCircle.style.animationPlayState = 'running';
+             waves.forEach(w => w.style.animationPlayState = 'running');
+             packets.forEach(p => p.style.animationPlayState = 'running');
+
+            // Show success after animation completes
+            setTimeout(() => {
+                // Hide progress elements
+                if (statusText) statusText.style.display = 'none';
+                if (progressContainer) progressContainer.style.display = 'none';
+                if (title) title.style.opacity = '0.6'; // Dim titles
+                if (subtitle) subtitle.style.opacity = '0.6';
+                
+                // Pause background animations
+                 if (pulseCircle) pulseCircle.style.animationPlayState = 'paused';
+                 waves.forEach(w => w.style.animationPlayState = 'paused');
+                 packets.forEach(p => p.style.animationPlayState = 'paused');
+
+                // Show success result
+                if (successElement) successElement.style.display = 'flex';
+                if (pulseCircle) pulseCircle.classList.add('success-pulse');
+                
+                // Auto close after a delay
                 setTimeout(() => {
-                    overlay.remove();
-                }, 300);
+                     if (overlay.classList.contains('active')) {
+                        overlay.classList.remove('active');
+                        // Optionally remove the demo element after fade out
+                        setTimeout(() => { 
+                            if (overlay.id === 'wakeAnimationOverlay-demo') overlay.remove(); 
+                        }, 300);
+                    }
+                }, 3000);
+            }, 3100); // Timing: after progress bar (3s) + small buffer
+        }, 100); // Small delay to ensure CSS is applied
+        
+        // Close button functionality (find the button within the specific overlay)
+        const closeButton = overlay.querySelector('#wakeCloseButton-demo');
+        if (closeButton) {
+            // Remove old listener if exists and add new one
+            const newCloseButton = closeButton.cloneNode(true);
+            closeButton.parentNode.replaceChild(newCloseButton, closeButton);
+            newCloseButton.addEventListener('click', () => {
+                 if (overlay.classList.contains('active')) {
+                    overlay.classList.remove('active');
+                     setTimeout(() => {
+                        if (overlay.id === 'wakeAnimationOverlay-demo') overlay.remove(); 
+                     }, 300);
+                 }
             });
         }
         
-        // Also allow closing by clicking outside
+        // Also allow closing by clicking the background
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.remove();
-                }, 300);
+            if (e.target === overlay) { // Only if clicking the overlay itself
+                 if (overlay.classList.contains('active')) {
+                    overlay.classList.remove('active');
+                     setTimeout(() => {
+                        if (overlay.id === 'wakeAnimationOverlay-demo') overlay.remove(); 
+                    }, 300);
+                 }
             }
         });
         
-        // Setup retry button
-        const retryButton = overlay.querySelector('.wake-retry-button');
-        if (retryButton) {
-            retryButton.addEventListener('click', () => {
-                // For demo purposes, just close the overlay
-                overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.remove();
-                }, 300);
-            });
-        }
+        // Note: Retry button is not needed for demo, but its element is present
+        // const retryButton = overlay.querySelector('.wake-retry-button');
     }
 });
 </script>
