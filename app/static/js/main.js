@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Update navbar
       if (navbar) {
-        navbar.classList.remove('navbar-light', 'bg-light');
-        navbar.classList.add('navbar-dark', 'bg-dark');
+        navbar.classList.remove('navbar-light');
+        navbar.classList.add('navbar-dark');
       }
       
       // Update footer
@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Update navbar
       if (navbar) {
-        navbar.classList.remove('navbar-dark', 'bg-dark');
-        navbar.classList.add('navbar-light', 'bg-light');
+        navbar.classList.remove('navbar-dark');
+        navbar.classList.add('navbar-light');
       }
       
       // Update footer

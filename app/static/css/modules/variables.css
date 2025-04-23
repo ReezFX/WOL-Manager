@@ -35,6 +35,10 @@
   --danger-color: #e25563; /* Clear red */
   --danger-color-rgb: 226, 85, 99;
   
+  /* Navbar specific gradient colors (brighter primary/secondary) */
+  --navbar-gradient-primary-rgb: 30, 180, 210;
+  --navbar-gradient-secondary-rgb: 20, 130, 160;
+  
   /* Common variables */
   --transition-speed: 0.3s;
   --border-radius: 1rem;
