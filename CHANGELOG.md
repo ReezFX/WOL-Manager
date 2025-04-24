@@ -5,6 +5,54 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-04-01
+
+### Added
+- Wake confirmation dialog for already-online hosts:
+  - Added new function `showWakeConfirm()` with customizable success callback
+  - Implemented clear warning message when attempting to wake an already-online host
+  - Added cancel and confirm buttons with proper event handler management
+  - Created smooth transition between confirmation and animation states
+- Enhanced retry functionality:
+  - Implemented improved retry button behavior with preserved host context
+  - Added seamless transition between retry action and animation restart
+  - Created host ID tracking system to maintain context between operations
+
+### Changed
+- Refactored wake animation handling system:
+  - Improved animation state management with reliable initialization and cleanup
+  - Enhanced progress bar transitions with proper timing control
+  - Modified polling system to prevent race conditions during status checks
+  - Updated animation element selection with proper null checking
+  - Added timeout safety mechanism to ensure animations complete properly
+  - Implemented `resetWakeAnimation()` call at initialization to ensure clean state
+- Enhanced status polling mechanism:
+  - Added polling termination flag to prevent redundant status checks
+  - Implemented visibility check for status text to prevent unnecessary updates
+  - Added proper error handling for network failures during status checks
+  - Enhanced timeout handling with race condition prevention
+  - Improved cleanup after polling completes to prevent memory leaks
+
+### Fixed
+- Status polling and animation interaction issues:
+  - Fixed potential infinite polling issue with proper termination mechanism
+  - Resolved race conditions between different status check responses
+  - Added safety timeout with proper cleanup to prevent stuck animations
+  - Fixed repeated polling after user-initiated cancellation
+  - Improved error handling during failed network requests
+- Animation state inconsistencies:
+  - Fixed incomplete animation reset when transitioning between states
+  - Resolved element style inconsistencies during animation transitions
+  - Added proper reset for progress bar transitions
+  - Fixed animation issues when rapidly triggering multiple wake operations
+  - Added delayed cleanup after animation completion for smoother transitions
+- DOM manipulation errors:
+  - Added null checks before manipulating DOM elements to prevent errors
+  - Fixed potential issues with missing elements in older browser environments
+  - Improved element class handling for animation states
+  - Resolved potential race conditions in element updates
+  - Enhanced event listener management with clone-and-replace pattern
+
 ## [1.4.0] - 2025-03-25
 
 ### Added
