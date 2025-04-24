@@ -1,5 +1,26 @@
 // Theme switcher functionality
 document.addEventListener('DOMContentLoaded', function() {
+  // --- START: Index page dark theme enforcement ---
+  if (window.isIndexPage === true) {
+    // Force dark theme classes and attributes
+    document.documentElement.classList.remove('light-theme');
+    document.documentElement.classList.add('dark-theme');
+    document.documentElement.setAttribute('data-bs-theme', 'dark');
+    document.body.classList.remove('light-theme'); // Ensure body matches
+    document.body.classList.add('dark-theme');
+    document.body.setAttribute('data-bs-theme', 'dark');
+
+    // Hide the theme toggle button
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    if (themeToggleBtn) {
+      themeToggleBtn.style.display = 'none';
+    }
+
+    // Stop further theme initialization/listeners for index page
+    return; 
+  }
+  // --- END: Index page dark theme enforcement ---
+
   // Theme constants
   const DARK_THEME = 'dark';
   const LIGHT_THEME = 'light';
@@ -323,18 +344,41 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Fix colors when any modal is shown
-  document.body.addEventListener('shown.bs.modal', function() {
-    // Use a slight delay to ensure the modal is fully rendered
-    setTimeout(fixModalPreElementColors, 10);
-  });
-  
-  // Also apply formatting when content is dynamically loaded into a modal
-  document.body.addEventListener('DOMNodeInserted', function(e) {
-    if (document.querySelector('.modal.show') && 
-        (e.target.tagName === 'PRE' || e.target.querySelector('pre'))) {
-      setTimeout(fixModalPreElementColors, 10);
+  // Create a MutationObserver to watch for nodes added to modals
+  const modalObserver = new MutationObserver(function(mutationsList) {
+    // Only proceed if a modal is currently shown
+    if (!document.querySelector('.modal.show')) {
+        return;
     }
+    
+    for(const mutation of mutationsList) {
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach(node => {
+          // Check if the added node is a PRE element or contains one
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.tagName === 'PRE' || node.querySelector('pre')) {
+              // Found a new PRE tag, fix colors with a slight delay
+              setTimeout(fixModalPreElementColors, 10);
+              // Optional: could disconnect observer here if only needed once per modal show
+            }
+          }
+        });
+      }
+    }
+  });
+
+  // Start observing the body for changes when a modal is shown
+  // We observe the body because modal content might be added anywhere
+  document.body.addEventListener('shown.bs.modal', function(event) {
+    // Start observing the modal body (or the whole document body for simplicity)
+    modalObserver.observe(document.body, { childList: true, subtree: true });
+    // Fix colors initially when modal shows
+    setTimeout(fixModalPreElementColors, 10); 
+  });
+
+  // Stop observing when the modal is hidden
+  document.body.addEventListener('hidden.bs.modal', function(event) {
+    modalObserver.disconnect();
   });
 
   // Re-fix colors when window resizes (in case of responsive styling changes)

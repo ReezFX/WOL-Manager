@@ -3,18 +3,10 @@
 {% block title %}Wake-on-LAN - Home{% endblock %}
 
 {% block content %}
-<div class="branding-header text-center py-5">
-    <div class="branding-bg"></div>
-    <div class="container position-relative">
-        <div class="row justify-content-center">
-            <div class="col-md-10 col-lg-8">
-                <div class="brand-container text-center">
-                    <img src="{{ url_for('static', filename='img/WOL-Manager-DIsplay.png') }}" alt="WOL Manager Logo" class="brand-logo img-fluid my-md-3 my-2 mx-auto d-block" style="max-width: 100%; width: auto;">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<script>window.isIndexPage = true;</script>
+<canvas id="gradient-canvas"></canvas>
+
+<!-- Branding Header Removed -->
 
 <!-- Version 1.4.0 Advertisement Banner -->
 <div class="update-banner-container">
@@ -68,69 +60,89 @@
 </div>
 
 <style>
+    /* Define darker color variables based on theme */
+    :root {
+        --primary-color-darker-rgb: 15, 111, 130;
+        --accent-color-darker-rgb: 204, 92, 64;
+    }
+
     /* Update Banner Styling */
     .update-banner-container {
         margin-bottom: 3rem;
         overflow: hidden;
     }
-    
+
     .update-banner {
-        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.1), rgba(var(--accent-color-rgb), 0.1));
+        /* Let ::before handle gradient */
+        background-color: transparent; /* Let ::before handle gradient */
         border-radius: 16px;
         padding: 2.5rem 0;
-        position: relative;
-        overflow: hidden;
-        border: 1px solid rgba(var(--primary-color-rgb), 0.15);
+        position: relative; /* Keep for ::before */
+        overflow: hidden; /* Keep for rounding */
     }
-    
+
+    .update-banner::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1; /* Behind content */
+        border-radius: inherit; /* Match parent rounding */
+        background: linear-gradient(135deg, rgba(var(--primary-color-darker-rgb), 0.7), rgba(var(--accent-color-darker-rgb), 0.6));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
     .update-title {
         font-weight: 700;
         font-size: 2.2rem;
-        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        /* SOLID text gradient using NEW colors */
+        background: linear-gradient(135deg, var(--info-color, #5bc0de), var(--accent-color, #ff7e5f));
         -webkit-background-clip: text;
         background-clip: text;
-        color: transparent;
+        color: transparent; /* REQUIRED to show the background gradient */
     }
-    
+
     .update-description {
         font-size: 1.1rem;
-        color: var(--text-primary);
-        opacity: 0.9;
+        opacity: 1; /* Ensure full opacity */
+        color: var(--text-light); /* Ensure light text */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Darker shadow for light text */
     }
-    
+
     .update-features {
         list-style: none;
         padding: 0;
         margin: 0;
     }
-    
+
     .update-features li {
         padding: 8px 0;
         font-weight: 500;
         display: flex;
         align-items: center;
+        color: var(--text-light); /* Ensure light text */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Darker shadow for light text */
     }
-    
-    .dark-theme .update-banner {
-        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.2), rgba(var(--accent-color-rgb), 0.2));
-        border-color: rgba(var(--primary-color-rgb), 0.25);
-    }
-    
+
     /* Animation Preview Styling */
     .animation-preview-container {
         position: relative;
         perspective: 1000px;
     }
-    
+
     .animation-preview {
         transform: rotateY(-5deg) rotateX(5deg);
         transition: transform 0.5s ease;
     }
-    
+
     .animation-preview:hover {
         transform: rotateY(0deg) rotateX(0deg);
     }
-    
+
     .device-mockup {
         width: 100%;
         max-width: 500px;
@@ -141,7 +153,7 @@
         overflow: hidden;
         position: relative;
     }
-    
+
     .device-frame {
         aspect-ratio: 16/9;
         width: 100%;
@@ -149,7 +161,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .device-stripe {
         background: #111;
         padding: 10px;
@@ -158,7 +170,7 @@
         text-align: center;
         font-family: monospace;
     }
-    
+
     /* Wake Animation Preview Elements */
     .wake-preview-content {
         position: absolute;
@@ -171,7 +183,7 @@
         justify-content: center;
         overflow: hidden;
     }
-    
+
     .wake-preview-bg {
         position: absolute;
         top: 0;
@@ -180,7 +192,7 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0.85);
     }
-    
+
     .preview-pulse {
         width: 50px;
         height: 50px;
@@ -190,7 +202,7 @@
         box-shadow: 0 0 20px var(--primary-color);
         animation: previewPulse 1.5s infinite alternate;
     }
-    
+
     .preview-waves {
         position: absolute;
         width: 100%;
@@ -199,7 +211,7 @@
         align-items: center;
         justify-content: center;
     }
-    
+
     .preview-wave {
         position: absolute;
         border-radius: 50%;
@@ -208,26 +220,26 @@
         transform: scale(0);
         animation: previewWaves 3s infinite ease-out;
     }
-    
+
     .preview-wave:nth-child(1) {
         width: 80px;
         height: 80px;
         animation-delay: 0s;
     }
-    
+
     .preview-wave:nth-child(2) {
         width: 120px;
         height: 120px;
         border-color: var(--accent-color);
         animation-delay: 0.5s;
     }
-    
+
     .preview-packets {
         position: absolute;
         width: 100%;
         height: 100%;
     }
-    
+
     .preview-packet {
         position: absolute;
         width: 6px;
@@ -240,15 +252,15 @@
         box-shadow: 0 0 8px white;
         animation: previewPacket 2s infinite linear;
     }
-    
+
     .preview-packet:nth-child(1) {
         animation-delay: 0s;
     }
-    
+
     .preview-packet:nth-child(2) {
         animation-delay: 1s;
     }
-    
+
     /* Animation Keyframes */
     @keyframes previewPulse {
         0% {
@@ -260,7 +272,7 @@
             box-shadow: 0 0 20px var(--primary-color);
         }
     }
-    
+
     @keyframes previewWaves {
         0% {
             opacity: 0.7;
@@ -274,7 +286,7 @@
             transform: scale(1);
         }
     }
-    
+
     @keyframes previewPacket {
         0% {
             transform: translate(0, 0);
@@ -291,42 +303,42 @@
             opacity: 0;
         }
     }
-    
+
     /* Mobile Optimizations */
     @media (max-width: 991.98px) {
         .update-banner {
             padding: 2rem 0;
             border-radius: 12px;
         }
-        
+
         .update-title {
             font-size: 1.8rem;
         }
-        
+
         .animation-preview {
             transform: none;
         }
-        
+
         .device-mockup {
             max-width: 100%;
             border-radius: 16px;
         }
     }
-    
+
     @media (max-width: 767.98px) {
         .update-banner-container {
             margin-bottom: 2rem;
         }
-        
+
         .update-title {
             font-size: 1.5rem;
         }
-        
+
         .update-description {
             font-size: 1rem;
         }
     }
-    
+
     .branding-header {
         position: relative;
         overflow: hidden;
@@ -334,7 +346,7 @@
         margin-bottom: 2rem;
         border-bottom: 1px solid rgba(var(--border-color), 0.5);
     }
-    
+
     /* Media query for mobile devices */
     @media (max-width: 767.98px) {
         .branding-header {
@@ -342,7 +354,7 @@
             margin-bottom: 1rem;
         }
     }
-    
+
     .branding-bg {
         position: absolute;
         top: 0;
@@ -352,9 +364,9 @@
         /* Removed gradient background to let the transparent PNG images shine through */
         z-index: -1;
     }
-    
+
     /* Removed gradient background for dark theme as well */
-    
+
     .brand-container {
         padding: 1rem;
         margin: 0 auto;
@@ -369,20 +381,20 @@
         justify-content: center;
         transition: var(--apple-transition);
     }
-    
+
     /* Hover effect removed as requested
     .brand-container:hover {
         transform: translateY(-5px);
         box-shadow: var(--apple-shadow-lg);
     }
     */
-    
+
     .brand-logo {
         /* filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.25)); */
         transition: transform 0.3s ease;
         margin-bottom: 2rem;
     }
-    
+
     /* Media query for mobile devices */
     @media (max-width: 767.98px) {
         .brand-logo {
@@ -390,26 +402,26 @@
             max-width: 80%;
         }
     }
-    
+
     .brand-title-wrapper {
         padding: 0.5rem 0 0.5rem;
         position: relative;
     }
-    
+
     .brand-title {
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.22));
         transition: transform 0.3s ease;
         max-width: 80%;
     }
-    
+
     /* Hover effect for brand title removed as requested
     .brand-container:hover .brand-title {
         transform: scale(1.02);
     }
     */
-    
+
     /* Wake Animation Overlay Additional Styles */
-    .wake-result.success, 
+    .wake-result.success,
     .wake-result.failure {
         display: none;
         align-items: center;
@@ -418,21 +430,21 @@
         opacity: 0;
         animation: fadeIn 0.5s ease-in-out forwards;
     }
-    
-    .wake-icon-success, 
+
+    .wake-icon-success,
     .wake-icon-failure {
         font-size: 1.5rem;
         margin-right: 10px;
     }
-    
+
     .wake-icon-success {
         color: var(--success-color, #28a745);
     }
-    
+
     .wake-icon-failure {
         color: var(--danger-color, #dc3545);
     }
-    
+
     .wake-retry-button {
         display: inline-block;
         margin-top: 10px;
@@ -443,16 +455,140 @@
         cursor: pointer;
         transition: background-color 0.2s;
     }
-    
+
     .wake-retry-button:hover {
         background-color: var(--primary-color);
     }
-    
+
     @keyframes fadeIn {
         0% { opacity: 0; }
         100% { opacity: 1; }
     }
-    
+
+    /* Feature Showcase Styling */
+
+    .feature-card {
+        /* Glassmorphism effect using darker theme colors - Dark - Increased Opacity */
+        background: linear-gradient(135deg, rgba(var(--primary-color-darker-rgb), 0.85), rgba(var(--accent-color-darker-rgb), 0.8)); /* Higher Alpha */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-color: rgba(255, 255, 255, 0.1); /* Lighter border for dark */
+        border-radius: 16px; /* Match update-banner */
+        padding: 2rem 1.5rem;
+        /* text-align: center; */ /* Replaced by flex alignment */
+        transition: border-color 0.3s ease, background-color 0.3s ease; /* Smoother transition */
+        /* Added Flexbox for internal layout */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; /* Align content to the top */
+    }
+
+    .feature-card:hover {
+        border-color: rgba(var(--primary-color-rgb), 0.35);
+    }
+
+    .feature-icon {
+        margin-bottom: 1rem; /* Space below icon */
+    }
+
+    .feature-icon i {
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover .feature-icon i {
+        transform: scale(1.1);
+    }
+
+    .feature-title {
+        font-weight: 600;
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem; /* Space below title */
+        text-align: center; /* Ensure title is centered */
+        color: var(--text-light);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .feature-description {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        text-align: center; /* Ensure description is centered */
+        flex-grow: 1; /* Allow description to take up space if needed */
+        color: var(--text-secondary-dark);
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    }
+
+    /* End Feature Showcase Styling */
+
+    /* Styling for the Getting Started card */
+    .info-card {
+        /* Glassmorphism effect using darker theme colors - Dark - Increased Opacity */
+        background: linear-gradient(135deg, rgba(var(--primary-color-darker-rgb), 0.85), rgba(var(--accent-color-darker-rgb), 0.8)); /* Higher Alpha */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-color: rgba(255, 255, 255, 0.1); /* Lighter border for dark */
+        border-radius: 16px;
+        padding: 2rem 1.5rem;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+        /* Added Flexbox for internal layout */
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Center content horizontally */
+        justify-content: flex-start; /* Align content to the top */
+    }
+
+    .info-card:hover {
+        border-color: rgba(var(--primary-color-rgb), 0.35);
+    }
+
+    .info-card .card-title { /* Target title specifically */
+        font-weight: 600;
+        font-size: 1.25rem; /* Match feature-title */
+        margin-bottom: 1rem; /* Consistent spacing */
+        text-align: center;
+        display: flex; /* Align icon and text */
+        align-items: center;
+        color: var(--text-light);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .info-card .card-text {
+        font-size: 0.95rem; /* Match feature-description */
+        line-height: 1.6;
+        text-align: center; /* Center text paragraphs */
+        max-width: 90%; /* Prevent text from hitting edges */
+        color: var(--text-secondary-dark);
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Animated Gradient Canvas Styling */
+    #gradient-canvas {
+        width: 100%;
+        height: 100%;
+        position: fixed; /* Keep background fixed */
+        top: 0;
+        left: 0;
+        z-index: -1; /* Place behind all other content */
+        /* Define colors using theme variables */
+        --gradient-color-1: var(--primary-color, #17a2b8);
+        --gradient-color-2: var(--secondary-color, #0d6e8c);
+        --gradient-color-3: var(--info-color, #5bc0de);
+        --gradient-color-4: var(--accent-color, #ff7e5f);
+    }
+
+    /* Ensure content sections have higher z-index if needed */
+    .branding-header,
+    .update-banner-container,
+    .container {
+        position: relative; /* Needed for z-index to work */
+        z-index: 1; /* Ensure content stays above canvas */
+    }
+
+    /* Contrast for main headline section */
+    .main-headline h1,
+    .main-headline p {
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6); /* Even stronger for dark */
+    }
 </style>
 
 <!-- JS to handle animation preview button -->
@@ -667,65 +803,106 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             
-            <div class="row g-4 py-md-4 py-3">
-                <div class="col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-center mb-md-3 mb-2">
-                                <i class="fas fa-power-off fa-3x text-primary"></i>
+            <!-- Feature Showcase Section -->
+            <div class="feature-showcase py-md-5 py-4">
+                <h2 class="text-center display-5 fw-bold mb-5">Core Features</h2>
+                <div class="row g-4 justify-content-center">
+                    <!-- Feature: Host Management -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon text-primary mb-3">
+                                <i class="fas fa-server fa-2x"></i>
                             </div>
-                            <h3 class="card-title text-center">What is Wake-on-LAN?</h3>
-                            <p class="card-text">
-                                Wake-on-LAN (WoL) is a network standard that allows a computer to be turned on remotely by a network message. 
-                                The message is usually sent by a program executed on another device on the same local area network.
-                            </p>
-                            <p class="card-text">
-                                It works by sending a specially formatted network packet called a "magic packet" to the target device's 
-                                MAC address, which signals the network interface to power on the system.
+                            <h4 class="feature-title">Host Management</h4>
+                            <p class="feature-description">
+                                Easily add, edit, view, and delete network devices. Store MAC addresses and assign custom names.
                             </p>
                         </div>
                     </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-center mb-md-3 mb-2">
-                                <i class="fas fa-laptop-house fa-3x text-primary"></i>
+                    <!-- Feature: Wake-on-LAN -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon text-success mb-3">
+                                <i class="fas fa-power-off fa-2x"></i>
                             </div>
-                            <h3 class="card-title text-center">How Our App Helps</h3>
-                            <p class="card-text">
-                                Our Wake-on-LAN application makes it easy to:
+                            <h4 class="feature-title">Remote Wake-Up</h4>
+                            <p class="feature-description">
+                                Send Wake-on-LAN magic packets to power on your devices remotely with a single click.
                             </p>
-                            <ul class="card-text">
-                                <li>Store and manage multiple devices with custom names</li>
-                                <li>Wake up devices with a single click from anywhere</li>
-                                <li>Track wake-up history and success rates</li>
-                                <li>Organize devices by purpose or location</li>
-                                <li>Schedule automatic wake-ups at specified times</li>
-                            </ul>
+                        </div>
+                    </div>
+                    <!-- Feature: Modern UI & Themes -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon text-info mb-3">
+                                <i class="fas fa-palette fa-2x"></i>
+                            </div>
+                            <h4 class="feature-title">Modern Interface</h4>
+                            <p class="feature-description">
+                                Experience a responsive UI with Light/Dark modes, smooth animations, and AJAX-powered actions.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Feature: Access Control -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon text-warning mb-3">
+                                <i class="fas fa-users-cog fa-2x"></i>
+                            </div>
+                            <h4 class="feature-title">Access Control</h4>
+                            <p class="feature-description">
+                                Secure user authentication with role-based permissions and configurable host visibility.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Feature: API & Public Access -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon text-secondary mb-3">
+                                <i class="fas fa-link fa-2x"></i>
+                            </div>
+                            <h4 class="feature-title">API & Public Links</h4>
+                            <p class="feature-description">
+                                Utilize the host status API for automation and configure secure public access links for specific hosts.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Feature: Docker Support -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon mb-3" style="color: #2496ED;">
+                                <i class="fab fa-docker fa-2x"></i>
+                            </div>
+                            <h4 class="feature-title">Dockerized Deployment</h4>
+                            <p class="feature-description">
+                                Deploy easily using Docker containers for consistent environments and simplified setup.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="card mt-md-5 mt-4 shadow-sm">
-                <div class="card-body">
-                    <h3 class="card-title"><i class="fas fa-lightbulb text-warning me-2"></i>Getting Started</h3>
-                    <p class="card-text">
-                        To use Wake-on-LAN, your devices must have WoL enabled in their BIOS/UEFI settings and 
-                        network adapters must be configured properly. Our application streamlines the process 
-                        of sending the magic packets, but your network and devices need to be WoL-compatible.
-                    </p>
-                    
-                    <div class="d-flex justify-content-center mt-4">
-                        {% if not current_user.is_authenticated %}
-                            <div class="alert alert-info" role="alert">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>Want access?</strong> Contact an administrator to create an account for you.
-                            </div>
-                        {% endif %}
-                    </div>
+            <!-- End Feature Showcase Section -->
+
+            <div class="card info-card mt-md-5 mt-4">
+                <h4 class="card-title mb-3"><i class="fas fa-book-open text-info me-2"></i>Getting Started</h4> 
+                <p class="card-text mb-3">
+                    Ready to wake your devices? Ensure they support Wake-on-LAN and have it enabled in their BIOS/UEFI settings. 
+                    Your network adapter might also need specific configuration.
+                </p>
+                <p class="card-text">
+                    Our application simplifies sending the necessary 'magic packets', but proper device and network setup is key. 
+                    Need detailed instructions? 
+                    <a href="https://github.com/ReezFX/WOL-Manager/wiki" target="_blank" rel="noopener noreferrer">Check out our Wiki <i class="fas fa-external-link-alt fa-xs ms-1"></i></a> 
+                    for setup guides and troubleshooting tips.
+                </p>
+                
+                <div class="d-flex justify-content-center mt-4">
+                    {% if not current_user.is_authenticated %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Want access?</strong> Contact an administrator to create an account for you.
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
