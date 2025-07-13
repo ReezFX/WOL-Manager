@@ -46,6 +46,16 @@ WOL-Manager is a Flask-based web application designed to provide a user-friendly
 
 ## Release Notes
 
+### Version 1.5.1 (2025-07-13)
+- Security Updates:
+  - Updated Flask from 3.1.0 to 3.1.1 to address CVE-2025-47278 security vulnerability
+  - Upgraded Flask-CORS from 5.0.1 to 6.0.0 to address known security issues
+  - Enhanced overall application security posture with latest dependency updates
+- Line Ending Compatibility:
+  - Improved cross-platform compatibility for Windows development environments
+  - Enhanced Docker container compatibility with proper Unix line endings
+  - Maintained full compatibility with Linux deployment environments
+
 ### Version 1.5.0 (2025-04-01)
 - Enhanced Wake Animation System with improved reliability:
   - Refactored animation handling to prevent race conditions during status checking

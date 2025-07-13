@@ -5,6 +5,19 @@ All notable changes to the WOL-Manager application will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2025-07-13
+
+### Security
+- Updated Flask from 3.1.0 to 3.1.1 to address CVE-2025-47278 security vulnerability
+- Upgraded Flask-CORS from 5.0.1 to 6.0.0 to address known security issues
+- Enhanced overall application security posture with latest dependency updates
+
+### Changed
+- Improved cross-platform compatibility for Windows development environments
+- Enhanced Docker container compatibility with proper Unix line endings
+- Maintained full compatibility with Linux deployment environments
+- Updated application version display to 1.5.1 in footer
+
 ## [1.5.0] - 2025-04-01
 
 ### Added
