@@ -1,117 +1,208 @@
-/* Statistics Dashboard Module */
+/* Statistics Dashboard Module - 2025 Modern Dark Design */
 .statistics-dashboard {
-    margin-bottom: 2rem;
-    padding: 2rem;
-    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(var(--primary-color-rgb), 0.015) 100%);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 6px 24px rgba(var(--shadow-color-rgb, 0, 0, 0), 0.04),
-                0 2px 6px rgba(var(--shadow-color-rgb, 0, 0, 0), 0.02);
-    backdrop-filter: blur(10px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 2rem !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
     position: relative;
-    overflow: hidden;
 }
 
+/* Remove all glassmorphism artifacts */
 .statistics-dashboard::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color, var(--primary-color)), var(--accent-color, var(--primary-color)));
-    opacity: 0.8;
+    display: none !important;
 }
 
 .statistics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 2rem;
-    margin-top: 1.5rem;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important;
+    gap: 1.5rem !important;
+    margin-top: 0 !important;
 }
 
-.statistic-card {
-    background: linear-gradient(145deg, var(--bg-card) 0%, rgba(var(--primary-color-rgb), 0.01) 100%);
-    border: 1px solid rgba(var(--primary-color-rgb), 0.08);
-    border-radius: 12px;
-    padding: 1.25rem;
-    height: 220px; /* Fixed height including padding */
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05), 0 1px 4px rgba(0, 0, 0, 0.03);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+/* 2025 Modern Dark Theme Card Design - Higher specificity */
+.statistics-dashboard .statistic-card,
+.statistics-grid .statistic-card,
+.statistic-card.card {
+    background: rgba(30, 30, 35, 0.95) !important;
+    border: 1px solid rgba(var(--primary-color-rgb), 0.15) !important;
+    border-radius: 16px !important;
+    padding: 1.75rem !important;
+    height: 280px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transform: translateZ(0) !important;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }
 
+/* Subtle gradient overlay */
 .statistic-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(var(--primary-color-rgb), 0.03) 0%, 
+        transparent 50%,
+        rgba(var(--accent-color-rgb), 0.02) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    border-radius: 16px;
+}
+
+/* Top accent bar */
+.statistic-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     height: 2px;
-    background: linear-gradient(90deg, var(--primary-color), rgba(var(--primary-color-rgb), 0.6));
-    opacity: 0.7;
+    background: linear-gradient(90deg, 
+        var(--primary-color) 0%, 
+        var(--accent-color) 100%);
+    border-radius: 16px 16px 0 0;
+    opacity: 0.6;
     transform: scaleX(0);
-    transition: transform 0.3s ease;
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.statistic-card:hover {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(var(--primary-color-rgb), 0.06);
-    transform: translateY(-4px);
-    border-color: rgba(var(--primary-color-rgb), 0.15);
+.statistics-dashboard .statistic-card:hover,
+.statistics-grid .statistic-card:hover,
+.statistic-card.card:hover {
+    background: rgba(35, 35, 42, 0.98) !important;
+    border-color: rgba(var(--primary-color-rgb), 0.25) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 
+        0 12px 25px -5px rgba(0, 0, 0, 0.25),
+        0 8px 10px -5px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(var(--primary-color-rgb), 0.05) !important;
 }
 
-.statistic-card:hover::before {
-    transform: scaleX(1);
+.statistics-dashboard .statistic-card:hover::before,
+.statistics-grid .statistic-card:hover::before,
+.statistic-card.card:hover::before {
+    opacity: 1 !important;
+}
+
+.statistics-dashboard .statistic-card:hover::after,
+.statistics-grid .statistic-card:hover::after,
+.statistic-card.card:hover::after {
+    transform: scaleX(1) !important;
+    opacity: 0.9 !important;
 }
 
 .statistic-header {
     display: flex;
     align-items: center;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+}
+
+.statistic-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 1px;
+    opacity: 0.8;
 }
 
 .statistic-title {
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.95);
     margin: 0;
     flex: 1;
+    letter-spacing: -0.01em;
+    text-shadow: none;
 }
 
 .statistic-icon {
     width: 20px;
     height: 20px;
-    margin-right: 0.5rem;
+    margin-right: 0.75rem;
     color: var(--primary-color);
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+.statistic-card:hover .statistic-icon {
+    color: var(--accent-color);
+    opacity: 1;
+    transform: scale(1.05);
 }
 
 .statistic-content {
     flex: 1;
     position: relative;
-    height: 150px; /* Exactly 150px as requested */
+    height: 180px; /* Increased for better chart visibility */
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0.5rem 0;
 }
 
+/* Chart.js Container Optimizations */
 .chart-container {
     width: 100%;
     height: 100%;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    padding: 0.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.statistic-card:hover .chart-container {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .chart-canvas {
-    max-width: 100%;
-    max-height: 100%;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    height: auto !important;
+    border-radius: 8px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
+    transition: filter 0.3s ease;
 }
 
-/* Loading state */
+.statistic-card:hover .chart-canvas {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+/* Chart.js Legend Styling */
+.chart-container .chartjs-legend {
+    display: none !important;
+}
+
+/* Chart.js Tooltip Optimization */
+.chartjs-tooltip {
+    background: rgba(20, 20, 25, 0.95) !important;
+    border: 1px solid rgba(var(--primary-color-rgb), 0.3) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
+}
+
+/* Enhanced Loading state */
 .statistic-loading {
     display: flex;
     flex-direction: column;
@@ -119,21 +210,35 @@
     justify-content: center;
     height: 150px;
     color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
 }
 
 .loading-spinner {
-    width: 24px;
-    height: 24px;
-    border: 2px solid var(--border-color);
-    border-top: 2px solid var(--primary-color);
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(var(--primary-color-rgb), 0.1);
+    border-top: 3px solid var(--primary-color);
+    border-right: 3px solid var(--accent-color);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 0.5rem;
+    animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+    margin-bottom: 0.75rem;
+    filter: drop-shadow(0 2px 4px rgba(var(--primary-color-rgb), 0.1));
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% { 
+        transform: rotate(0deg);
+        filter: drop-shadow(0 2px 4px rgba(var(--primary-color-rgb), 0.1));
+    }
+    50% { 
+        transform: rotate(180deg);
+        filter: drop-shadow(0 4px 8px rgba(var(--accent-color-rgb), 0.15));
+    }
+    100% { 
+        transform: rotate(360deg);
+        filter: drop-shadow(0 2px 4px rgba(var(--primary-color-rgb), 0.1));
+    }
 }
 
 /* Error state */
