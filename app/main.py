@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request, jsonify
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, func, and_
+from datetime import datetime, timedelta
 import os
 
-from app.models import Host
+from app.models import Host, WolLog
 from app import db_session
 from app.logging_config import get_logger
 
@@ -167,5 +168,214 @@ def internal_server_error(e):
 
 from functools import wraps
 from time import time
+
+
+# Statistics API Routes
+@main.route('/api/device_status')
+def api_device_status():
+    """API endpoint for device status statistics (pie chart data)."""
+    if not current_user.is_authenticated and not session.get('authenticated'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        # Get user context
+        if current_user.is_authenticated:
+            user = current_user
+        else:
+            # Create simple user object for session-based auth
+            class SimpleUser:
+                def __init__(self):
+                    self.id = session.get('user_id')
+                    self.is_admin = session.get('is_admin', False)
+                    self.roles = []
+            user = SimpleUser()
+        
+        # Get hosts accessible to the user
+        if user.is_admin:
+            hosts = db_session.query(Host).all()
+        else:
+            hosts = db_session.query(Host).filter(Host.created_by == user.id).all()
+        
+        # Count hosts by status using the ping service
+        online_count = 0
+        offline_count = 0
+        unknown_count = 0
+        
+        # Get real status from ping service
+        try:
+            from app.ping_service import get_host_status
+            
+            for host in hosts:
+                try:
+                    # Get status from the ping service
+                    status_data = get_host_status(host.id)
+                    status = status_data.get('status', 'unknown')
+                    
+                    if status == 'online':
+                        online_count += 1
+                    elif status == 'offline':
+                        offline_count += 1
+                    else:
+                        unknown_count += 1
+                        
+                except Exception as e:
+                    logger.warning(f'Failed to get status for host {host.id}: {str(e)}')
+                    unknown_count += 1
+                    
+        except ImportError:
+            logger.warning('Ping service not available, using fallback status distribution')
+            # Fallback: distribute hosts evenly across statuses
+            total_hosts = len(hosts)
+            online_count = total_hosts // 3
+            offline_count = total_hosts // 3
+            unknown_count = total_hosts - online_count - offline_count
+        
+        return jsonify({
+            'labels': ['Online', 'Offline', 'Unknown'],
+            'data': [online_count, offline_count, unknown_count]
+        })
+    
+    except Exception as e:
+        logger.error(f'Error fetching device status: {str(e)}')
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@main.route('/api/wol_success_rate')
+def api_wol_success_rate():
+    """API endpoint for WoL success rate over time (line chart data)."""
+    if not current_user.is_authenticated and not session.get('authenticated'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        days = request.args.get('days', default=7, type=int)
+        
+        # Get user context
+        if current_user.is_authenticated:
+            user = current_user
+        else:
+            class SimpleUser:
+                def __init__(self):
+                    self.id = session.get('user_id')
+                    self.is_admin = session.get('is_admin', False)
+                    self.roles = []
+            user = SimpleUser()
+        
+        # Calculate date range
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+        
+        # Query WoL logs based on user permissions
+        if user.is_admin:
+            # Admin can see all logs
+            logs_query = db_session.query(WolLog).filter(
+                WolLog.timestamp >= start_date,
+                WolLog.timestamp <= end_date
+            )
+        else:
+            # Regular users see only their own logs
+            logs_query = db_session.query(WolLog).filter(
+                WolLog.user_id == user.id,
+                WolLog.timestamp >= start_date,
+                WolLog.timestamp <= end_date
+            )
+        
+        # Group by day and calculate success rate
+        daily_stats = {}
+        for i in range(days):
+            day = start_date + timedelta(days=i)
+            day_str = day.strftime('%Y-%m-%d')
+            daily_stats[day_str] = {'total': 0, 'success': 0}
+        
+        logs = logs_query.all()
+        for log in logs:
+            day_str = log.timestamp.strftime('%Y-%m-%d')
+            if day_str in daily_stats:
+                daily_stats[day_str]['total'] += 1
+                if log.success:
+                    daily_stats[day_str]['success'] += 1
+        
+        # Calculate success rates
+        labels = []
+        success_rates = []
+        
+        for i in range(days):
+            day = start_date + timedelta(days=i)
+            day_str = day.strftime('%Y-%m-%d')
+            labels.append(day_str)
+            
+            total = daily_stats[day_str]['total']
+            success = daily_stats[day_str]['success']
+            
+            if total > 0:
+                success_rate = (success / total) * 100
+            else:
+                success_rate = 0  # No attempts = 0% success rate
+            
+            success_rates.append(round(success_rate, 1))
+        
+        return jsonify({
+            'labels': labels,
+            'data': success_rates
+        })
+    
+    except Exception as e:
+        logger.error(f'Error fetching WoL success rate: {str(e)}')
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@main.route('/api/device_usage')
+def api_device_usage():
+    """API endpoint for device usage frequency (bar chart data)."""
+    if not current_user.is_authenticated and not session.get('authenticated'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        # Get user context
+        if current_user.is_authenticated:
+            user = current_user
+        else:
+            class SimpleUser:
+                def __init__(self):
+                    self.id = session.get('user_id')
+                    self.is_admin = session.get('is_admin', False)
+                    self.roles = []
+            user = SimpleUser()
+        
+        # Query device usage based on user permissions
+        if user.is_admin:
+            # Admin can see usage for all devices
+            hosts = db_session.query(Host).all()
+            usage_query = db_session.query(
+                Host.name,
+                func.count(WolLog.id).label('wake_count')
+            ).outerjoin(WolLog, Host.id == WolLog.device_id).group_by(Host.id, Host.name)
+        else:
+            # Regular users see only their own devices
+            hosts = db_session.query(Host).filter(Host.created_by == user.id).all()
+            usage_query = db_session.query(
+                Host.name,
+                func.count(WolLog.id).label('wake_count')
+            ).filter(
+                Host.created_by == user.id
+            ).outerjoin(WolLog, Host.id == WolLog.device_id).group_by(Host.id, Host.name)
+        
+        usage_data = usage_query.all()
+        
+        # Prepare chart data
+        device_names = []
+        wake_counts = []
+        
+        for name, count in usage_data:
+            device_names.append(name)
+            wake_counts.append(count if count else 0)
+        
+        return jsonify({
+            'labels': device_names,
+            'data': wake_counts
+        })
+    
+    except Exception as e:
+        logger.error(f'Error fetching device usage: {str(e)}')
+        return jsonify({'error': 'Internal server error'}), 500
 
 

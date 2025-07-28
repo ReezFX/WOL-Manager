@@ -7,7 +7,7 @@ from flask import Blueprint, request, flash, redirect, url_for, render_template,
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 
-from app.models import Host
+from app.models import Host, WolLog
 from app import db_session
 from app.logging_config import get_logger
 
@@ -170,18 +170,50 @@ def wake_host(host_id):
         return redirect(url_for('host.list_hosts'))
     # Attempt to wake the host
     access_logger.info(f"Attempting to wake host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
-    success = send_magic_packet(host.mac_address)
     
-    # Show a success or error message
-    if success:
-        # Update the last_wake_time field
-        host.last_wake_time = datetime.now()
+    # Record start time for response time calculation
+    start_time = datetime.now()
+    success = send_magic_packet(host.mac_address)
+    end_time = datetime.now()
+    
+    # Calculate response time in milliseconds
+    response_time = int((end_time - start_time).total_seconds() * 1000)
+    
+    # Log the WoL attempt to the database for statistics
+    try:
+        wol_log = WolLog(
+            device_id=host_id,
+            timestamp=start_time,
+            success=success,
+            response_time=response_time,
+            user_id=current_user.id
+        )
+        db_session.add(wol_log)
+        
+        # Show a success or error message
+        if success:
+            # Update the last_wake_time field
+            host.last_wake_time = start_time
+            access_logger.info(f"Successfully sent WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
+            flash(f'Wake-on-LAN packet sent to {host.name} ({host.mac_address}).', 'success')
+        else:
+            access_logger.error(f"Failed to send WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
+            flash(f'Failed to send Wake-on-LAN packet to {host.name}.', 'danger')
+        
+        # Commit all changes
         db_session.commit()
-        access_logger.info(f"Successfully sent WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
-        flash(f'Wake-on-LAN packet sent to {host.name} ({host.mac_address}).', 'success')
-    else:
-        access_logger.error(f"Failed to send WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
-        flash(f'Failed to send Wake-on-LAN packet to {host.name}.', 'danger')
+        
+    except Exception as e:
+        logger.error(f"Failed to log WoL attempt for host {host_id}: {str(e)}")
+        db_session.rollback()
+        
+        # Still show user feedback even if logging fails
+        if success:
+            access_logger.info(f"Successfully sent WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
+            flash(f'Wake-on-LAN packet sent to {host.name} ({host.mac_address}).', 'success')
+        else:
+            access_logger.error(f"Failed to send WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
+            flash(f'Failed to send Wake-on-LAN packet to {host.name}.', 'danger')
     
     # Redirect to the host list
     return redirect(url_for('host.list_hosts'))

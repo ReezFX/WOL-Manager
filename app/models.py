@@ -86,6 +86,7 @@ class User(Base, UserMixin):
     # Relationships
     hosts = relationship('Host', back_populates='created_by_user', cascade="all, delete-orphan")
     roles = relationship('Role', secondary=user_roles, back_populates='users')
+    wol_logs = relationship('WolLog', back_populates='user')
     
     def __repr__(self):
         return f'<User {self.username}>'
@@ -137,6 +138,7 @@ class Host(Base):
     
     # Relationships
     created_by_user = relationship('User', back_populates='hosts')
+    wol_logs = relationship('WolLog', back_populates='device')
     
     def __repr__(self):
         return f'<Host {self.name} ({self.mac_address})>'
@@ -171,6 +173,23 @@ class Host(Base):
             user_role_ids = [str(role.id) for role in user.roles]
             return any(role_id in self.visible_to_roles for role_id in user_role_ids)
         return False
+
+class WolLog(Base):
+    __tablename__ = 'wol_logs'
+    
+    id = Column(Integer, primary_key=True)
+    device_id = Column(Integer, ForeignKey('hosts.id'), nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    success = Column(Boolean, nullable=False)
+    response_time = Column(Integer, nullable=True)  # in milliseconds
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    
+    # Relationships
+    device = relationship('Host', back_populates='wol_logs')
+    user = relationship('User', back_populates='wol_logs')
+    
+    def __repr__(self):
+        return f'<WolLog {self.device_id} - {"success" if self.success else "failed"} at {self.timestamp}>'
 
 class AppSettings(Base):
     __tablename__ = 'app_settings'

@@ -1,5 +1,5 @@
 from flask import render_template, abort, current_app, request, redirect, url_for, flash, jsonify
-from app.models import Host, db_session
+from app.models import Host, WolLog, db_session
 from datetime import datetime
 from app.utils import validate_public_access_token
 from . import bp
@@ -69,16 +69,44 @@ def wake_host():
         f"Public wake attempt for host {host.id} ({host.name}) from IP {request.remote_addr}"
     )
     
-    # Send wake-on-lan signal
+    # Record start time for response time calculation
+    start_time = datetime.now()
     success = send_magic_packet(host.mac_address)
+    end_time = datetime.now()
     
-    if success:
-        # Update the last wake time
-        host.last_wake_time = datetime.now()
+    # Calculate response time in milliseconds
+    response_time = int((end_time - start_time).total_seconds() * 1000)
+    
+    # Log the WoL attempt to the database for statistics (no user_id for public access)
+    try:
+        wol_log = WolLog(
+            device_id=host_id,
+            timestamp=start_time,
+            success=success,
+            response_time=response_time,
+            user_id=None  # Public access has no user
+        )
+        db_session.add(wol_log)
+        
+        if success:
+            # Update the last wake time
+            host.last_wake_time = start_time
+            flash('Wake-on-LAN packet sent successfully.', 'success')
+        else:
+            flash('Failed to send Wake-on-LAN packet.', 'danger')
+        
+        # Commit all changes
         db_session.commit()
-        flash('Wake-on-LAN packet sent successfully.', 'success')
-    else:
-        flash('Failed to send Wake-on-LAN packet.', 'danger')
+        
+    except Exception as e:
+        current_app.logger.error(f"Failed to log public WoL attempt for host {host_id}: {str(e)}")
+        db_session.rollback()
+        
+        # Still show user feedback even if logging fails
+        if success:
+            flash('Wake-on-LAN packet sent successfully.', 'success')
+        else:
+            flash('Failed to send Wake-on-LAN packet.', 'danger')
     
     # Redirect back to the public view
     return redirect(url_for('public.public_host_view', token=host.public_access_token))
