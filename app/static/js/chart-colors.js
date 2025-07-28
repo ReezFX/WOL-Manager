@@ -21,62 +21,70 @@ const COLORS = {
     dangerRGB: [226, 85, 99]
 };
 
-// Chart.js Default Color Schemes
+// Chart.js Default Color Schemes with Modern Gradients
 const CHART_COLORS = {
-    // Primary color scheme for single data series
+    // Primary color scheme for single data series with gradient enhancement
     primary: {
-        background: `rgba(${COLORS.primaryRGB.join(',')}, 0.2)`,
+        background: `linear-gradient(135deg, rgba(${COLORS.primaryRGB.join(',')}, 0.3), rgba(${COLORS.secondaryRGB.join(',')}, 0.15))`,
         border: COLORS.primary,
-        hover: `rgba(${COLORS.primaryRGB.join(',')}, 0.3)`
+        hover: `linear-gradient(135deg, rgba(${COLORS.primaryRGB.join(',')}, 0.4), rgba(${COLORS.secondaryRGB.join(',')}, 0.25))`
     },
     
-    // Multi-color scheme for multiple data series
+    // Multi-color scheme with vibrant gradients for multiple data series
     multiColor: [
         {
-            background: `rgba(${COLORS.primaryRGB.join(',')}, 0.2)`,
+            background: `linear-gradient(135deg, rgba(${COLORS.primaryRGB.join(',')}, 0.35), rgba(${COLORS.secondaryRGB.join(',')}, 0.2))`,
             border: COLORS.primary,
-            hover: `rgba(${COLORS.primaryRGB.join(',')}, 0.3)`
+            hover: `linear-gradient(135deg, rgba(${COLORS.primaryRGB.join(',')}, 0.45), rgba(${COLORS.secondaryRGB.join(',')}, 0.3))`
         },
         {
-            background: `rgba(${COLORS.accentRGB.join(',')}, 0.2)`,
+            background: `linear-gradient(135deg, rgba(${COLORS.accentRGB.join(',')}, 0.35), rgba(${COLORS.warningRGB.join(',')}, 0.2))`,
             border: COLORS.accent,
-            hover: `rgba(${COLORS.accentRGB.join(',')}, 0.3)`
+            hover: `linear-gradient(135deg, rgba(${COLORS.accentRGB.join(',')}, 0.45), rgba(${COLORS.warningRGB.join(',')}, 0.3))`
         },
         {
-            background: `rgba(${COLORS.successRGB.join(',')}, 0.2)`,
+            background: `linear-gradient(135deg, rgba(${COLORS.successRGB.join(',')}, 0.35), rgba(${COLORS.infoRGB.join(',')}, 0.2))`,
             border: COLORS.success,
-            hover: `rgba(${COLORS.successRGB.join(',')}, 0.3)`
+            hover: `linear-gradient(135deg, rgba(${COLORS.successRGB.join(',')}, 0.45), rgba(${COLORS.infoRGB.join(',')}, 0.3))`
         },
         {
-            background: `rgba(${COLORS.infoRGB.join(',')}, 0.2)`,
+            background: `linear-gradient(135deg, rgba(${COLORS.infoRGB.join(',')}, 0.35), rgba(${COLORS.primaryRGB.join(',')}, 0.2))`,
             border: COLORS.info,
-            hover: `rgba(${COLORS.infoRGB.join(',')}, 0.3)`
+            hover: `linear-gradient(135deg, rgba(${COLORS.infoRGB.join(',')}, 0.45), rgba(${COLORS.primaryRGB.join(',')}, 0.3))`
         },
         {
-            background: `rgba(${COLORS.warningRGB.join(',')}, 0.2)`,
+            background: `linear-gradient(135deg, rgba(${COLORS.warningRGB.join(',')}, 0.35), rgba(${COLORS.accentRGB.join(',')}, 0.2))`,
             border: COLORS.warning,
-            hover: `rgba(${COLORS.warningRGB.join(',')}, 0.3)`
+            hover: `linear-gradient(135deg, rgba(${COLORS.warningRGB.join(',')}, 0.45), rgba(${COLORS.accentRGB.join(',')}, 0.3))`
         },
         {
-            background: `rgba(${COLORS.dangerRGB.join(',')}, 0.2)`,
+            background: `linear-gradient(135deg, rgba(${COLORS.dangerRGB.join(',')}, 0.35), rgba(255, 100, 120, 0.2))`,
             border: COLORS.danger,
-            hover: `rgba(${COLORS.dangerRGB.join(',')}, 0.3)`
+            hover: `linear-gradient(135deg, rgba(${COLORS.dangerRGB.join(',')}, 0.45), rgba(255, 100, 120, 0.3))`
         }
     ],
     
-    // Gradient schemes for enhanced visuals
+    // Enhanced gradient schemes for enhanced visuals
     gradients: {
         primary: {
             start: COLORS.primary,
-            end: COLORS.secondary
+            end: COLORS.secondary,
+            css: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`
         },
         accent: {
             start: COLORS.accent,
-            end: COLORS.warning
+            end: COLORS.warning,
+            css: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.warning})`
         },
         success: {
             start: COLORS.success,
-            end: COLORS.info
+            end: COLORS.info,
+            css: `linear-gradient(135deg, ${COLORS.success}, ${COLORS.info})`
+        },
+        danger: {
+            start: COLORS.danger,
+            end: '#ff6b8a',
+            css: `linear-gradient(135deg, ${COLORS.danger}, #ff6b8a)`
         }
     }
 };

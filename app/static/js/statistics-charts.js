@@ -120,11 +120,11 @@ function initSuccessRateChart() {
                 hoverBackgroundColor: CHART_COLORS.primary.hover,
                 borderWidth: 3,
                 fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointBackgroundColor: CHART_COLORS.primary.border,
-                pointBorderColor: 'rgba(30, 30, 35, 0.9)',
+                tension: 0.3,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointBackgroundColor: CHART_COLORS.gradients.primary.start,
+                pointBorderColor: CHART_COLORS.gradients.primary.end,
                 pointBorderWidth: 2
             }]
         },
@@ -188,7 +188,7 @@ function initDeviceUsageChart() {
                 data: [], // Will be populated with usage data
                 backgroundColor: CHART_COLORS.multiColor.map(c => c.background),
                 borderColor: CHART_COLORS.multiColor.map(c => c.border),
-                hoverBackgroundColor: CHART_COLORS.multiColor.map(c => c.hover),
+                hoverBackgroundColor: CHART_COLORS.multiColor.map(c => ChartUtils.createGradient(ctx, ctx.canvas.getContext('2d').canvas, c.background, c.hover)),
                 borderWidth: 1,
                 borderRadius: 6,
                 borderSkipped: false

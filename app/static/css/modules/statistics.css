@@ -1,4 +1,4 @@
-/* Statistics Dashboard Module - 2025 Modern Dark Design */
+/* Statistics Dashboard Module - 2025 Modern Design with Vibrant Gradients */
 .statistics-dashboard {
     margin-bottom: 2rem !important;
     padding: 0 !important;
@@ -20,24 +20,30 @@
     margin-top: 0 !important;
 }
 
-/* 2025 Modern Dark Theme Card Design - Higher specificity */
+/* 2025 Modern Dark Theme Card Design with Vibrant Gradients */
 .statistics-dashboard .statistic-card,
 .statistics-grid .statistic-card,
 .statistic-card.card {
-    background: rgba(30, 30, 35, 0.95) !important;
-    border: 1px solid rgba(var(--primary-color-rgb), 0.15) !important;
-    border-radius: 16px !important;
+    background: linear-gradient(145deg, 
+        rgba(25, 25, 30, 0.98) 0%,
+        rgba(35, 35, 42, 0.95) 50%,
+        rgba(30, 30, 38, 0.97) 100%) !important;
+    border: 1px solid rgba(var(--primary-color-rgb), 0.2) !important;
+    border-radius: 20px !important;
     padding: 1.75rem !important;
-    height: 280px !important;
+    height: 300px !important;
     display: flex !important;
     flex-direction: column !important;
     position: relative !important;
     overflow: hidden !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
     transform: translateZ(0) !important;
     box-shadow: 
-        0 4px 6px -1px rgba(0, 0, 0, 0.1),
-        0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
 }
 
 /* Subtle gradient overlay */
@@ -49,13 +55,13 @@
     right: 0;
     bottom: 0;
     background: linear-gradient(135deg, 
-        rgba(var(--primary-color-rgb), 0.03) 0%, 
+        rgba(var(--primary-color-rgb), 0.05) 0%, 
         transparent 50%,
-        rgba(var(--accent-color-rgb), 0.02) 100%);
+        rgba(var(--accent-color-rgb), 0.04) 100%);
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
-    border-radius: 16px;
+    border-radius: 20px;
 }
 
 /* Top accent bar */
@@ -69,8 +75,8 @@
     background: linear-gradient(90deg, 
         var(--primary-color) 0%, 
         var(--accent-color) 100%);
-    border-radius: 16px 16px 0 0;
-    opacity: 0.6;
+    border-radius: 20px 20px 0 0;
+    opacity: 0.8;
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -79,13 +85,16 @@
 .statistics-dashboard .statistic-card:hover,
 .statistics-grid .statistic-card:hover,
 .statistic-card.card:hover {
-    background: rgba(35, 35, 42, 0.98) !important;
-    border-color: rgba(var(--primary-color-rgb), 0.25) !important;
+    background: linear-gradient(145deg, 
+        rgba(35, 35, 42, 0.99) 0%,
+        rgba(45, 45, 52, 0.96) 50%,
+        rgba(40, 40, 48, 0.98) 100%) !important;
+    border-color: rgba(var(--primary-color-rgb), 0.3) !important;
     transform: translateY(-2px) !important;
     box-shadow: 
-        0 12px 25px -5px rgba(0, 0, 0, 0.25),
-        0 8px 10px -5px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(var(--primary-color-rgb), 0.05) !important;
+        0 12px 28px -5px rgba(0, 0, 0, 0.28),
+        0 8px 12px -5px rgba(0, 0, 0, 0.11),
+        0 0 0 2px rgba(var(--primary-color-rgb), 0.05) !important;
 }
 
 .statistics-dashboard .statistic-card:hover::before,
@@ -98,7 +107,7 @@
 .statistics-grid .statistic-card:hover::after,
 .statistic-card.card:hover::after {
     transform: scaleX(1) !important;
-    opacity: 0.9 !important;
+    opacity: 1 !important;
 }
 
 .statistic-header {
@@ -285,52 +294,104 @@
     opacity: 0.7;
 }
 
-/* Responsive design */
+/* Responsive design for modern cards */
 @media (max-width: 768px) {
     .statistics-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 1.25rem;
     }
     
-    .statistic-card {
-        height: 180px; /* Slightly smaller on mobile */
+    .statistics-dashboard .statistic-card,
+    .statistics-grid .statistic-card,
+    .statistic-card.card {
+        height: 260px !important; /* Maintain better proportions on tablet */
+        padding: 1.5rem !important;
+        border-radius: 16px !important;
     }
     
     .statistic-content {
-        height: 130px;
+        height: 160px;
     }
     
     .statistic-loading,
     .statistic-error,
     .statistic-empty {
-        height: 130px;
+        height: 160px;
+    }
+    
+    .chart-container {
+        padding: 0.25rem;
     }
 }
 
 @media (max-width: 480px) {
     .statistics-dashboard {
-        padding: 0.75rem;
-        margin: 0 -0.5rem 1.5rem;
-        border-radius: 8px;
+        padding: 0.5rem;
+        margin: 0 -0.25rem 1.5rem;
     }
     
-    .statistic-card {
-        height: 160px;
-        padding: 0.75rem;
+    .statistics-grid {
+        gap: 1rem;
+    }
+    
+    .statistics-dashboard .statistic-card,
+    .statistics-grid .statistic-card,
+    .statistic-card.card {
+        height: 220px !important;
+        padding: 1.25rem !important;
+        border-radius: 14px !important;
     }
     
     .statistic-content {
-        height: 110px;
+        height: 130px;
     }
     
     .statistic-loading,
     .statistic-error,
     .statistic-empty {
-        height: 110px;
+        height: 130px;
     }
     
     .statistic-title {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .statistic-icon {
+        width: 18px;
+        height: 18px;
+        margin-right: 0.5rem;
+    }
+    
+    .chart-container {
+        padding: 0.125rem;
+        border-radius: 8px;
+    }
+    
+    .statistics-header {
+        padding: 1rem 0 !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .statistics-header h3 {
+        font-size: 1.25rem !important;
+    }
+    
+    .statistics-controls {
+        gap: 0.75rem !important;
+    }
+    
+    .time-range-selector,
+    select.time-range-selector {
+        min-width: 120px !important;
+        font-size: 0.8rem !important;
+        padding: 0.625rem 0.875rem !important;
+    }
+    
+    .refresh-stats-btn,
+    button.refresh-stats-btn {
+        padding: 0.625rem 1rem !important;
+        font-size: 0.8rem !important;
     }
 }
 
