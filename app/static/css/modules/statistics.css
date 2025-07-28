@@ -1,4 +1,4 @@
-/* Statistics Dashboard Module - 2025 Modern Design with Vibrant Gradients */
+/* Statistics Dashboard Module - Senior Frontend Polish */
 .statistics-dashboard {
     margin-bottom: 2rem !important;
     padding: 0 !important;
@@ -6,44 +6,108 @@
     border: none !important;
     box-shadow: none !important;
     position: relative;
+    /* Performance optimization */
+    contain: layout style paint;
+    will-change: auto;
 }
 
-/* Remove all glassmorphism artifacts */
+/* Clean slate - remove artifacts */
 .statistics-dashboard::before {
     display: none !important;
 }
 
+/* Advanced Grid with Better Responsive Behavior */
 .statistics-grid {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important;
-    gap: 1.5rem !important;
-    margin-top: 0 !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: clamp(1rem, 2.5vw, 1.5rem) !important;
+    margin: 0 !important;
+    padding: 1.5rem 0 2rem !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 0 var(--border-radius) var(--border-radius) !important;
+    /* Smooth grid animations */
+    transition: gap 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    /* Performance boost */
+    transform: translateZ(0);
+    box-shadow: none !important;
 }
 
-/* 2025 Modern Dark Theme Card Design with Vibrant Gradients */
+/* Senior Frontend: Production-Ready Card Design with Theme Support */
 .statistics-dashboard .statistic-card,
 .statistics-grid .statistic-card,
 .statistic-card.card {
-    background: linear-gradient(145deg, 
-        rgba(25, 25, 30, 0.98) 0%,
-        rgba(35, 35, 42, 0.95) 50%,
-        rgba(30, 30, 38, 0.97) 100%) !important;
-    border: 1px solid rgba(var(--primary-color-rgb), 0.2) !important;
-    border-radius: 20px !important;
-    padding: 1.75rem !important;
-    height: 300px !important;
+    /* Core Layout */
     display: flex !important;
     flex-direction: column !important;
     position: relative !important;
+    height: clamp(280px, 20vw, 320px) !important;
+    padding: clamp(1.25rem, 3vw, 1.75rem) !important;
     overflow: hidden !important;
-    transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
-    transform: translateZ(0) !important;
-    box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.12),
-        0 4px 16px rgba(0, 0, 0, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    
+    /* Border & Shape - rounded top corners for first row cards to match header */
+    border: 1px solid rgba(var(--primary-color-rgb), 0.2) !important;
+    border-radius: clamp(12px, 1.5vw, 16px) !important;
+    
+    /* Performance Optimizations */
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
+    contain: layout style paint !important;
+    will-change: transform, box-shadow !important;
+    
+    /* Smooth Transitions */
+    transition: 
+        transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+        box-shadow 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+        border-color 0.3s ease,
+        background 0.3s ease !important;
+    
+    /* Hardware Acceleration */
+    transform: translate3d(0, 0, 0) !important;
+}
+
+/* Light Theme Card Design */
+.light-theme .statistics-dashboard .statistic-card,
+.light-theme .statistics-grid .statistic-card,
+.light-theme .statistic-card.card {
+    /* Light theme gradient background */
+    background: 
+        linear-gradient(145deg, 
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(248, 249, 250, 0.95) 50%,
+            rgba(243, 244, 246, 0.97) 100%),
+        radial-gradient(circle at 30% 30%, 
+            rgba(var(--primary-color-rgb), 0.04) 0%, 
+            transparent 50%) !important;
+    
+    /* Light theme shadow system */
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        0 4px 16px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 0 0 0.5px rgba(var(--primary-color-rgb), 0.08) !important;
+}
+
+/* Dark Theme Card Design */
+.dark-theme .statistics-dashboard .statistic-card,
+.dark-theme .statistics-grid .statistic-card,
+.dark-theme .statistic-card.card {
+    /* Dark theme gradient background */
+    background: 
+        linear-gradient(145deg, 
+            rgba(26, 26, 28, 0.98) 0%,
+            rgba(36, 36, 38, 0.95) 50%,
+            rgba(45, 45, 48, 0.97) 100%),
+        radial-gradient(circle at 30% 30%, 
+            rgba(var(--primary-color-rgb), 0.08) 0%, 
+            transparent 50%) !important;
+    
+    /* Dark theme shadow system */
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.25),
+        0 4px 16px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03),
+        0 0 0 0.5px rgba(var(--primary-color-rgb), 0.12) !important;
 }
 
 /* Subtle gradient overlay */
@@ -82,19 +146,44 @@
     transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.statistics-dashboard .statistic-card:hover,
-.statistics-grid .statistic-card:hover,
-.statistic-card.card:hover {
-    background: linear-gradient(145deg, 
-        rgba(35, 35, 42, 0.99) 0%,
-        rgba(45, 45, 52, 0.96) 50%,
-        rgba(40, 40, 48, 0.98) 100%) !important;
-    border-color: rgba(var(--primary-color-rgb), 0.3) !important;
+/* Light theme hover effects */
+.light-theme .statistics-dashboard .statistic-card:hover,
+.light-theme .statistics-grid .statistic-card:hover,
+.light-theme .statistic-card.card:hover {
+    background: 
+        linear-gradient(145deg, 
+            rgba(250, 250, 252, 0.99) 0%,
+            rgba(245, 246, 248, 0.96) 50%,
+            rgba(240, 241, 243, 0.98) 100%),
+        radial-gradient(circle at 30% 30%, 
+            rgba(var(--primary-color-rgb), 0.06) 0%, 
+            transparent 50%) !important;
+    border-color: rgba(var(--primary-color-rgb), 0.35) !important;
     transform: translateY(-2px) !important;
     box-shadow: 
-        0 12px 28px -5px rgba(0, 0, 0, 0.28),
-        0 8px 12px -5px rgba(0, 0, 0, 0.11),
-        0 0 0 2px rgba(var(--primary-color-rgb), 0.05) !important;
+        0 12px 32px rgba(0, 0, 0, 0.12),
+        0 8px 16px rgba(0, 0, 0, 0.08),
+        0 0 0 2px rgba(var(--primary-color-rgb), 0.08) !important;
+}
+
+/* Dark theme hover effects */
+.dark-theme .statistics-dashboard .statistic-card:hover,
+.dark-theme .statistics-grid .statistic-card:hover,
+.dark-theme .statistic-card.card:hover {
+    background: 
+        linear-gradient(145deg, 
+            rgba(35, 35, 42, 0.99) 0%,
+            rgba(45, 45, 52, 0.96) 50%,
+            rgba(40, 40, 48, 0.98) 100%),
+        radial-gradient(circle at 30% 30%, 
+            rgba(var(--primary-color-rgb), 0.1) 0%, 
+            transparent 50%) !important;
+    border-color: rgba(var(--primary-color-rgb), 0.35) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 
+        0 12px 28px -5px rgba(0, 0, 0, 0.35),
+        0 8px 12px -5px rgba(0, 0, 0, 0.15),
+        0 0 0 2px rgba(var(--primary-color-rgb), 0.08) !important;
 }
 
 .statistics-dashboard .statistic-card:hover::before,
@@ -110,50 +199,107 @@
     opacity: 1 !important;
 }
 
+/* Enhanced statistic card header with webapp integration */
 .statistic-header {
     display: flex;
     align-items: center;
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem 1rem;
+    background: linear-gradient(135deg, 
+        rgba(var(--primary-color-rgb), 0.06) 0%,
+        rgba(var(--secondary-color-rgb), 0.04) 50%,
+        rgba(var(--info-color-rgb), 0.03) 100%);
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+    border: 1px solid rgba(var(--primary-color-rgb), 0.12);
+    border-bottom: none;
     position: relative;
+    margin: -1.75rem -1.75rem 1.25rem -1.75rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    overflow: hidden;
+}
+
+.statistic-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        var(--primary-color) 0%, 
+        var(--info-color) 30%,
+        var(--accent-color) 70%,
+        var(--warning-color) 100%);
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
 }
 
 .statistic-header::after {
     content: '';
     position: absolute;
-    bottom: -1px;
+    bottom: 0;
     left: 0;
-    width: 40px;
+    right: 0;
     height: 1px;
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-    border-radius: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%,
+        rgba(var(--primary-color-rgb), 0.6) 20%,
+        rgba(var(--accent-color-rgb), 0.4) 80%,
+        transparent 100%);
     opacity: 0.8;
 }
 
 .statistic-title {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, 
+        var(--primary-color) 0%, 
+        var(--secondary-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin: 0;
     flex: 1;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    position: relative;
     text-shadow: none;
 }
 
+/* Fallback for browsers that don't support background-clip: text */
+@supports not (-webkit-background-clip: text) {
+    .statistic-title {
+        color: var(--primary-color);
+        -webkit-text-fill-color: unset;
+    }
+}
+
 .statistic-icon {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     margin-right: 0.75rem;
-    color: var(--primary-color);
+    background: linear-gradient(135deg, 
+        var(--primary-color) 0%, 
+        var(--accent-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     opacity: 0.9;
     transition: all 0.3s ease;
+    filter: drop-shadow(0 1px 2px rgba(var(--primary-color-rgb), 0.2));
+}
+
+/* Fallback for statistic icon */
+@supports not (-webkit-background-clip: text) {
+    .statistic-icon {
+        color: var(--primary-color);
+        -webkit-text-fill-color: unset;
+    }
 }
 
 .statistic-card:hover .statistic-icon {
-    color: var(--accent-color);
     opacity: 1;
-    transform: scale(1.05);
+    transform: scale(1.08) rotate(5deg);
+    filter: drop-shadow(0 2px 4px rgba(var(--accent-color-rgb), 0.3));
 }
 
 .statistic-content {
@@ -166,35 +312,89 @@
     padding: 0.5rem 0;
 }
 
-/* Chart.js Container Optimizations */
+/* Senior Frontend: Advanced Chart Container */
 .chart-container {
+    /* Layout */
     width: 100%;
     height: 100%;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.02);
-    border-radius: 12px;
-    padding: 0.5rem;
-    transition: background-color 0.3s ease;
+    
+    /* Visual Design */
+    background: 
+        radial-gradient(circle at 50% 50%, 
+            rgba(0, 0, 0, 0.025) 0%, 
+            rgba(0, 0, 0, 0.015) 100%);
+    border-radius: clamp(8px, 1.5vw, 12px);
+    padding: clamp(0.25rem, 1vw, 0.5rem);
+    
+    /* Subtle Inner Shadow */
+    box-shadow: 
+        inset 0 1px 3px rgba(0, 0, 0, 0.05),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    
+    /* Smooth Transitions */
+    transition: 
+        background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Performance */
+    contain: layout style;
 }
 
-.statistic-card:hover .chart-container {
-    background: rgba(0, 0, 0, 0.05);
+/* Light theme chart container hover */
+.light-theme .statistic-card:hover .chart-container {
+    background: 
+        radial-gradient(circle at 50% 50%, 
+            rgba(var(--primary-color-rgb), 0.03) 0%, 
+            rgba(0, 0, 0, 0.015) 100%);
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
+/* Dark theme chart container hover */
+.dark-theme .statistic-card:hover .chart-container {
+    background: 
+        radial-gradient(circle at 50% 50%, 
+            rgba(0, 0, 0, 0.04) 0%, 
+            rgba(0, 0, 0, 0.02) 100%);
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.08),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Enhanced Chart Canvas */
 .chart-canvas {
+    /* Sizing */
     max-width: 100% !important;
     max-height: 100% !important;
     height: auto !important;
-    border-radius: 8px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
-    transition: filter 0.3s ease;
+    
+    /* Visual Enhancement */
+    border-radius: clamp(6px, 1vw, 8px);
+    
+    /* Advanced Shadow System */
+    filter: 
+        drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05))
+        drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    
+    /* Smooth Interactions */
+    transition: 
+        filter 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.2s ease;
+    
+    /* Performance Boost */
+    will-change: filter;
 }
 
 .statistic-card:hover .chart-canvas {
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    filter: 
+        drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1))
+        drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    transform: scale(1.01);
 }
 
 /* Chart.js Legend Styling */
@@ -204,11 +404,12 @@
 
 /* Chart.js Tooltip Optimization */
 .chartjs-tooltip {
-    background: rgba(20, 20, 25, 0.95) !important;
+    background: var(--bg-card) !important;
     border: 1px solid rgba(var(--primary-color-rgb), 0.3) !important;
     border-radius: 8px !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: var(--apple-shadow-lg) !important;
     backdrop-filter: blur(12px) !important;
+    color: var(--text-primary) !important;
 }
 
 /* Enhanced Loading state */
@@ -297,8 +498,18 @@
 /* Responsive design for modern cards */
 @media (max-width: 768px) {
     .statistics-grid {
-        grid-template-columns: 1fr;
-        gap: 1.25rem;
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+        padding: 1.5rem !important;
+    }
+    
+    .statistics-header {
+        padding: 1.5rem 1.5rem 1rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .statistics-header h3 {
+        font-size: 1.5rem !important;
     }
     
     .statistics-dashboard .statistic-card,
@@ -307,6 +518,11 @@
         height: 260px !important; /* Maintain better proportions on tablet */
         padding: 1.5rem !important;
         border-radius: 16px !important;
+    }
+    
+    .statistic-header {
+        margin: -1.5rem -1.5rem 1rem -1.5rem !important;
+        padding: 1rem 1.25rem 0.75rem !important;
     }
     
     .statistic-content {
@@ -414,24 +630,58 @@
     border-top-color: var(--primary-color);
 }
 
-/* Statistics dashboard header - Modern styling */
+/* Statistics dashboard header - Enhanced webapp-integrated design */
 .statistics-header {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    margin-bottom: 2rem !important;
-    padding: 1.5rem 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    margin-bottom: 0 !important;
+    padding: 2rem 2.5rem 1.5rem !important;
+    border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+    background: linear-gradient(135deg, 
+        rgba(var(--primary-color-rgb), 0.08) 0%,
+        rgba(var(--secondary-color-rgb), 0.06) 50%,
+        rgba(var(--accent-color-rgb), 0.04) 100%) !important;
+    border: 1px solid rgba(var(--primary-color-rgb), 0.15) !important;
+    border-bottom: 1px solid rgba(var(--primary-color-rgb), 0.1) !important;
+    position: relative !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.statistics-header::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, 
+        var(--primary-color) 0%, 
+        var(--info-color) 35%,
+        var(--accent-color) 70%,
+        var(--warning-color) 100%) !important;
+    border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
 }
 
 .statistics-header h3 {
     margin: 0 !important;
-    color: rgba(255, 255, 255, 0.95) !important;
-    font-size: 1.5rem !important;
+    background: linear-gradient(135deg, 
+        var(--primary-color) 0%, 
+        var(--secondary-color) 60%,
+        var(--accent-color) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-size: 1.75rem !important;
     font-weight: 700 !important;
-    letter-spacing: -0.02em !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    letter-spacing: -0.03em !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
 }
+
 
 .statistics-controls {
     display: flex !important;
@@ -446,15 +696,13 @@ select.time-range-selector {
     padding: 0.75rem 1rem !important;
     border: 1px solid rgba(var(--primary-color-rgb), 0.2) !important;
     border-radius: 12px !important;
-    background: rgba(40, 40, 45, 0.9) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
+    background: var(--input-bg) !important;
+    color: var(--text-primary) !important;
     font-weight: 500 !important;
     min-width: 140px !important;
     cursor: pointer !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    box-shadow: var(--apple-shadow-sm) !important;
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
 }
@@ -462,12 +710,9 @@ select.time-range-selector {
 .time-range-selector:hover,
 select.time-range-selector:hover {
     border-color: rgba(var(--primary-color-rgb), 0.4) !important;
-    background: rgba(45, 45, 52, 0.95) !important;
-    color: rgba(255, 255, 255, 1) !important;
-    box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.15),
-        0 0 0 1px rgba(var(--primary-color-rgb), 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    box-shadow: var(--apple-shadow) !important;
     transform: translateY(-1px) !important;
 }
 
@@ -482,8 +727,8 @@ select.time-range-selector:focus {
 
 /* Option styling for select */
 .time-range-selector option {
-    background: rgba(30, 30, 35, 0.98) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
+    background: var(--input-bg) !important;
+    color: var(--text-primary) !important;
     padding: 0.5rem !important;
 }
 
@@ -565,13 +810,201 @@ button.refresh-stats-btn:active {
     transform: rotate(180deg) !important;
 }
 
-/* Animation for loading charts */
+/* Senior Frontend: Advanced State Management & Micro-interactions */
+
+/* Chart Loading States with Skeleton Animation */
 .chart-loading {
-    opacity: 0.5;
+    opacity: 0.6;
     pointer-events: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.08),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+    border-radius: inherit;
 }
 
 .chart-loaded {
     opacity: 1;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Card Entrance Animation */
+.statistic-card {
+    animation: cardEnter 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+}
+
+.statistic-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.statistic-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.statistic-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes cardEnter {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Focus Management for Accessibility */
+.statistic-card:focus-within {
+    outline: 2px solid rgba(var(--primary-color-rgb), 0.6);
+    outline-offset: 2px;
+    border-color: rgba(var(--primary-color-rgb), 0.4) !important;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .statistic-card {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+    
+    .chart-loading::before {
+        animation: none;
+    }
+    
+    .loading-spinner {
+        animation: spin 2s linear infinite;
+    }
+    
+    .statistic-card,
+    .chart-container,
+    .chart-canvas {
+        transition: none;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .statistic-card {
+        border-width: 2px;
+        border-color: rgba(var(--primary-color-rgb), 0.8) !important;
+    }
+    
+    .statistic-title {
+        color: rgba(255, 255, 255, 1) !important;
+        font-weight: 700;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .statistics-dashboard {
+        break-inside: avoid;
+    }
+    
+    .statistic-card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 2px solid #333 !important;
+        background: white !important;
+    }
+    
+    .statistic-title {
+        color: #000 !important;
+    }
+    
+    .refresh-stats-btn,
+    .time-range-selector {
+        display: none;
+    }
+}
+
+/* Performance Optimization: GPU Layering */
+.statistic-card,
+.chart-container,
+.chart-canvas {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Advanced Hover Effects with CSS Custom Properties - Theme Aware */
+.light-theme .statistic-card {
+    --hover-intensity: 0;
+    --hover-scale: 1;
+    
+    transform: translate3d(0, calc(var(--hover-intensity) * -2px), 0) 
+               scale(var(--hover-scale)) !important;
+}
+
+.dark-theme .statistic-card {
+    --hover-intensity: 0;
+    --hover-scale: 1;
+    
+    transform: translate3d(0, calc(var(--hover-intensity) * -2px), 0) 
+               scale(var(--hover-scale)) !important;
+}
+
+.statistic-card:hover {
+    --hover-intensity: 1;
+    --hover-scale: 1.005;
+}
+
+/* Container Query Support (Progressive Enhancement) */
+@container (min-width: 400px) {
+    .statistic-card {
+        padding: 2rem;
+    }
+    
+    .statistic-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* Modern Scrollbar Styling */
+.statistics-dashboard {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--primary-color-rgb), 0.3) transparent;
+}
+
+.statistics-dashboard::-webkit-scrollbar {
+    width: 6px;
+}
+
+.statistics-dashboard::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.statistics-dashboard::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--primary-color-rgb), 0.3);
+    border-radius: 3px;
+    transition: background-color 0.3s ease;
+}
+
+.statistics-dashboard::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.5);
 }

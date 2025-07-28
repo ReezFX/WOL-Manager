@@ -11,7 +11,7 @@
 @import 'components.css';
 @import 'forms.css';
 @import 'tables.css';
-@import 'statistics.css';
+/* statistics.css loaded separately in base.html to prevent conflicts */
 @import 'toast.css';
 @import 'responsive.css';
 

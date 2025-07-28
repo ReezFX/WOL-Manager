@@ -46,6 +46,7 @@
     <!-- Custom CSS (Modularized) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/animations.css') }}">
+    <!-- Statistics CSS loaded LAST to ensure maximum priority and prevent overrides -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/statistics.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
