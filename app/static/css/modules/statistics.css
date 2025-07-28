@@ -146,58 +146,6 @@
     transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* Light theme hover effects */
-.light-theme .statistics-dashboard .statistic-card:hover,
-.light-theme .statistics-grid .statistic-card:hover,
-.light-theme .statistic-card.card:hover {
-    background: 
-        linear-gradient(145deg, 
-            rgba(250, 250, 252, 0.99) 0%,
-            rgba(245, 246, 248, 0.96) 50%,
-            rgba(240, 241, 243, 0.98) 100%),
-        radial-gradient(circle at 30% 30%, 
-            rgba(var(--primary-color-rgb), 0.06) 0%, 
-            transparent 50%) !important;
-    border-color: rgba(var(--primary-color-rgb), 0.35) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 
-        0 12px 32px rgba(0, 0, 0, 0.12),
-        0 8px 16px rgba(0, 0, 0, 0.08),
-        0 0 0 2px rgba(var(--primary-color-rgb), 0.08) !important;
-}
-
-/* Dark theme hover effects */
-.dark-theme .statistics-dashboard .statistic-card:hover,
-.dark-theme .statistics-grid .statistic-card:hover,
-.dark-theme .statistic-card.card:hover {
-    background: 
-        linear-gradient(145deg, 
-            rgba(35, 35, 42, 0.99) 0%,
-            rgba(45, 45, 52, 0.96) 50%,
-            rgba(40, 40, 48, 0.98) 100%),
-        radial-gradient(circle at 30% 30%, 
-            rgba(var(--primary-color-rgb), 0.1) 0%, 
-            transparent 50%) !important;
-    border-color: rgba(var(--primary-color-rgb), 0.35) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 
-        0 12px 28px -5px rgba(0, 0, 0, 0.35),
-        0 8px 12px -5px rgba(0, 0, 0, 0.15),
-        0 0 0 2px rgba(var(--primary-color-rgb), 0.08) !important;
-}
-
-.statistics-dashboard .statistic-card:hover::before,
-.statistics-grid .statistic-card:hover::before,
-.statistic-card.card:hover::before {
-    opacity: 1 !important;
-}
-
-.statistics-dashboard .statistic-card:hover::after,
-.statistics-grid .statistic-card:hover::after,
-.statistic-card.card:hover::after {
-    transform: scaleX(1) !important;
-    opacity: 1 !important;
-}
 
 /* Enhanced statistic card header with webapp integration */
 .statistic-header {
@@ -296,11 +244,6 @@
     }
 }
 
-.statistic-card:hover .statistic-icon {
-    opacity: 1;
-    transform: scale(1.08) rotate(5deg);
-    filter: drop-shadow(0 2px 4px rgba(var(--accent-color-rgb), 0.3));
-}
 
 .statistic-content {
     flex: 1;
@@ -344,27 +287,6 @@
     contain: layout style;
 }
 
-/* Light theme chart container hover */
-.light-theme .statistic-card:hover .chart-container {
-    background: 
-        radial-gradient(circle at 50% 50%, 
-            rgba(var(--primary-color-rgb), 0.03) 0%, 
-            rgba(0, 0, 0, 0.015) 100%);
-    box-shadow: 
-        inset 0 2px 4px rgba(0, 0, 0, 0.06),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-
-/* Dark theme chart container hover */
-.dark-theme .statistic-card:hover .chart-container {
-    background: 
-        radial-gradient(circle at 50% 50%, 
-            rgba(0, 0, 0, 0.04) 0%, 
-            rgba(0, 0, 0, 0.02) 100%);
-    box-shadow: 
-        inset 0 2px 4px rgba(0, 0, 0, 0.08),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
 
 /* Enhanced Chart Canvas */
 .chart-canvas {
@@ -390,12 +312,6 @@
     will-change: filter;
 }
 
-.statistic-card:hover .chart-canvas {
-    filter: 
-        drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1))
-        drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
-    transform: scale(1.01);
-}
 
 /* Chart.js Legend Styling */
 .chart-container .chartjs-legend {
@@ -617,9 +533,6 @@
     border-color: var(--border-color-dark);
 }
 
-.dark-theme .statistic-card:hover {
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
-}
 
 .dark-theme .statistic-header {
     border-bottom-color: var(--border-color-dark);
@@ -969,10 +882,6 @@ button.refresh-stats-btn:active {
                scale(var(--hover-scale)) !important;
 }
 
-.statistic-card:hover {
-    --hover-intensity: 1;
-    --hover-scale: 1.005;
-}
 
 /* Container Query Support (Progressive Enhancement) */
 @container (min-width: 400px) {
