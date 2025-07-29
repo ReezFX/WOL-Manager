@@ -81,18 +81,25 @@ function setupRippleEffects(container = document) {
  * @param {HTMLElement} container - Optional container to limit scope
  */
 function setupCardAnimations(container = document) {
-  // Apply staggered animations for cards
-  const cards = container.querySelectorAll('.card');
+  // Apply staggered animations for cards - but avoid double application
+  const cards = container.querySelectorAll('.card-animate-in');
   
   cards.forEach((card, index) => {
-    // Only apply animation if it has the card-animate-in class
-    if (card.classList.contains('card-animate-in')) {
-      // Ensure cards that load later still animate in
-      if (card.getBoundingClientRect().top < window.innerHeight) {
-        card.style.animationDelay = `${index * 50}ms`;
-        card.style.animationPlayState = 'running';
-      }
+    // Skip if animation has already been initialized to prevent conflicts
+    if (card.dataset.animationInitialized === 'true') {
+      return;
     }
+    
+    // Mark as initialized
+    card.dataset.animationInitialized = 'true';
+    
+    // Only apply animation delay if not already set inline
+    if (!card.style.animationDelay) {
+      card.style.animationDelay = `${index * 50}ms`;
+    }
+    
+    // Ensure animation runs
+    card.style.animationPlayState = 'running';
     
     // Add hover animation class for cards that don't already have it
     if (!card.classList.contains('hover-elevate')) {
@@ -219,6 +226,13 @@ function autoEnhanceInteractiveElements(container = document) {
   const flashMessages = container.querySelectorAll('.alert:not(.processed-alert)');
   flashMessages.forEach((alert, index) => {
     alert.classList.add('processed-alert');
+    
+    // Skip if already animated to prevent conflicts
+    if (alert.dataset.alertAnimated === 'true') {
+      return;
+    }
+    alert.dataset.alertAnimated = 'true';
+    
     // Add initial styles
     alert.style.opacity = '0';
     alert.style.transform = 'translateY(-20px)';
@@ -233,11 +247,15 @@ function autoEnhanceInteractiveElements(container = document) {
     // Add auto-dismiss after 5 seconds for success messages
     if (alert.classList.contains('alert-success')) {
       setTimeout(() => {
-        alert.style.opacity = '0';
-        alert.style.transform = 'translateY(-20px)';
-        setTimeout(() => {
-          alert.remove();
-        }, 300);
+        if (alert.parentNode) { // Check if element still exists
+          alert.style.opacity = '0';
+          alert.style.transform = 'translateY(-20px)';
+          setTimeout(() => {
+            if (alert.parentNode) {
+              alert.remove();
+            }
+          }, 300);
+        }
       }, 5000);
     }
   });
@@ -303,22 +321,25 @@ window.updateStatusBadgeAnimation = function(badgeId, status) {
   if (badge) {
     console.log("Updating badge animation:", badgeId, "with status:", status);
     
+    // Prevent animation conflicts by checking if status is actually changing
+    const currentStatus = badge.getAttribute('data-status');
+    if (currentStatus === status) {
+      return; // No change needed
+    }
+    
     // Update data attribute
     badge.setAttribute('data-status', status);
     
-    // Remove current animation
-    badge.style.animation = '';
-    
-    // Force a reflow to ensure animation restarts
-    void badge.offsetWidth;
-    
-    // Update classes to match status
+    // Remove current animation and classes cleanly
+    badge.style.animation = 'none';
     badge.classList.remove('bg-success', 'bg-danger', 'bg-secondary');
+    
+    // Force a reflow to ensure animation state is reset
+    void badge.offsetWidth;
     
     // Apply styling based on status
     if (status === 'online') {
       // No animation for online status
-      badge.style.animation = 'none';
       badge.style.backgroundColor = 'var(--success-color)';
       badge.style.color = 'white';
       badge.classList.add('bg-success');
@@ -330,7 +351,6 @@ window.updateStatusBadgeAnimation = function(badgeId, status) {
       badge.classList.add('bg-danger');
     } else if (status === 'unknown') {
       // No animation for unknown status
-      badge.style.animation = 'none';
       badge.style.backgroundColor = 'var(--secondary-color)';
       badge.style.color = 'white';
       badge.classList.add('bg-secondary');

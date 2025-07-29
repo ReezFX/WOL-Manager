@@ -18,9 +18,6 @@
   transform: translateY(-3px);
 }
 
-.card-animate-in {
-  animation: cardEntrance 0.4s var(--animation-spring) forwards;
-}
 
 /* Card Headers */
 .card-header {

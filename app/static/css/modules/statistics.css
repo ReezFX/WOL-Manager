@@ -833,6 +833,19 @@ button.refresh-stats-btn:active {
     }
 }
 
+/* Fallback for browsers that don't support prefers-contrast */
+@media (min-contrast: 50%) {
+    .statistic-card {
+        border-width: 2px;
+        border-color: rgba(var(--primary-color-rgb), 0.8) !important;
+    }
+    
+    .statistic-title {
+        color: rgba(255, 255, 255, 1) !important;
+        font-weight: 700;
+    }
+}
+
 /* Print Styles */
 @media print {
     .statistics-dashboard {
