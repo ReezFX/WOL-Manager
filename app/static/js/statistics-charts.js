@@ -136,7 +136,7 @@ function initSuccessRateChart() {
                 y: {
                     ...CHART_CONFIG.defaults.scales.y,
                     beginAtZero: true,
-                    max: 100,
+                    max: 105,
                     ticks: {
                         ...CHART_CONFIG.defaults.scales.y.ticks,
                         callback: function(value) {

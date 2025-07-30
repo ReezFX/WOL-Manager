@@ -95,6 +95,14 @@ const CHART_CONFIG = {
     defaults: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: {
+                top: 1,
+                left: 1,
+                right: 1,
+                bottom: 1
+            }
+        },
         plugins: {
             legend: {
                 display: false  // Hide legends as per CSS

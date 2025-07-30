@@ -172,6 +172,14 @@ function createDeviceStatusChart(container, data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 5,
+                    left: 8,
+                    right: 1,
+                    bottom: 5
+                }
+            },
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -235,22 +243,31 @@ function createWolSuccessChart(container, data) {
                 data: data.data,
                 borderColor: 'rgb(23, 162, 184)',
                 backgroundColor: 'rgba(23, 162, 184, 0.15)',
-                borderWidth: 2,
+                borderWidth: 3,
                 fill: true,
                 tension: 0.4,
                 pointBackgroundColor: 'rgb(23, 162, 184)',
                 pointBorderColor: 'rgb(13, 110, 140)',
                 pointBorderWidth: 2,
-                pointRadius: 4
+                pointRadius: 5,
+                pointHoverRadius: 8
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 8,
+                    left: 5,
+                    right: 10,
+                    bottom: 5
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
+                    grace: '10%',
                     ticks: {
                         callback: function(value) {
                             return value + '%';
@@ -260,7 +277,8 @@ function createWolSuccessChart(container, data) {
                         }
                     },
                     grid: {
-                        color: 'rgba(0,0,0,0.1)'
+                        color: 'rgba(255, 255, 255, 0.08)',
+                        borderColor: 'rgba(255, 255, 255, 0.1)'
                     }
                 },
                 x: {
@@ -268,7 +286,8 @@ function createWolSuccessChart(container, data) {
                         font: {
                             size: 9
                         },
-                        maxRotation: 45
+                        maxRotation: 45,
+                        color: 'rgba(255, 255, 255, 0.7)'
                     },
                     grid: {
                         display: false
@@ -333,17 +352,28 @@ function createDeviceUsageChart(container, data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 8,
+                    left: 5,
+                    right: 10,
+                    bottom: 5
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
+                    grace: '10%',
                     ticks: {
                         stepSize: 1,
                         font: {
                             size: 10
-                        }
+                        },
+                        color: 'rgba(255, 255, 255, 0.7)'
                     },
                     grid: {
-                        color: 'rgba(0,0,0,0.1)'
+                        color: 'rgba(255, 255, 255, 0.08)',
+                        borderColor: 'rgba(255, 255, 255, 0.1)'
                     }
                 },
                 x: {
@@ -351,7 +381,8 @@ function createDeviceUsageChart(container, data) {
                         font: {
                             size: 9
                         },
-                        maxRotation: 45
+                        maxRotation: 45,
+                        color: 'rgba(255, 255, 255, 0.7)'
                     },
                     grid: {
                         display: false

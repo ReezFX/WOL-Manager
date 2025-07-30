@@ -256,11 +256,11 @@
 .statistic-content {
     flex: 1;
     position: relative;
-    height: 180px; /* Increased for better chart visibility */
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 0;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0rem;
+    min-height: 0;
 }
 
 /* Senior Frontend: Advanced Chart Container */
@@ -270,16 +270,16 @@
     height: 100%;
     position: relative;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
     
     /* Visual Design */
     background: 
         radial-gradient(circle at 50% 50%, 
             rgba(0, 0, 0, 0.025) 0%, 
             rgba(0, 0, 0, 0.015) 100%);
-    border-radius: clamp(8px, 1.5vw, 12px);
-    padding: clamp(0.25rem, 1vw, 0.5rem);
+    border-radius: clamp(4px, 0.8vw, 8px);
+    padding: 0rem;
     
     /* Subtle Inner Shadow */
     box-shadow: 
@@ -299,12 +299,12 @@
 /* Enhanced Chart Canvas */
 .chart-canvas {
     /* Sizing */
-    max-width: 100% !important;
-    max-height: 100% !important;
-    height: auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    flex: 1;
     
     /* Visual Enhancement */
-    border-radius: clamp(6px, 1vw, 8px);
+    border-radius: clamp(4px, 0.8vw, 6px);
     
     /* Advanced Shadow System */
     filter: 
@@ -314,10 +314,18 @@
     /* Smooth Interactions */
     transition: 
         filter 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-        transform 0.2s ease;
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Performance Boost */
-    will-change: filter;
+    will-change: filter, transform;
+}
+
+/* Hover effect for engagement */
+.statistic-card:hover .chart-canvas {
+    transform: scale(1.03);
+    filter: 
+        drop-shadow(0 4px 8px rgba(0, 0, 0, 0.08))
+        drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
 }
 
 
@@ -456,17 +464,18 @@
     }
     
     .statistic-content {
-        height: 160px;
+        padding: 0rem;
     }
     
     .statistic-loading,
     .statistic-error,
     .statistic-empty {
-        height: 160px;
+        height: 140px;
     }
     
     .chart-container {
-        padding: 0.25rem;
+        padding: 0.02rem;
+        border-radius: 6px;
     }
 }
 
@@ -489,13 +498,13 @@
     }
     
     .statistic-content {
-        height: 130px;
+        padding: 0.02rem;
     }
     
     .statistic-loading,
     .statistic-error,
     .statistic-empty {
-        height: 130px;
+        height: 120px;
     }
     
     .statistic-title {
@@ -509,8 +518,8 @@
     }
     
     .chart-container {
-        padding: 0.125rem;
-        border-radius: 8px;
+        padding: 0.01rem;
+        border-radius: 4px;
     }
     
     .statistics-header {
