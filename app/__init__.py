@@ -191,24 +191,56 @@ def create_app(config_name=None):
     def inject_version_info():
         """Inject version information and update status into all templates."""
         try:
-            from app.update_checker import get_update_checker
-            update_checker = get_update_checker()
-            status = update_checker.get_status()
+            from app.models import AppSettings
+            import os
+            
+            # Get settings from database
+            settings = AppSettings.get_settings(db_session)
+            
+            # If we don't have stored version info, read local version from file
+            local_version = settings.local_version
+            if not local_version:
+                version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'VERSION')
+                if os.path.exists(version_file):
+                    with open(version_file, 'r', encoding='utf-8') as f:
+                        local_version = f.read().strip()
+                        # Update the database with local version if it wasn't stored
+                        if local_version and local_version != 'unknown':
+                            settings.local_version = local_version
+                            db_session.commit()
+                else:
+                    local_version = 'unknown'
             
             return {
-                'app_version': status['local_version'],
-                'update_available': status['update_available'],
-                'latest_version': status['remote_version'],
-                'github_repo': status['github_repo']
+                'app_version': local_version or 'unknown',
+                'update_available': settings.update_available or False,
+                'latest_version': settings.remote_version,
+                'github_repo': 'ReezFX/WOL-Manager'
             }
         except Exception as e:
             logger.error(f"Error getting version info: {str(e)}")
-            return {
-                'app_version': 'unknown',
-                'update_available': False,
-                'latest_version': None,
-                'github_repo': 'ReezFX/WOL-Manager'
-            }
+            # Fallback to reading VERSION file directly
+            try:
+                import os
+                local_version = 'unknown'
+                version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'VERSION')
+                if os.path.exists(version_file):
+                    with open(version_file, 'r', encoding='utf-8') as f:
+                        local_version = f.read().strip()
+                
+                return {
+                    'app_version': local_version,
+                    'update_available': False,
+                    'latest_version': None,
+                    'github_repo': 'ReezFX/WOL-Manager'
+                }
+            except Exception:
+                return {
+                    'app_version': 'unknown',
+                    'update_available': False,
+                    'latest_version': None,
+                    'github_repo': 'ReezFX/WOL-Manager'
+                }
     
     # Add context processor for toast system
     @app.context_processor

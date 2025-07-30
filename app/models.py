@@ -203,6 +203,13 @@ class AppSettings(Base):
     max_concurrent_sessions = Column(Integer, default=10, nullable=False)
     log_profile = Column(String(10), default="MEDIUM", nullable=False)  # Options: LOW, MEDIUM, HIGH, DEBUG
     
+    # Update checker fields
+    local_version = Column(String(20), nullable=True)  # Current local version
+    remote_version = Column(String(20), nullable=True)  # Latest remote version
+    update_available = Column(Boolean, default=False, nullable=False)  # Whether update is available
+    last_update_check = Column(DateTime, nullable=True)  # When the last check was performed
+    check_error = Column(Text, nullable=True)  # Any error from the last check
+    
     def __repr__(self):
         return f'<AppSettings id={self.id}>'
         

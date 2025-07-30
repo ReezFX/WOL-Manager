@@ -534,6 +534,8 @@ def api_check_update():
         import requests
         from packaging import version
         import time
+        from datetime import datetime
+        from app.models import AppSettings
         
         # Read local version
         local_version = "unknown"
@@ -565,6 +567,19 @@ def api_check_update():
                 update_available = version.parse(remote_version) > version.parse(local_version)
             except Exception as e:
                 check_error = f"Version comparison error: {str(e)}"
+        
+        # Store results in database
+        try:
+            settings = AppSettings.get_settings(db_session)
+            settings.local_version = local_version
+            settings.remote_version = remote_version
+            settings.update_available = update_available
+            settings.last_update_check = datetime.utcnow()
+            settings.check_error = check_error
+            db_session.commit()
+        except Exception as e:
+            logger.error(f"Error storing update check results: {str(e)}", exc_info=True)
+            db_session.rollback()
         
         access_logger.info(f"Manual update check triggered by admin {current_user.username}")
         

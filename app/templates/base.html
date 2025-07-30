@@ -46,6 +46,7 @@
     <!-- Custom CSS (Modularized) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/animations.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/update_badge.css') }}">
     <!-- Statistics CSS loaded LAST to ensure maximum priority and prevent overrides -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/statistics.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -123,6 +124,7 @@
                         </a>
                     </li>
                     {% endif %}
+                    <!-- Update Available Badge - Removed from navbar -->
                     <li class="nav-item ms-2">
                         <button class="theme-toggle-btn btn nav-link py-1 px-2 rounded-circle action-button btn-animate-press" id="theme-toggle">
                             <i class="fas fa-moon" id="theme-icon"></i>
