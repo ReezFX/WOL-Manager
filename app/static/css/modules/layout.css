@@ -105,11 +105,13 @@ body {
 .apple-navbar .nav-link:hover {
   background-color: rgba(0, 0, 0, 0.04);
   color: var(--primary-color);
+  text-decoration: none;
 }
 
 .dark-theme .apple-navbar .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.08);
   color: #fff;
+  text-decoration: none;
 }
 
 .navbar-brand {
@@ -147,11 +149,13 @@ body {
 .navbar-nav .nav-link:hover,
 .navbar-nav .nav-link:focus {
   color: var(--primary-color);
+  text-decoration: none;
 }
 
 .dark-theme .navbar-nav .nav-link:hover,
 .dark-theme .navbar-nav .nav-link:focus {
   color: rgba(255, 255, 255, 1);
+  text-decoration: none;
 }
 
 .dark-theme .navbar-toggler {
@@ -199,8 +203,15 @@ body {
     transform: translateX(2px);
 }
 
+/* Remove underlines from dropdown items */
+.dropdown-item:hover,
+.dropdown-item:focus {
+    text-decoration: none !important;
+}
+
 .dark-theme .dropdown-item:hover {
     background-color: rgba(255, 255, 255, 0.1);
+    text-decoration: none !important;
 }
 
 /* Fallback for browsers without backdrop-filter support */
@@ -297,4 +308,47 @@ body {
   font-weight: 600;
   color: var(--accent-color);
   letter-spacing: -0.02em;
+}
+
+/* =============================================
+   COMPREHENSIVE NAVIGATION LINK STYLING
+   Remove underlines from ALL navigation links
+   ============================================= */
+
+/* Remove underlines from all navigation-related links */
+.navbar a,
+.navbar .nav-link,
+.navbar .navbar-brand,
+.apple-navbar a,
+.apple-navbar .nav-link, 
+.apple-navbar .navbar-brand,
+.dropdown-menu a,
+.dropdown-item,
+.navbar-nav a,
+.navbar-nav .nav-link {
+    text-decoration: none !important;
+}
+
+/* Ensure hover states also don't show underlines */
+.navbar a:hover,
+.navbar .nav-link:hover,
+.navbar .navbar-brand:hover,
+.apple-navbar a:hover,
+.apple-navbar .nav-link:hover,
+.apple-navbar .navbar-brand:hover,
+.dropdown-menu a:hover,
+.dropdown-item:hover,
+.navbar-nav a:hover,
+.navbar-nav .nav-link:hover,
+.navbar a:focus,
+.navbar .nav-link:focus,
+.navbar .navbar-brand:focus,
+.apple-navbar a:focus,
+.apple-navbar .nav-link:focus,
+.apple-navbar .navbar-brand:focus,
+.dropdown-menu a:focus,
+.dropdown-item:focus,
+.navbar-nav a:focus,
+.navbar-nav .nav-link:focus {
+    text-decoration: none !important;
 }

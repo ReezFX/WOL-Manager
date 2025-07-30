@@ -9,6 +9,7 @@
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    flex-wrap: wrap;
 }
 
 .dashboard-title {
@@ -44,3 +45,54 @@
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 1.5rem 1rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+    
+    .dashboard-title {
+        font-size: 1.75rem;
+    }
+    
+    .dashboard-subtitle {
+        font-size: 1rem;
+    }
+    
+    .dashboard-header-actions {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .dashboard-header-actions .btn-apple {
+        padding: 0.75rem 2rem;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-header {
+        padding: 1rem 0.75rem;
+        margin-bottom: 1.5rem;
+        border-radius: 8px;
+    }
+    
+    .dashboard-title {
+        font-size: 1.5rem;
+        line-height: 1.3;
+    }
+    
+    .dashboard-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .dashboard-header-actions .btn-apple {
+        padding: 0.65rem 1.5rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
+    }
+}
