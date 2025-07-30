@@ -232,3 +232,81 @@
     height: 28px !important; /* Use !important to override potential inline height */
   }
 }
+
+/* === Responsive Host Card Layout === */
+
+/* Tablet view: 2 cards per row */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  #dashboard-host-grid .host-column {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  .card-footer .d-flex.justify-content-between {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-footer .d-flex.justify-content-between > * {
+    margin-bottom: 0.5rem;
+  }
+
+  .card-footer .d-flex.justify-content-between > *:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Statistics dashboard adjustments for tablet */
+  .statistics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.25rem !important;
+  }
+
+  .statistic-card {
+    height: auto !important;
+    min-height: 250px !important;
+  }
+
+  /* Action buttons in tablet view should be aligned properly */
+  .card-footer .d-flex.justify-content-between > div {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+/* Mobile view: 1 card per row */
+@media (max-width: 767.98px) {
+  .container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  #dashboard-host-grid .host-column {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .card-footer .d-flex.justify-content-between {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+/* Statistics dashboard adjustments for mobile */
+  .statistics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    padding: 1rem 0 !important; /* Keep vertical padding */
+  }
+
+  .feature-spotlight {
+    margin-bottom: 2rem !important;
+  }
+
+  .feature-spotlight .row {
+    flex-direction: column;
+  }
+
+  .feature-visual {
+    min-height: 120px !important;
+  }
+}
