@@ -77,7 +77,7 @@
 </div>
 
     <!-- Version 1.4.0 Feature Spotlight -->
-    <div class="feature-spotlight mb-4 card-animate-in" id="v140-spotlight" style="animation-delay: 0.4s;">
+    <div class="feature-spotlight mb-4 card-animate-in" id="v140-spotlight" style="animation-delay: 0.2s;">
         <div class="row align-items-center g-0">
             <div class="col-md-8">
                 <div class="feature-content p-4">
@@ -310,7 +310,7 @@
     </style>
 
     <!-- Statistics Section Separator -->
-    <div class="section-separator statistics-separator card-animate-in" style="animation-delay: 0.5s;">
+    <div class="section-separator statistics-separator card-animate-in" style="animation-delay: 0.3s;">
         <div class="separator-line">
             <div class="separator-content">
                 <div class="separator-icon">
@@ -327,7 +327,7 @@
     </div>
 
     <!-- Statistics Dashboard -->
-    <div class="statistics-dashboard card-animate-in" style="animation-delay: 0.6s;">
+    <div class="statistics-dashboard card-animate-in" style="animation-delay: 0.4s;">
         
         <div class="statistics-grid">
             <!-- Device Status Chart -->
@@ -375,7 +375,7 @@
     </div>
 
     <!-- Modern Separator -->
-    <div class="section-separator card-animate-in" style="animation-delay: 0.6s;">
+    <div class="section-separator card-animate-in" style="animation-delay: 0.5s;">
         <div class="separator-line">
             <div class="separator-content">
                 <div class="separator-icon">
@@ -390,7 +390,7 @@
     <div class="row" id="dashboard-host-grid">
         {% for host in hosts %}
         <div class="col-md-4 mb-4 host-column" id="host-column-{{ host.id }}">
-            <div class="card h-100 card-animate-in hover-elevate" data-host-id="{{ host.id }}">
+            <div class="card h-100 card-animate-in hover-elevate" data-host-id="{{ host.id }}" style="animation-delay: {{ 0.6 + (loop.index0 * 0.1) }}s;">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ host.name }}</h5>
                     {% if host.status == 'online' %}
