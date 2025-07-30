@@ -64,12 +64,17 @@
         </div>
     </div>
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="card-animate-in" style="animation-delay: 0.1s;">Dashboard</h1>
-        <a href="{{ url_for('host.add_host') }}" class="btn btn-primary card-animate-in" style="animation-delay: 0.2s;">
-            <i class="fas fa-plus"></i> Add New Host
+<div class="dashboard-header card-animate-in" style="animation-delay: 0.1s;">
+    <div class="dashboard-header-content">
+        <h1 class="dashboard-title">Dashboard</h1>
+        <p class="dashboard-subtitle">Welcome back, {{ current_user.username }}!</p>
+    </div>
+    <div class="dashboard-header-actions">
+        <a href="{{ url_for('host.add_host') }}" class="btn btn-primary btn-apple">
+            <i class="fas fa-plus me-1"></i> Add New Host
         </a>
     </div>
+</div>
 
     <!-- Version 1.4.0 Feature Spotlight -->
     <div class="feature-spotlight mb-4 card-animate-in" id="v140-spotlight" style="animation-delay: 0.4s;">
