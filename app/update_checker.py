@@ -56,36 +56,24 @@ class UpdateChecker:
     
     def _fetch_remote_version(self) -> Optional[str]:
         """
-        Fetch the latest version from GitHub repository.
+        Fetch the latest version from GitHub VERSION file.
         
         Returns:
             Latest version string or None if failed
         """
         try:
-            # Try multiple methods to get the version
+            version_url = "https://raw.githubusercontent.com/ReezFX/WOL-Manager/refs/heads/main/VERSION"
+            logger.info(f"Fetching remote version from: {version_url}")
             
-            # Method 1: Check VERSION file in the repository
-            version_url = f"https://raw.githubusercontent.com/{self.github_repo}/main/VERSION"
             response = requests.get(version_url, timeout=10)
             
             if response.status_code == 200:
                 remote_version = response.text.strip()
-                logger.info(f"Fetched remote version from VERSION file: {remote_version}")
+                logger.info(f"Successfully fetched remote version: {remote_version}")
                 return remote_version
-            
-            # Method 2: Fall back to latest release tag (if VERSION file not found)
-            releases_url = f"https://api.github.com/repos/{self.github_repo}/releases/latest"
-            response = requests.get(releases_url, timeout=10)
-            
-            if response.status_code == 200:
-                release_data = response.json()
-                tag_name = release_data.get('tag_name', '').lstrip('v')
-                if tag_name:
-                    logger.info(f"Fetched remote version from release tag: {tag_name}")
-                    return tag_name
-            
-            logger.warning("Could not fetch remote version from GitHub")
-            return None
+            else:
+                logger.warning(f"Failed to fetch VERSION file. Status code: {response.status_code}")
+                return None
             
         except requests.RequestException as e:
             logger.error(f"Network error while fetching remote version: {str(e)}")
@@ -186,14 +174,48 @@ class UpdateChecker:
             Dictionary with update status information
         """
         with self._lock:
-            self.last_check = 0  # Reset last check time to force update
-            return self.check_for_updates()
+            current_time = time.time()
+            
+            logger.info("Force checking for updates...")
+            self.check_error = None
+            
+            try:
+                # Reload local version in case it changed
+                self._load_local_version()
+                
+                # Fetch remote version
+                remote_ver = self._fetch_remote_version()
+                
+                if remote_ver:
+                    self.remote_version = remote_ver
+                    
+                    # Compare versions
+                    if self.local_version != "unknown":
+                        self.update_available = self._compare_versions(self.local_version, self.remote_version)
+                    else:
+                        self.update_available = False
+                        
+                    self.last_check = current_time
+                    logger.info(f"Force update check completed. Update available: {self.update_available}")
+                else:
+                    self.check_error = "Failed to fetch remote version"
+                    logger.warning("Force update check failed: Could not fetch remote version")
+                    
+            except Exception as e:
+                self.check_error = str(e)
+                logger.error(f"Force update check failed: {str(e)}")
+            
+            return self.get_status()
     
     def _background_check(self) -> None:
         """Background thread function for periodic update checks."""
         while True:
+            time.sleep(self.check_interval)
             try:
-                time.sleep(self.check_interval)
+                # Skip check if one was performed recently
+                if time.time() - self.last_check < self.check_interval:
+                    continue
+                
                 self.check_for_updates()
             except Exception as e:
                 logger.error(f"Error in background update checker: {str(e)}")

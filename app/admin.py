@@ -531,23 +531,52 @@ def settings():
 def api_check_update():
     """API endpoint for manually triggering update checks"""
     try:
-        from app.update_checker import get_update_checker
-        update_checker = get_update_checker()
+        import requests
+        from packaging import version
+        import time
         
-        # Force an immediate update check
-        status = update_checker.force_check()
+        # Read local version
+        local_version = "unknown"
+        version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'VERSION')
+        if os.path.exists(version_file):
+            with open(version_file, 'r', encoding='utf-8') as f:
+                local_version = f.read().strip()
+        
+        # Fetch remote version
+        remote_version = None
+        check_error = None
+        
+        try:
+            response = requests.get(
+                "https://raw.githubusercontent.com/ReezFX/WOL-Manager/refs/heads/main/VERSION",
+                timeout=10
+            )
+            if response.status_code == 200:
+                remote_version = response.text.strip()
+            else:
+                check_error = f"Failed to fetch remote version (HTTP {response.status_code})"
+        except Exception as e:
+            check_error = f"Network error: {str(e)}"
+        
+        # Compare versions
+        update_available = False
+        if remote_version and local_version != "unknown":
+            try:
+                update_available = version.parse(remote_version) > version.parse(local_version)
+            except Exception as e:
+                check_error = f"Version comparison error: {str(e)}"
         
         access_logger.info(f"Manual update check triggered by admin {current_user.username}")
         
         return jsonify({
             'success': True,
             'data': {
-                'local_version': status['local_version'],
-                'remote_version': status['remote_version'],
-                'update_available': status['update_available'],
-                'last_check': status['last_check'],
-                'check_error': status['check_error'],
-                'github_repo': status['github_repo']
+                'local_version': local_version,
+                'remote_version': remote_version,
+                'update_available': update_available,
+                'last_check': int(time.time()),
+                'check_error': check_error,
+                'github_repo': 'ReezFX/WOL-Manager'
             },
             'message': 'Update check completed successfully'
         })

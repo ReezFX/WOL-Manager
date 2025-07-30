@@ -29,12 +29,18 @@ function initializeUpdateChecker() {
  * Load current version information
  */
 function loadVersionInfo() {
+    const headers = {
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    // Add CSRF token if available
+    if (window.csrfToken) {
+        headers['X-CSRFToken'] = window.csrfToken;
+    }
+    
     fetch('/admin/api/version-info', {
         method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': window.csrfToken
-        }
+        headers: headers
     })
     .then(response => response.json())
     .then(data => {
@@ -63,13 +69,18 @@ function checkForUpdates() {
     // Hide any previous status messages
     statusAlert.classList.add('d-none');
     
+    const headers = {
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    // Add CSRF token if available
+    if (window.csrfToken) {
+        headers['X-CSRFToken'] = window.csrfToken;
+    }
+    
     fetch('/admin/api/check-update', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': window.csrfToken
-        }
+        headers: headers
     })
     .then(response => response.json())
     .then(data => {
