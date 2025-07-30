@@ -153,6 +153,8 @@
           </form>
         </div>
       </div>
+      <!-- About Section -->
+      {% include 'admin/_about.html' %}
     </div>
   </div>
 </div>
@@ -160,6 +162,8 @@
 
 {% block scripts %}
 {{ super() }}
+<!-- Include admin-specific JavaScript -->
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Add animation to cards when page loads

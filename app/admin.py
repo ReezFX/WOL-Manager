@@ -524,6 +524,73 @@ def settings():
     
     return render_template('admin/settings.html', form=form, current_log_profile=current_log_profile)
 
+
+@admin.route('/api/check-update', methods=['POST'])
+@login_required
+@admin_required
+def api_check_update():
+    """API endpoint for manually triggering update checks"""
+    try:
+        from app.update_checker import get_update_checker
+        update_checker = get_update_checker()
+        
+        # Force an immediate update check
+        status = update_checker.force_check()
+        
+        access_logger.info(f"Manual update check triggered by admin {current_user.username}")
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'local_version': status['local_version'],
+                'remote_version': status['remote_version'],
+                'update_available': status['update_available'],
+                'last_check': status['last_check'],
+                'check_error': status['check_error'],
+                'github_repo': status['github_repo']
+            },
+            'message': 'Update check completed successfully'
+        })
+    
+    except Exception as e:
+        logger.error(f"Error during manual update check: {str(e)}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': f'Error checking for updates: {str(e)}'
+        }), 500
+
+
+@admin.route('/api/version-info', methods=['GET'])
+@login_required
+@admin_required
+def api_version_info():
+    """API endpoint for getting current version information"""
+    try:
+        from app.update_checker import get_update_checker
+        update_checker = get_update_checker()
+        
+        # Get current status without forcing a new check
+        status = update_checker.get_status()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'local_version': status['local_version'],
+                'remote_version': status['remote_version'],
+                'update_available': status['update_available'],
+                'last_check': status['last_check'],
+                'check_error': status['check_error'],
+                'github_repo': status['github_repo']
+            }
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting version info: {str(e)}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': f'Error getting version information: {str(e)}'
+        }), 500
+
 def read_log_file(filename, log_level='all', start_date=None, end_date=None, search_text=None, page=1, per_page=100, chunk_size=1024*1024, request=None):
     """
     Read and filter log file content with pagination support

@@ -134,6 +134,27 @@
         </div>
     </nav>
 
+    <!-- Update Notification Banner -->
+    {% if update_available and latest_version %}
+    <div class="alert alert-info alert-dismissible fade show m-0 border-0 rounded-0" role="alert" id="update-notification">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <i class="fas fa-download me-2"></i>
+                    <strong>Update available!</strong> Version {{ latest_version }} is now available. You are currently running version {{ app_version }}.
+                    <a href="https://github.com/{{ github_repo }}/releases/latest" class="alert-link" target="_blank">View release notes</a>
+                </div>
+                <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                    <a href="https://github.com/{{ github_repo }}/releases/latest" class="btn btn-outline-primary btn-sm me-2" target="_blank">
+                        <i class="fas fa-external-link-alt me-1"></i>Download
+                    </a>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Header Block -->
     {% block header %}{% endblock %}
 
@@ -193,7 +214,7 @@
             <!-- Copyright - more subtle with less spacing -->
             <div class="row mt-1">
                 <div class="col-12 text-center">
-                    <span class="footer-text small text-muted">&copy; {{ now.year }} WoL Manager. All rights reserved. | v1.5.1</span>
+                    <span class="footer-text small text-muted">&copy; {{ now.year }} WoL Manager. All rights reserved. | v{{ app_version }}</span>
                 </div>
             </div>
     </footer>

@@ -186,6 +186,30 @@ def create_app(config_name=None):
         from datetime import datetime
         return {'now': datetime.utcnow()}
     
+    # Add context processor for version information and update status
+    @app.context_processor
+    def inject_version_info():
+        """Inject version information and update status into all templates."""
+        try:
+            from app.update_checker import get_update_checker
+            update_checker = get_update_checker()
+            status = update_checker.get_status()
+            
+            return {
+                'app_version': status['local_version'],
+                'update_available': status['update_available'],
+                'latest_version': status['remote_version'],
+                'github_repo': status['github_repo']
+            }
+        except Exception as e:
+            logger.error(f"Error getting version info: {str(e)}")
+            return {
+                'app_version': 'unknown',
+                'update_available': False,
+                'latest_version': None,
+                'github_repo': 'ReezFX/WOL-Manager'
+            }
+    
     # Add context processor for toast system
     @app.context_processor
     def inject_toast_flash():
@@ -233,6 +257,16 @@ def create_app(config_name=None):
     # Update ping_service.py to use connection pool
     from app.ping_service import update_redis_pool
     update_redis_pool(redis_pool)
+    
+    # Initialize update checker service
+    try:
+        from app.update_checker import init_update_checker
+        update_checker = init_update_checker()
+        # Perform initial check in background
+        threading.Thread(target=lambda: update_checker.check_for_updates(), daemon=True).start()
+        logger.info("Update checker service started successfully")
+    except Exception as e:
+        logger.error(f"Failed to start update checker service: {str(e)}")
     
     return app
 
