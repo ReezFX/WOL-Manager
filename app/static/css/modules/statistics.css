@@ -22,7 +22,7 @@
     grid-template-columns: repeat(3, 1fr) !important;
     gap: clamp(1rem, 2.5vw, 1.5rem) !important;
     margin: 0 !important;
-    padding: 1.5rem 0 2rem !important; /* Keep vertical padding */
+    padding: 0 0 2rem !important; /* Remove top padding, keep bottom padding */
     background: transparent !important;
     border: none !important;
     border-radius: 0 0 var(--border-radius) var(--border-radius) !important;
@@ -424,7 +424,7 @@
     .statistics-grid {
         grid-template-columns: 1fr !important;
         gap: 1.25rem !important;
-        padding: 1.5rem 0 !important; /* Remove horizontal padding to match container */
+        padding: 0 0 2rem !important; /* Remove top padding, keep bottom padding */
     }
     
     .statistics-dashboard {

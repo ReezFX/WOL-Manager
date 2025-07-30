@@ -425,7 +425,7 @@
    ============================================= */
 
 .section-separator {
-  margin: 3rem 0;
+  margin: 3rem 0 3rem 0; /* Top margin 3rem, bottom margin 1.5rem for better visual spacing */
   position: relative;
   display: flex;
   align-items: center;
@@ -433,7 +433,7 @@
 }
 
 .statistics-separator {
-  padding: 1rem 1.5rem;
+  padding: 0; /* Remove extra padding to match other separators */
 }
 
 .separator-line {
