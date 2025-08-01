@@ -6,125 +6,127 @@
 <script>window.isIndexPage = true;</script>
 <canvas id="gradient-canvas"></canvas>
 
-<!-- Branding Header Removed -->
-
-<!-- Version 1.5.0 Advertisement Banner -->
-<div class="update-banner-container">
-    <div class="update-banner">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-5 mb-4 mb-lg-0">
-                    <div class="update-content pe-lg-4">
-                        <div class="badge bg-primary mb-2 fw-semibold">New in v1.5.0</div>
-                        <h2 class="update-title mb-2">Enhanced Wake Experience</h2>
-                        <p class="update-description mb-3">Experience our most responsive and reliable update yet with smarter animations and flawless interaction handling.</p>
-                        <ul class="update-features">
-                            <li><i class="fas fa-bolt text-primary me-2"></i>New wake animation overlay</li>
-                            <li><i class="fas fa-exchange-alt text-primary me-2"></i>Instant AJAX management</li>
-                            <li><i class="fas fa-palette text-primary me-2"></i>Improved theme transitions</li>
-                            <li><i class="fas fa-sync-alt text-primary me-2"></i>Smart retry functionality</li>
-                            <li><i class="fas fa-shield-alt text-primary me-2"></i>Enhanced error protection</li>
-                            <li><i class="fas fa-check-circle text-primary me-2"></i>Intelligent confirmation dialogs</li>
-                        </ul>
-                        <button class="btn btn-primary mt-3 btn-lg play-animation-btn">
-                            <i class="fas fa-play-circle me-2"></i>Preview Animation
-                        </button>
-                    </div>
-                </div>
-                <div class="col-lg-7">
-                    <div class="animation-preview-container">
-                        <div class="animation-preview">
-                            <!-- Animation preview mockup -->
-                            <div class="device-mockup">
-                                <div class="device-frame">
-                                    <div class="wake-preview-content">
-                                        <div class="wake-preview-bg"></div>
-                                        <div class="preview-pulse"></div>
-                                        <div class="preview-waves">
-                                            <div class="preview-wave"></div>
-                                            <div class="preview-wave"></div>
-                                        </div>
-                                        <div class="preview-packets">
-                                            <div class="preview-packet"></div>
-                                            <div class="preview-packet"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="device-stripe">
-                                    <span>WOL Manager 1.5.0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container text-center">
+        <div class="hero-content">
+            <!-- Brand Logo -->
+            <div class="brand-logo-container">
+                <img src="{{ url_for('static', filename='img/WOL-Manager-DIsplay.png') }}"
+                     alt="WOL Manager Logo"
+                     class="brand-logo img-fluid">
             </div>
+
+            <p class="hero-description">Your network devices, simplified</p>
+            
+            <!-- Login Button -->
+            {% if not current_user.is_authenticated %}
+            <div class="cta-section">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-login btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Get Started
+                </a>
+            </div>
+            {% else %}
+            <div class="cta-section">
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-login btn-lg">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- NEW SECTION: Design Showcase -->
-<div class="design-showcase-container mt-5 mb-5">
+<!-- Features Section -->
+<div class="features-section">
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="text-center mb-4">
-                    <h2 class="display-4 fw-bold gradient-text mb-3">Experience Our New Look</h2>
-                    <p class="lead">Completely redesigned interface with stunning visuals and smooth interactions</p>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3 class="feature-title">Lightning Fast</h3>
+                        <p class="feature-description">
+                            Instantly wake your devices with optimized Wake-on-LAN packets.
+                            No delays, just immediate results.
+                        </p>
+                    </div>
                 </div>
-                
-                <div class="design-features-grid">
-                    <div class="row g-4">
-                        <!-- Feature 1: Adaptive Gradient -->
-                        <div class="col-md-6">
-                            <div class="design-feature-card">
-                                <div class="feature-icon-container mb-3">
-                                    <i class="fas fa-palette design-feature-icon"></i>
-                                </div>
-                                <h3 class="feature-title">Animated Gradient Background</h3>
-                                <p class="feature-description">
-                                    Our elegant animated gradient background creates a dynamic, immersive environment with smooth color transitions for a modern, polished look.
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <!-- Feature 2: Responsive Header -->
-                        <div class="col-md-6">
-                            <div class="design-feature-card">
-                                <div class="feature-icon-container mb-3">
-                                    <i class="fas fa-mobile-alt design-feature-icon"></i>
-                                </div>
-                                <h3 class="feature-title">Enhanced Mobile Experience</h3>
-                                <p class="feature-description">
-                                    Redesigned navigation and layouts that adapt perfectly to any device size with intuitive touch interactions and optimized controls.
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <!-- Feature 3: Smoother Animations -->
-                        <div class="col-md-6">
-                            <div class="design-feature-card">
-                                <div class="feature-icon-container mb-3">
-                                    <i class="fas fa-film design-feature-icon"></i>
-                                </div>
-                                <h3 class="feature-title">Fluid Animations</h3>
-                                <p class="feature-description">
-                                    Enjoy silky-smooth transitions and micro-interactions throughout the application with optimized performance on all devices.
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <!-- Feature 4: Accessibility -->
-                        <div class="col-md-6">
-                            <div class="design-feature-card">
-                                <div class="feature-icon-container mb-3">
-                                    <i class="fas fa-universal-access design-feature-icon"></i>
-                                </div>
-                                <h3 class="feature-title">Accessibility Focused</h3>
-                                <p class="feature-description">
-                                    Improved contrast ratios, keyboard navigation, and screen reader support make the application more accessible to everyone.
-                                </p>
-                            </div>
-                        </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3 class="feature-title">Secure & Private</h3>
+                        <p class="feature-description">
+                            Your device data is protected with industry-standard encryption.
+                            All traffic stays within your local network.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3 class="feature-title">Multi-User Ready</h3>
+                        <p class="feature-description">
+                            Support for multiple users with role-based access control.
+                            Perfect for teams and families.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3 class="feature-title">Mobile Friendly</h3>
+                        <p class="feature-description">
+                            Responsive design that works perfectly on all devices.
+                            Manage your hosts from anywhere.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3 class="feature-title">Real-time Monitoring</h3>
+                        <p class="feature-description">
+                            Monitor device status in real-time with live ping checks
+                            and comprehensive statistics.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3 class="feature-title">Easy Configuration</h3>
+                        <p class="feature-description">
+                            Simple setup process with intuitive interface.
+                            Get up and running in minutes, not hours.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -133,507 +135,6 @@
 </div>
 
 <style>
-    /* Define darker color variables based on theme */
-    :root {
-        --primary-color-darker-rgb: 15, 111, 130;
-        --accent-color-darker-rgb: 204, 92, 64;
-    }
-
-    /* Update Banner Styling */
-    .update-banner-container {
-        margin-bottom: 3rem;
-        overflow: hidden;
-    }
-
-    .update-banner {
-        /* Let ::before handle gradient */
-        background-color: transparent; /* Let ::before handle gradient */
-        border-radius: 16px;
-        padding: 2.5rem 0;
-        position: relative; /* Keep for ::before */
-        overflow: hidden; /* Keep for rounding */
-    }
-
-    .update-banner::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: -1; /* Behind content */
-        border-radius: inherit; /* Match parent rounding */
-        background: linear-gradient(135deg, rgba(var(--primary-color-darker-rgb), 0.7), rgba(var(--accent-color-darker-rgb), 0.6));
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .update-title {
-        font-weight: 700;
-        font-size: 2.2rem;
-        /* SOLID text gradient using NEW colors */
-        background: linear-gradient(135deg, var(--info-color, #5bc0de), var(--accent-color, #ff7e5f));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent; /* REQUIRED to show the background gradient */
-    }
-
-    .update-description {
-        font-size: 1.1rem;
-        opacity: 1; /* Ensure full opacity */
-        color: var(--text-light); /* Ensure light text */
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Darker shadow for light text */
-    }
-
-    .update-features {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .update-features li {
-        padding: 8px 0;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        color: var(--text-light); /* Ensure light text */
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Darker shadow for light text */
-    }
-
-    /* Animation Preview Styling */
-    .animation-preview-container {
-        position: relative;
-        perspective: 1000px;
-    }
-
-    .animation-preview {
-        transform: rotateY(-5deg) rotateX(5deg);
-        transition: transform 0.5s ease;
-    }
-
-    .animation-preview:hover {
-        transform: rotateY(0deg) rotateX(0deg);
-    }
-
-    .device-mockup {
-        width: 100%;
-        max-width: 500px;
-        margin: 0 auto;
-        border-radius: 24px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        background: #000;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .device-frame {
-        aspect-ratio: 16/9;
-        width: 100%;
-        background: #000;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .device-stripe {
-        background: #111;
-        padding: 10px;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 14px;
-        text-align: center;
-        font-family: monospace;
-    }
-
-    /* Wake Animation Preview Elements */
-    .wake-preview-content {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-
-    .wake-preview-bg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.85);
-    }
-
-    .preview-pulse {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-        border-radius: 50%;
-        z-index: 2;
-        box-shadow: 0 0 20px var(--primary-color);
-        animation: previewPulse 1.5s infinite alternate;
-    }
-
-    .preview-waves {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .preview-wave {
-        position: absolute;
-        border-radius: 50%;
-        border: 2px solid var(--primary-color);
-        opacity: 0;
-        transform: scale(0);
-        animation: previewWaves 3s infinite ease-out;
-    }
-
-    .preview-wave:nth-child(1) {
-        width: 80px;
-        height: 80px;
-        animation-delay: 0s;
-    }
-
-    .preview-wave:nth-child(2) {
-        width: 120px;
-        height: 120px;
-        border-color: var(--accent-color);
-        animation-delay: 0.5s;
-    }
-
-    .preview-packets {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-    }
-
-    .preview-packet {
-        position: absolute;
-        width: 6px;
-        height: 6px;
-        background: white;
-        border-radius: 50%;
-        top: 50%;
-        left: 50%;
-        opacity: 0;
-        box-shadow: 0 0 8px white;
-        animation: previewPacket 2s infinite linear;
-    }
-
-    .preview-packet:nth-child(1) {
-        animation-delay: 0s;
-    }
-
-    .preview-packet:nth-child(2) {
-        animation-delay: 1s;
-    }
-
-    /* Animation Keyframes */
-    @keyframes previewPulse {
-        0% {
-            transform: scale(0.95);
-            box-shadow: 0 0 10px var(--primary-color);
-        }
-        100% {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px var(--primary-color);
-        }
-    }
-
-    @keyframes previewWaves {
-        0% {
-            opacity: 0.7;
-            transform: scale(0);
-        }
-        70% {
-            opacity: 0.2;
-        }
-        100% {
-            opacity: 0;
-            transform: scale(1);
-        }
-    }
-
-    @keyframes previewPacket {
-        0% {
-            transform: translate(0, 0);
-            opacity: 0;
-        }
-        20% {
-            opacity: 1;
-        }
-        80% {
-            opacity: 1;
-        }
-        100% {
-            transform: translate(40px, -20px);
-            opacity: 0;
-        }
-    }
-
-    /* Mobile Optimizations */
-    @media (max-width: 991.98px) {
-        .update-banner {
-            padding: 2rem 0;
-            border-radius: 12px;
-        }
-
-        .update-title {
-            font-size: 1.8rem;
-        }
-
-        .animation-preview {
-            transform: none;
-        }
-
-        .device-mockup {
-            max-width: 100%;
-            border-radius: 16px;
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        .update-banner-container {
-            margin-bottom: 2rem;
-        }
-
-        .update-title {
-            font-size: 1.5rem;
-        }
-
-        .update-description {
-            font-size: 1rem;
-        }
-    }
-
-    .branding-header {
-        position: relative;
-        overflow: hidden;
-        padding: 2rem 0;
-        margin-bottom: 2rem;
-        border-bottom: 1px solid rgba(var(--border-color), 0.5);
-    }
-
-    /* Media query for mobile devices */
-    @media (max-width: 767.98px) {
-        .branding-header {
-            padding: 1rem 0;
-            margin-bottom: 1rem;
-        }
-    }
-
-    .branding-bg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        /* Removed gradient background to let the transparent PNG images shine through */
-        z-index: -1;
-    }
-
-    /* Removed gradient background for dark theme as well */
-
-    .brand-container {
-        padding: 1rem;
-        margin: 0 auto;
-        width: 100%;
-        /* Removed backdrop-filter blur effect to show transparent PNG properly */
-        /* Removed webkit backdrop filter as well */
-        border-radius: var(--border-radius-lg);
-        /* Removed box-shadow as requested */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        transition: var(--apple-transition);
-    }
-
-    /* Hover effect removed as requested
-    .brand-container:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--apple-shadow-lg);
-    }
-    */
-
-    .brand-logo {
-        /* filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.25)); */
-        transition: transform 0.3s ease;
-        margin-bottom: 2rem;
-    }
-
-    /* Media query for mobile devices */
-    @media (max-width: 767.98px) {
-        .brand-logo {
-            margin-bottom: 1rem;
-            max-width: 80%;
-        }
-    }
-
-    .brand-title-wrapper {
-        padding: 0.5rem 0 0.5rem;
-        position: relative;
-    }
-
-    .brand-title {
-        filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.22));
-        transition: transform 0.3s ease;
-        max-width: 80%;
-    }
-
-    /* Hover effect for brand title removed as requested
-    .brand-container:hover .brand-title {
-        transform: scale(1.02);
-    }
-    */
-
-    /* Wake Animation Overlay Additional Styles */
-    .wake-result.success,
-    .wake-result.failure {
-        display: none;
-        align-items: center;
-        margin-top: 1rem;
-        font-weight: 500;
-        opacity: 0;
-        animation: fadeIn 0.5s ease-in-out forwards;
-    }
-
-    .wake-icon-success,
-    .wake-icon-failure {
-        font-size: 1.5rem;
-        margin-right: 10px;
-    }
-
-    .wake-icon-success {
-        color: var(--success-color, #28a745);
-    }
-
-    .wake-icon-failure {
-        color: var(--danger-color, #dc3545);
-    }
-
-    .wake-retry-button {
-        display: inline-block;
-        margin-top: 10px;
-        padding: 5px 15px;
-        background-color: rgba(var(--primary-color-rgb), 0.9);
-        color: #fff;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .wake-retry-button:hover {
-        background-color: var(--primary-color);
-    }
-
-    @keyframes fadeIn {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
-    }
-
-    /* Feature Showcase Styling */
-
-    .feature-card {
-        /* Glassmorphism effect using darker theme colors - Dark - Increased Opacity */
-        background: linear-gradient(135deg, rgba(var(--primary-color-darker-rgb), 0.85), rgba(var(--accent-color-darker-rgb), 0.8)); /* Higher Alpha */
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-color: rgba(255, 255, 255, 0.1); /* Lighter border for dark */
-        border-radius: 16px; /* Match update-banner */
-        padding: 2rem 1.5rem;
-        /* text-align: center; */ /* Replaced by flex alignment */
-        transition: border-color 0.3s ease, background-color 0.3s ease; /* Smoother transition */
-        /* Added Flexbox for internal layout */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start; /* Align content to the top */
-    }
-
-    .feature-card:hover {
-        border-color: rgba(var(--primary-color-rgb), 0.35);
-    }
-
-    .feature-icon {
-        margin-bottom: 1rem; /* Space below icon */
-    }
-
-    .feature-icon i {
-        transition: transform 0.3s ease;
-    }
-
-    .feature-card:hover .feature-icon i {
-        transform: scale(1.1);
-    }
-
-    .feature-title {
-        font-weight: 600;
-        font-size: 1.25rem;
-        margin-bottom: 0.75rem; /* Space below title */
-        text-align: center; /* Ensure title is centered */
-        color: var(--text-light);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-
-    .feature-description {
-        font-size: 0.95rem;
-        line-height: 1.6;
-        text-align: center; /* Ensure description is centered */
-        flex-grow: 1; /* Allow description to take up space if needed */
-        color: var(--text-secondary-dark);
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-    }
-
-    /* End Feature Showcase Styling */
-
-    /* Styling for the Getting Started card */
-    .info-card {
-        /* Glassmorphism effect using darker theme colors - Dark - Increased Opacity */
-        background: linear-gradient(135deg, rgba(var(--primary-color-darker-rgb), 0.85), rgba(var(--accent-color-darker-rgb), 0.8)); /* Higher Alpha */
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-color: rgba(255, 255, 255, 0.1); /* Lighter border for dark */
-        border-radius: 16px;
-        padding: 2rem 1.5rem;
-        transition: border-color 0.3s ease, background-color 0.3s ease;
-        /* Added Flexbox for internal layout */
-        display: flex;
-        flex-direction: column;
-        align-items: center; /* Center content horizontally */
-        justify-content: flex-start; /* Align content to the top */
-    }
-
-    .info-card:hover {
-        border-color: rgba(var(--primary-color-rgb), 0.35);
-    }
-
-    .info-card .card-title { /* Target title specifically */
-        font-weight: 600;
-        font-size: 1.25rem; /* Match feature-title */
-        margin-bottom: 1rem; /* Consistent spacing */
-        text-align: center;
-        display: flex; /* Align icon and text */
-        align-items: center;
-        color: var(--text-light);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-
-    .info-card .card-text {
-        font-size: 0.95rem; /* Match feature-description */
-        line-height: 1.6;
-        text-align: center; /* Center text paragraphs */
-        max-width: 90%; /* Prevent text from hitting edges */
-        color: var(--text-secondary-dark);
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-    }
-
     /* Animated Gradient Canvas Styling */
     #gradient-canvas {
         width: 100%;
@@ -644,7 +145,7 @@
         z-index: -1; /* Place behind all other content */
         /* Define colors using theme variables */
         --gradient-color-1: var(--primary-color, #17a2b8);
-        --gradient-color-2: var(--secondary-color, #0d6e8c);
+        --gradient-color-2: var( #5d0d8c);
         --gradient-color-3: var(--info-color, #5bc0de);
         --gradient-color-4: var(--accent-color, #ff7e5f);
     }
@@ -657,441 +158,7 @@
         z-index: 1; /* Ensure content stays above canvas */
     }
 
-    /* Contrast for main headline section */
-    .main-headline h1,
-    .main-headline p {
-        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6); /* Even stronger for dark */
-    }
-
-    /* Gradient text effect */
-    .gradient-text {
-        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        text-shadow: none;
-    }
-    
-    /* Design showcase container */
-    .design-showcase-container {
-        position: relative;
-        padding: 4rem 0;
-        overflow: hidden;
-    }
-    
-    /* Design feature cards */
-    .design-feature-card {
-        background: linear-gradient(135deg, rgba(var(--primary-color-darker-rgb), 0.85), rgba(var(--accent-color-darker-rgb), 0.8));
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-radius: 16px;
-        padding: 2rem;
-        height: 100%;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .design-feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-    }
-    
-    /* Feature icon styling */
-    .feature-icon-container {
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-    }
-    
-    .design-feature-icon {
-        font-size: 1.8rem;
-        color: white;
-    }
-    
-    /* Title and description */
-    .feature-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        color: var(--text-light);
-    }
-    
-    .feature-description {
-        font-size: 0.95rem;
-        line-height: 1.6;
-        color: var(--text-secondary-dark);
-    }
-    
-    /* Call to action styling */
-    .design-cta {
-        margin-top: 2rem;
-        padding: 2rem;
-        background: linear-gradient(135deg, rgba(var(--primary-color-darker-rgb), 0.85), rgba(var(--accent-color-darker-rgb), 0.8));
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: var(--text-light);
-    }
-    
-    /* Glowing button effect */
-    .btn-glow {
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        background-color: transparent;
-        color: white;
-    }
-    
-    .btn-glow:hover {
-        box-shadow: 0 0 20px rgba(var(--primary-color-rgb), 0.7);
-        background-color: rgba(var(--primary-color-rgb), 0.2);
-        border-color: var(--primary-color);
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 767.98px) {
-        .design-showcase-container {
-            padding: 2rem 0;
-        }
-        
-        .feature-icon-container {
-            width: 60px;
-            height: 60px;
-        }
-        
-        .design-feature-icon {
-            font-size: 1.5rem;
-        }
-    }
 </style>
 
-<!-- JS to handle animation preview button -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const previewBtn = document.querySelector('.play-animation-btn');
-    
-    if (previewBtn) {
-        previewBtn.addEventListener('click', function() {
-            // Create the actual wake animation overlay
-            showWakeAnimationDemo();
-        });
-    }
-    
-    function showWakeAnimationDemo() {
-        // Check if an overlay already exists
-        let overlay = document.querySelector('.wake-animation-overlay');
-        if (overlay) {
-            // If exists but not active, just activate it
-            if (!overlay.classList.contains('active')) {
-                 overlay.classList.add('active');
-                 // Restart demo animation logic if needed
-            } else {
-                // Already active, maybe do nothing or restart?
-                console.log('Demo animation already active.');
-                return; 
-            }
-        } else {
-             // Create the actual wake animation overlay if it doesn't exist
-            overlay = document.createElement('div');
-            overlay.className = 'wake-animation-overlay'; // Use the class styled in animations.css
-            overlay.id = 'wakeAnimationOverlay-demo'; // Give it a unique ID for demo
-            document.body.appendChild(overlay);
-            
-            // Add the correct inner HTML structure matching dashboard.html
-            overlay.innerHTML = `
-                <div class="wake-animation-container">
-                    <!-- Close button -->
-                    <button class="wake-close-button" id="wakeCloseButton-demo">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <!-- Animation area -->
-                    <div class="animation-area">
-                        <div class="signal-waves">
-                            <div class="wave wave1"></div>
-                            <div class="wave wave2"></div>
-                            <div class="wave wave3"></div>
-                            <div class="wave wave4"></div>
-                        </div>
-                        <div class="pulse-circle"></div>
-                        <div class="packet-container">
-                            <div class="packet packet1"></div>
-                            <div class="packet packet2"></div>
-                            <div class="packet packet3"></div>
-                        </div>
-                    </div>
-                    <!-- Text area - must match the structure -->
-                    <div class="wake-text">
-                        <div class="wake-text-title">Waking Up Host</div>
-                        <div class="wake-text-subtitle">Sending Magic Packet</div>
-                        <div class="wake-text-status">Waiting for response...</div>
-                        <div class="wake-progress-container">
-                            <div class="wake-progress-bar"></div>
-                        </div>
-                        <div class="wake-result success">
-                            <i class="fas fa-check-circle wake-icon-success"></i>
-                            <div class="wake-result-text">Host Online</div>
-                        </div>
-                        <div class="wake-result failure">
-                            <i class="fas fa-exclamation-triangle wake-icon-failure"></i>
-                            <div class="wake-result-text">Wake Failed</div>
-                            <div class="wake-retry-button">Try Again</div> 
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-       
-        // --- Animation Logic --- 
-        // Reset state before starting
-        const successElement = overlay.querySelector('.wake-result.success');
-        const failureElement = overlay.querySelector('.wake-result.failure');
-        const statusText = overlay.querySelector('.wake-text-status');
-        const progressContainer = overlay.querySelector('.wake-progress-container');
-        const progressBar = overlay.querySelector('.wake-progress-bar');
-        const title = overlay.querySelector('.wake-text-title');
-        const subtitle = overlay.querySelector('.wake-text-subtitle');
-        const pulseCircle = overlay.querySelector('.pulse-circle');
-        const waves = overlay.querySelectorAll('.wave');
-        const packets = overlay.querySelectorAll('.packet');
-
-        // Reset visual elements
-        if (successElement) successElement.style.display = 'none';
-        if (failureElement) failureElement.style.display = 'none';
-        if (statusText) {
-            statusText.style.display = 'block';
-            statusText.textContent = 'Waiting for response...';
-        }
-        if (progressContainer) progressContainer.style.display = 'block';
-        if (progressBar) {
-            progressBar.style.transition = 'none';
-            progressBar.style.width = '0%';
-        }
-        if (title) title.style.opacity = '1';
-        if (subtitle) subtitle.style.opacity = '1';
-        if (pulseCircle) {
-            pulseCircle.classList.remove('success-pulse', 'failure-pulse');
-            pulseCircle.style.animationPlayState = '';
-        }
-        waves.forEach(el => el.style.animationPlayState = '');
-        packets.forEach(el => el.style.animationPlayState = '');
-
-        // Show the overlay with animation
-        setTimeout(() => {
-            overlay.classList.add('active');
-            // Animate progress bar for demo
-            if (progressBar) {
-                progressBar.style.width = '0%'; // Ensure start at 0
-                 progressBar.style.transition = 'none'; // Reset transition
-                setTimeout(() => { // Apply transition after a tick
-                    progressBar.style.transition = 'width 3s linear'; // shorter time for demo
-                    progressBar.style.width = '100%';
-                }, 50);
-            }
-            
-            // Resume animations
-             if (pulseCircle) pulseCircle.style.animationPlayState = 'running';
-             waves.forEach(w => w.style.animationPlayState = 'running');
-             packets.forEach(p => p.style.animationPlayState = 'running');
-
-            // Show success after animation completes
-            setTimeout(() => {
-                // Hide progress elements
-                if (statusText) statusText.style.display = 'none';
-                if (progressContainer) progressContainer.style.display = 'none';
-                if (title) title.style.opacity = '0.6'; // Dim titles
-                if (subtitle) subtitle.style.opacity = '0.6';
-                
-                // Pause background animations
-                 if (pulseCircle) pulseCircle.style.animationPlayState = 'paused';
-                 waves.forEach(w => w.style.animationPlayState = 'paused');
-                 packets.forEach(p => p.style.animationPlayState = 'paused');
-
-                // Show success result
-                if (successElement) successElement.style.display = 'flex';
-                if (pulseCircle) pulseCircle.classList.add('success-pulse');
-                
-                // Auto close after a delay
-                setTimeout(() => {
-                     if (overlay.classList.contains('active')) {
-                        overlay.classList.remove('active');
-                        // Optionally remove the demo element after fade out
-                        setTimeout(() => { 
-                            if (overlay.id === 'wakeAnimationOverlay-demo') overlay.remove(); 
-                        }, 300);
-                    }
-                }, 3000);
-            }, 3100); // Timing: after progress bar (3s) + small buffer
-        }, 100); // Small delay to ensure CSS is applied
-        
-        // Close button functionality (find the button within the specific overlay)
-        const closeButton = overlay.querySelector('#wakeCloseButton-demo');
-        if (closeButton) {
-            // Remove old listener if exists and add new one
-            const newCloseButton = closeButton.cloneNode(true);
-            closeButton.parentNode.replaceChild(newCloseButton, closeButton);
-            newCloseButton.addEventListener('click', () => {
-                 if (overlay.classList.contains('active')) {
-                    overlay.classList.remove('active');
-                     setTimeout(() => {
-                        if (overlay.id === 'wakeAnimationOverlay-demo') overlay.remove(); 
-                     }, 300);
-                 }
-            });
-        }
-        
-        // Also allow closing by clicking the background
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) { // Only if clicking the overlay itself
-                 if (overlay.classList.contains('active')) {
-                    overlay.classList.remove('active');
-                     setTimeout(() => {
-                        if (overlay.id === 'wakeAnimationOverlay-demo') overlay.remove(); 
-                    }, 300);
-                 }
-            }
-        });
-        
-        // Note: Retry button is not needed for demo, but its element is present
-        // const retryButton = overlay.querySelector('.wake-retry-button');
-    }
-});
-</script>
-
-<div class="container pt-md-5 pt-3 pb-5">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="text-center mb-md-5 mb-4">
-                <h1 class="display-4 fw-bold mb-md-3 mb-2">Wake up your devices remotely</h1>
-                <p class="fs-5 text-muted">Control your network devices from anywhere with our Wake-on-LAN solution</p>
-                
-                <div class="d-flex justify-content-center gap-3 mt-4">
-                    {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
-                        </a>
-                    {% else %}
-                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-sign-in-alt me-2"></i>Log In
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- Feature Showcase Section -->
-            <div class="feature-showcase py-md-5 py-4">
-                <h2 class="text-center display-5 fw-bold mb-5">Core Features</h2>
-                <div class="row g-4 justify-content-center">
-                    <!-- Feature: Host Management -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="feature-card h-100">
-                            <div class="feature-icon text-primary mb-3">
-                                <i class="fas fa-server fa-2x"></i>
-                            </div>
-                            <h4 class="feature-title">Host Management</h4>
-                            <p class="feature-description">
-                                Easily add, edit, view, and delete network devices. Store MAC addresses and assign custom names.
-                            </p>
-                        </div>
-                    </div>
-                    <!-- Feature: Wake-on-LAN -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="feature-card h-100">
-                            <div class="feature-icon text-success mb-3">
-                                <i class="fas fa-power-off fa-2x"></i>
-                            </div>
-                            <h4 class="feature-title">Remote Wake-Up</h4>
-                            <p class="feature-description">
-                                Send Wake-on-LAN magic packets to power on your devices remotely with a single click.
-                            </p>
-                        </div>
-                    </div>
-                    <!-- Feature: Modern UI & Themes -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="feature-card h-100">
-                            <div class="feature-icon text-info mb-3">
-                                <i class="fas fa-palette fa-2x"></i>
-                            </div>
-                            <h4 class="feature-title">Modern Interface</h4>
-                            <p class="feature-description">
-                                Experience a responsive UI with Light/Dark modes, smooth animations, and AJAX-powered actions.
-                            </p>
-                        </div>
-                    </div>
-                    <!-- Feature: Access Control -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="feature-card h-100">
-                            <div class="feature-icon text-warning mb-3">
-                                <i class="fas fa-users-cog fa-2x"></i>
-                            </div>
-                            <h4 class="feature-title">Access Control</h4>
-                            <p class="feature-description">
-                                Secure user authentication with role-based permissions and configurable host visibility.
-                            </p>
-                        </div>
-                    </div>
-                    <!-- Feature: API & Public Access -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="feature-card h-100">
-                            <div class="feature-icon text-secondary mb-3">
-                                <i class="fas fa-link fa-2x"></i>
-                            </div>
-                            <h4 class="feature-title">API & Public Links</h4>
-                            <p class="feature-description">
-                                Utilize the host status API for automation and configure secure public access links for specific hosts.
-                            </p>
-                        </div>
-                    </div>
-                    <!-- Feature: Docker Support -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="feature-card h-100">
-                            <div class="feature-icon mb-3" style="color: #2496ED;">
-                                <i class="fab fa-docker fa-2x"></i>
-                            </div>
-                            <h4 class="feature-title">Dockerized Deployment</h4>
-                            <p class="feature-description">
-                                Deploy easily using Docker containers for consistent environments and simplified setup.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Feature Showcase Section -->
-
-            <div class="card info-card mt-md-5 mt-4">
-                <h4 class="card-title mb-3"><i class="fas fa-book-open text-info me-2"></i>Getting Started</h4> 
-                <p class="card-text mb-3">
-                    Ready to wake your devices? Ensure they support Wake-on-LAN and have it enabled in their BIOS/UEFI settings. 
-                    Your network adapter might also need specific configuration.
-                </p>
-                <p class="card-text">
-                    Our application simplifies sending the necessary 'magic packets', but proper device and network setup is key. 
-                    Need detailed instructions? 
-                    <a href="https://github.com/ReezFX/WOL-Manager/wiki" target="_blank" rel="noopener noreferrer">Check out our Wiki <i class="fas fa-external-link-alt fa-xs ms-1"></i></a> 
-                    for setup guides and troubleshooting tips.
-                </p>
-                
-                <div class="d-flex justify-content-center mt-4">
-                    {% if not current_user.is_authenticated %}
-                        <div class="alert alert-info" role="alert">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Want access?</strong> Contact an administrator to create an account for you.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 

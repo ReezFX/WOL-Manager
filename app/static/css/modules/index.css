@@ -1,0 +1,606 @@
+/* =============================================
+   INDEX PAGE STYLES
+   Landing page specific styles for index.html
+   ============================================= */
+
+/* =============================================
+   HERO SECTION
+   ============================================= */
+
+.hero-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 0 6rem 0;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+    animation: fadeInUp 1s ease-out;
+}
+
+/* Brand Logo Styling */
+.brand-logo-container {
+    margin-bottom: 2rem;
+    animation: bounceIn 1.2s ease-out;
+}
+
+.brand-logo {
+    max-height: 200px;
+    width: auto;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+    transition: var(--transition-default);
+}
+
+.brand-logo:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.4));
+}
+
+/* Hero Typography */
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.hero-subtitle {
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+}
+
+
+.hero-description {
+    font-size: 1.2rem;
+    color: #e9ecef;
+    margin-bottom: 2.5rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
+    opacity: 0.9;
+    font-style: italic;
+}
+
+/* Call-to-Action Section */
+.cta-section {
+    margin-top: 2rem;
+    animation: fadeInUp 1.5s ease-out;
+}
+
+/* Login/CTA Button Styling */
+.btn-login {
+    background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 1rem 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    transition: var(--transition-default);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-login:hover::before {
+    left: 100%;
+}
+
+.btn-login:hover {
+    transform: translateY(-3px) scale(1.05) rotate(-1deg);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-login:active {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* =============================================
+   FEATURES SECTION
+   ============================================= */
+
+.features-section {
+    padding: 5rem 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* Feature Cards */
+.feature-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    height: 100%;
+    transition: var(--transition-default);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    opacity: 0;
+    transition: var(--transition-default);
+    pointer-events: none;
+}
+
+.feature-card:hover {
+    transform: translateY(-12px) scale(1.02) rotate(1deg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+}
+
+.feature-card:hover::before {
+    opacity: 1;
+}
+
+/* Feature Icons */
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 50%;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    transition: var(--transition-default);
+}
+
+.feature-icon i {
+    font-size: 2rem;
+    color: #fff;
+    transition: var(--transition-default);
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+}
+
+.feature-card:hover .feature-icon i {
+    transform: scale(1.1);
+}
+
+/* Feature Content */
+.feature-content {
+    text-align: center;
+}
+
+.feature-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1rem;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.feature-description {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e9ecef;
+    line-height: 1.6;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    margin-bottom: 0;
+}
+
+/* =============================================
+   RESPONSIVE DESIGN
+   ============================================= */
+
+/* Large desktop (1400px+) */
+@media (min-width: 1400px) {
+    .hero-section {
+        padding: 6rem 0 8rem 0;
+    }
+    
+    .features-section {
+        padding: 6rem 0;
+    }
+    
+    .brand-logo {
+        max-height: 250px;
+    }
+    
+    .hero-title {
+        font-size: 4rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.6rem;
+    }
+}
+
+/* Desktop (1200px - 1399px) */
+@media (max-width: 1399px) and (min-width: 1200px) {
+    .hero-section {
+        padding: 5rem 0 7rem 0;
+    }
+    
+    .features-section {
+        padding: 5rem 0;
+    }
+}
+
+/* Large tablet/small desktop (992px - 1199px) */
+@media (max-width: 1199px) and (min-width: 992px) {
+    .hero-section {
+        min-height: 90vh;
+        padding: 4rem 0 5rem 0;
+    }
+    
+    .hero-title {
+        font-size: 3rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.3rem;
+    }
+    
+    .brand-logo {
+        max-height: 180px;
+    }
+    
+    .features-section {
+        padding: 4rem 0;
+    }
+}
+
+/* Tablet (768px - 991px) */
+@media (max-width: 991px) and (min-width: 768px) {
+    .hero-section {
+        min-height: 85vh;
+        padding: 3rem 0 4rem 0;
+    }
+    
+    .hero-title {
+        font-size: 2.8rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 2.2rem;
+    }
+    
+    .brand-logo {
+        max-height: 160px;
+    }
+    
+    .btn-login {
+        font-size: 1.15rem;
+        padding: 0.95rem 2.2rem;
+    }
+    
+    .features-section {
+        padding: 3.5rem 0;
+    }
+    
+    .feature-card {
+        margin-bottom: 2rem;
+        padding: 1.8rem;
+    }
+}
+
+/* Mobile landscape/small tablet (576px - 767px) */
+@media (max-width: 767px) and (min-width: 576px) {
+    .hero-section {
+        min-height: 100vh;
+        padding: 2rem 0 3rem 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .hero-content {
+        padding: 2rem 0;
+    }
+    
+    .hero-title {
+        font-size: 2.4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.15rem;
+        margin-bottom: 2rem;
+    }
+    
+    .brand-logo {
+        max-height: 140px;
+    }
+    
+    .brand-logo-container {
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-login {
+        font-size: 1.1rem;
+        padding: 0.9rem 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .cta-section {
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .features-section {
+        padding: 3rem 0;
+        margin-top: 0;
+    }
+    
+    .feature-card {
+        padding: 1.6rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .feature-icon {
+        width: 65px;
+        height: 65px;
+    }
+    
+    .feature-icon i {
+        font-size: 1.6rem;
+    }
+    
+    .feature-title {
+        font-size: 1.35rem;
+    }
+    
+    .feature-description {
+        font-size: 0.98rem;
+    }
+}
+
+/* Mobile portrait (max-width: 575px) */
+@media (max-width: 575px) {
+    .hero-section {
+        min-height: 100vh;
+        padding: 1.5rem 0 2rem 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .hero-content {
+        padding: 1.5rem 0;
+    }
+    
+    .brand-logo-container {
+        margin-bottom: 1.2rem;
+    }
+    
+    .brand-logo {
+        max-height: 110px;
+    }
+    
+    .hero-title {
+        font-size: 1.9rem;
+        margin-bottom: 0.8rem;
+        line-height: 1.2;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.4;
+    }
+    
+    .cta-section {
+        margin-top: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-login {
+        font-size: 1rem;
+        padding: 0.8rem 1.8rem;
+        width: 100%;
+        max-width: 280px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .features-section {
+        padding: 2.5rem 0;
+        margin-top: 0;
+    }
+    
+    .feature-card {
+        padding: 1.4rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    .feature-icon {
+        width: 55px;
+        height: 55px;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-icon i {
+        font-size: 1.4rem;
+    }
+    
+    .feature-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .feature-description {
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+}
+
+/* Very small mobile (max-width: 400px) */
+@media (max-width: 400px) {
+    .hero-section {
+        padding: 1rem 0 1.5rem 0;
+    }
+    
+    .hero-content {
+        padding: 1rem 0;
+    }
+    
+    .brand-logo {
+        max-height: 90px;
+    }
+    
+    .hero-title {
+        font-size: 1.7rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.95rem;
+    }
+    
+    .btn-login {
+        font-size: 0.95rem;
+        padding: 0.75rem 1.5rem;
+        max-width: 260px;
+    }
+    
+    .features-section {
+        padding: 2rem 0;
+    }
+    
+    .feature-card {
+        padding: 1.2rem;
+    }
+    
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .feature-icon i {
+        font-size: 1.2rem;
+    }
+    
+    .feature-title {
+        font-size: 1.15rem;
+    }
+    
+    .feature-description {
+        font-size: 0.88rem;
+    }
+}
+
+/* =============================================
+   ANIMATIONS
+   ============================================= */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(-50px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05) translateY(0);
+    }
+    70% {
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Stagger animation delays for feature cards */
+.feature-card:nth-child(1) {
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.feature-card:nth-child(2) {
+    animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.feature-card:nth-child(3) {
+    animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.feature-card:nth-child(4) {
+    animation: fadeInUp 0.8s ease-out 0.8s both;
+}
+
+.feature-card:nth-child(5) {
+    animation: fadeInUp 0.8s ease-out 1s both;
+}
+
+.feature-card:nth-child(6) {
+    animation: fadeInUp 0.8s ease-out 1.2s both;
+}
+
