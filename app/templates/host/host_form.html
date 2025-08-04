@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container host-form-container">
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <div class="card">
@@ -58,22 +58,43 @@
                             {% endfor %}
                         </div>
                         <div class="form-group mb-3">
-                            <label for="visible_to_roles">Visible to Roles</label>
-                            <select multiple class="form-control{% if form.visible_to_roles.errors %} is-invalid{% endif %}" 
-                                    id="visible_to_roles" name="visible_to_roles" size="5">
+                            <label class="form-label" for="visible_to_roles">Visible to Roles</label>
+                            <div class="role-selector-container{% if form.visible_to_roles.errors %} is-invalid{% endif %}">
+                                <div class="role-cards-grid">
+                                    {% for role_id, role_name in form.visible_to_roles.choices %}
+                                    <div class="role-card {% if role_id in form.visible_to_roles.data %}selected{% endif %}" 
+                                         data-role-id="{{ role_id }}">
+                                        <div class="role-card-content">
+                                            <div class="role-icon">
+                                                <i class="fas fa-users"></i>
+                                            </div>
+                                            <div class="role-info">
+                                                <span class="role-name">{{ role_name }}</span>
+                                                <span class="role-description">Access Level</span>
+                                            </div>
+                                            <div class="role-checkbox">
+                                                <i class="fas fa-check"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <!-- Hidden inputs to maintain form compatibility -->
                                 {% for role_id, role_name in form.visible_to_roles.choices %}
-                                <option value="{{ role_id }}" 
-                                    {% if role_id in form.visible_to_roles.data %}selected{% endif %}>
-                                    {{ role_name }}
-                                </option>
+                                <input type="checkbox" 
+                                       name="visible_to_roles" 
+                                       value="{{ role_id }}" 
+                                       id="role_{{ role_id }}"
+                                       {% if role_id in form.visible_to_roles.data %}checked{% endif %}
+                                       style="display: none;">
                                 {% endfor %}
-                            </select>
+                            </div>
                             {% for error in form.visible_to_roles.errors %}
                             <div class="invalid-feedback">
                                 {{ error }}
                             </div>
                             {% endfor %}
-                            <small class="form-text text-muted">Hold Ctrl (or Cmd on Mac) to select multiple roles. Users with these roles will be able to see this host.</small>
+                            <small class="form-text text-muted">Select the roles that should have access to this host. Multiple roles can be selected.</small>
                         </div>
                         {% if form.public_access is defined %}
                         <div class="form-group mb-3">
@@ -101,5 +122,120 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Role card selector functionality
+    const roleCards = document.querySelectorAll('.role-card');
+    const hiddenInputs = document.querySelectorAll('input[name="visible_to_roles"]');
+    
+    roleCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const roleId = this.dataset.roleId;
+            const hiddenInput = document.getElementById(`role_${roleId}`);
+            
+            if (hiddenInput) {
+                // Toggle the hidden checkbox
+                hiddenInput.checked = !hiddenInput.checked;
+                
+                // Update visual state
+                if (hiddenInput.checked) {
+                    this.classList.add('selected');
+                } else {
+                    this.classList.remove('selected');
+                }
+                
+                // Add ripple effect
+                createRippleEffect(this, event);
+            }
+        });
+        
+        // Add keyboard support
+        card.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                this.click();
+            }
+        });
+        
+        // Make cards focusable
+        card.setAttribute('tabindex', '0');
+    });
+    
+    // Create ripple effect for better UX
+    function createRippleEffect(element, event) {
+        const ripple = document.createElement('span');
+        const rect = element.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+        
+        ripple.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            left: ${x}px;
+            top: ${y}px;
+            background: rgba(var(--primary-color-rgb), 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: scale(0);
+            animation: ripple 0.6s ease-out;
+            z-index: 0;
+        `;
+        
+        element.style.position = 'relative';
+        element.appendChild(ripple);
+        
+        // Remove ripple after animation
+        setTimeout(() => {
+            if (ripple.parentNode) {
+                ripple.parentNode.removeChild(ripple);
+            }
+        }, 600);
+    }
+    
+    // Add CSS for ripple animation if not already present
+    if (!document.querySelector('#ripple-animation-style')) {
+        const style = document.createElement('style');
+        style.id = 'ripple-animation-style';
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(2);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Form validation enhancement
+    const form = document.querySelector('form');
+    const roleSelector = document.querySelector('.role-selector-container');
+    
+    if (form && roleSelector) {
+        form.addEventListener('submit', function(event) {
+            const checkedRoles = document.querySelectorAll('input[name="visible_to_roles"]:checked');
+            
+            // Remove any existing validation classes
+            roleSelector.classList.remove('is-invalid', 'is-valid');
+            
+            // Add subtle validation feedback
+            if (checkedRoles.length > 0) {
+                roleSelector.classList.add('is-valid');
+            }
+        });
+    }
+    
+    // Smooth scroll to form errors if any
+    const errorElements = document.querySelectorAll('.invalid-feedback');
+    if (errorElements.length > 0) {
+        errorElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
 {% endblock %}
 

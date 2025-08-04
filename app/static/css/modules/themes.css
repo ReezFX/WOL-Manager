@@ -20,6 +20,8 @@ html, body {
   --bg-secondary: #f8f9fa;
   --bg-tertiary: #e9ecef;
   --bg-card: #ffffff;
+  --card-bg: #ffffff;
+  --card-bg-secondary: #f8f9fa;
   
   /* Text colors */
   --text-primary: #212529;
@@ -55,6 +57,8 @@ html, body {
   --bg-secondary: #242426;
   --bg-tertiary: #2d2d30;
   --bg-card: #2d2d30;
+  --card-bg: #2d2d30;
+  --card-bg-secondary: #242426;
   
   /* Text colors */
   --text-primary: #f8f9fa;

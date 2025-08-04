@@ -2,23 +2,30 @@
    7. FORM STYLING
    ============================================= */
 
-/* Form controls */
+/* Updated Form controls */
 .form-control {
   border-color: var(--input-border);
   background-color: var(--input-bg);
   color: var(--text-primary);
-  transition: all 0.3s ease;
-  border-radius: 0.75rem;
-  padding: 0.6rem 1rem;
+  transition: all 0.3s ease-in-out;
+  border-radius: 1rem;
+  padding: 0.75rem 1.25rem;
   border-width: 1px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .form-control:focus {
   border-color: var(--input-focus-border);
-  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
-  transform: translateY(-1px);
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25), 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
   outline: none;
+  background-color: var(--input-bg);
+}
+
+.form-control:hover:not(:focus) {
+  border-color: var(--input-focus-border);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
 }
 
 .form-control::placeholder {
@@ -26,11 +33,14 @@
   opacity: 0.7;
 }
 
-/* Form labels */
+/* Enhanced Form labels */
 .form-label {
   color: var(--text-primary);
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Enhanced form labels with icons */
@@ -49,29 +59,37 @@
   font-weight: 500;
 }
 
-/* Select controls */
+/* Updated Select controls */
 .form-select {
   border-color: var(--input-border);
   background-color: var(--input-bg);
   color: var(--text-primary);
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
-  transition: all 0.3s ease;
-  border-radius: 0.75rem;
-  padding: 0.6rem 1rem;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+  transition: all 0.3s ease-in-out;
+  border-radius: 1rem;
+  padding: 0.75rem 1.25rem;
   border-width: 1px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .form-select:focus {
   border-color: var(--input-focus-border);
-  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25);
-  transform: translateY(-1px);
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25), 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
   outline: none;
+  background-color: var(--input-bg);
 }
 
-/* Dark theme form select control - override background image for better contrast */
+.form-select:hover:not(:focus) {
+  border-color: var(--input-focus-border);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Updated Dark theme form select control - better contrast and visibility */
 .dark-theme .form-select {
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23f8f9fa' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Checkbox controls */
@@ -204,3 +222,536 @@
 /* Note: The dark theme validation styles are redundant since they use the same CSS variables 
    and therefore have been removed. Using CSS variables eliminates the need for separate 
    theme-specific validation styles. */
+
+/* =============================================
+   HOST FORM SPECIFIC STYLING
+   ============================================= */
+
+/* Host form container styling */
+.host-form-container .card {
+  border: none;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.host-form-container .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+/* Host form header styling */
+.host-form-container .card-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.host-form-container .card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.host-form-container .card-header h2 {
+  color: white;
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.75rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+/* Host form body styling */
+.host-form-container .card-body {
+  padding: 2.5rem;
+  background: var(--card-bg);
+}
+
+/* Host form group spacing */
+.host-form-container .form-group {
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+/* Enhanced input styling for host form */
+.host-form-container .form-control,
+.host-form-container .form-select {
+  border: 2px solid var(--input-border);
+  border-radius: 1.25rem;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: var(--input-bg);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.host-form-container .form-control:focus,
+.host-form-container .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25), 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  background: var(--input-bg);
+}
+
+.host-form-container .form-control:hover:not(:focus),
+.host-form-container .form-select:hover:not(:focus) {
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Multi-select styling */
+.host-form-container select[multiple] {
+  min-height: 120px;
+  padding: 1rem;
+  border: 2px solid var(--input-border);
+  border-radius: 1.25rem;
+  background: var(--input-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.host-form-container select[multiple]:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.25), 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Checkbox styling for host form */
+.host-form-container .form-check {
+  padding: 1rem;
+  background: var(--card-bg-secondary);
+  border-radius: 1rem;
+  border: 1px solid var(--input-border);
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.host-form-container .form-check:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.host-form-container .form-check-input {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--input-border);
+  margin-right: 0.75rem;
+}
+
+.host-form-container .form-check-input:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.4);
+}
+
+/* Button styling for host form */
+.host-form-container .btn {
+  padding: 0.875rem 2rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.host-form-container .btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+}
+
+.host-form-container .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(var(--primary-color-rgb), 0.4);
+  background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+}
+
+.host-form-container .btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--input-border);
+}
+
+.host-form-container .btn-secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Form text and helper text styling */
+.host-form-container .form-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  padding-left: 0.25rem;
+  font-style: italic;
+}
+
+/* Invalid feedback styling */
+.host-form-container .invalid-feedback {
+  font-size: 0.875rem;
+  color: var(--danger-color);
+  margin-top: 0.5rem;
+  padding-left: 0.25rem;
+  font-weight: 500;
+}
+
+/* Success feedback styling */
+.host-form-container .valid-feedback {
+  font-size: 0.875rem;
+  color: var(--success-color);
+  margin-top: 0.5rem;
+  padding-left: 0.25rem;
+  font-weight: 500;
+}
+
+/* =============================================
+   MODERN ROLE SELECTOR STYLING
+   ============================================= */
+
+/* Role selector container */
+.role-selector-container {
+  padding: 1.25rem;
+  background: var(--bg-secondary);
+  border: 2px solid var(--input-border);
+  border-radius: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.role-selector-container:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.role-selector-container.is-invalid {
+  border-color: var(--danger-color);
+  box-shadow: 0 0 0 0.25rem rgba(var(--danger-color-rgb), 0.25);
+}
+
+/* Role cards grid layout */
+.role-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+/* Individual role card */
+.role-card {
+  background: var(--card-bg);
+  border: 2px solid var(--input-border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.role-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-color-rgb), 0.05) 0%, 
+    rgba(var(--secondary-color-rgb), 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.role-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.role-card:hover::before {
+  opacity: 1;
+}
+
+.role-card.selected {
+  border-color: var(--primary-color);
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-color-rgb), 0.1) 0%, 
+    rgba(var(--secondary-color-rgb), 0.1) 100%);
+  box-shadow: 0 6px 20px rgba(var(--primary-color-rgb), 0.25);
+}
+
+.role-card.selected::before {
+  opacity: 1;
+}
+
+/* Role card content layout */
+.role-card-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Role icon styling */
+.role-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+}
+
+.role-icon i {
+  color: white;
+  font-size: 1.25rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.role-card:hover .role-icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.4);
+}
+
+.role-card.selected .role-icon {
+  background: linear-gradient(135deg, var(--success-color), var(--primary-color));
+  transform: scale(1.05);
+}
+
+/* Role information */
+.role-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.role-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.role-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  transition: color 0.3s ease;
+}
+
+.role-card:hover .role-name {
+  color: var(--primary-color);
+}
+
+.role-card.selected .role-name {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.role-card.selected .role-description {
+  color: var(--secondary-color);
+}
+
+/* Role checkbox indicator */
+.role-checkbox {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--input-border);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--input-bg);
+}
+
+.role-checkbox i {
+  font-size: 1rem;
+  color: transparent;
+  transition: all 0.3s ease;
+}
+
+.role-card:hover .role-checkbox {
+  border-color: var(--primary-color);
+  background: rgba(var(--primary-color-rgb), 0.1);
+  transform: scale(1.1);
+}
+
+.role-card.selected .role-checkbox {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.4);
+}
+
+.role-card.selected .role-checkbox i {
+  color: white;
+  transform: scale(1.2);
+}
+
+/* Active/pressed state */
+.role-card:active {
+  transform: translateY(-1px) scale(0.98);
+  transition: all 0.1s ease;
+}
+
+/* Dark theme adjustments */
+.dark-theme .role-card {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .role-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .role-card.selected {
+  box-shadow: 0 6px 24px rgba(var(--primary-color-rgb), 0.4);
+}
+
+.dark-theme .role-selector-container {
+  background: var(--bg-tertiary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.dark-theme .role-selector-container:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading state (optional for future enhancement) */
+.role-card.loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.role-card.loading .role-icon {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Responsive adjustments for role selector */
+@media (max-width: 768px) {
+  .role-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .role-card {
+    padding: 1rem;
+  }
+  
+  .role-card-content {
+    gap: 0.75rem;
+  }
+  
+  .role-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .role-icon i {
+    font-size: 1.1rem;
+  }
+  
+  .role-name {
+    font-size: 1rem;
+  }
+  
+  .role-description {
+    font-size: 0.8rem;
+  }
+  
+  .role-checkbox {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .role-checkbox i {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .role-selector-container {
+    padding: 1rem;
+  }
+  
+  .role-card {
+    padding: 0.875rem;
+  }
+  
+  .role-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .role-icon i {
+    font-size: 1rem;
+  }
+}
+
+/* Responsive adjustments for host form */
+@media (max-width: 768px) {
+  .host-form-container .card-header {
+    padding: 1.5rem;
+  }
+  
+  .host-form-container .card-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .host-form-container .card-body {
+    padding: 1.5rem;
+  }
+  
+  .host-form-container .form-control,
+  .host-form-container .form-select {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
+  }
+  
+  .host-form-container .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    width: 100%;
+    margin-bottom: 0.75rem;
+  }
+}
