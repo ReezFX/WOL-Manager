@@ -8,58 +8,7 @@
   .card-header h2 { font-size: 1.5rem; }
   .card-header h3 { font-size: 1.3rem; }
   
-  /* Navbar adjustments */
-  .navbar-brand { font-size: 1.2rem; }
-
-  /* -- Mobile Navbar Improvements -- */
-
-  /* Reduce navbar height and adjust body padding */
-  .apple-navbar {
-    padding-top: 0.6rem;  /* Slightly adjust padding */
-    padding-bottom: 0.6rem;
-    transition: padding 0.3s ease; /* Add transition for padding changes */
-  }
-
-  body {
-    /* Match new navbar height (approx 0.6rem + 0.6rem + line-height ~ 62px) */
-    padding-top: 62px;
-    transition: padding-top 0.3s ease; /* Add transition for padding changes */
-  }
-
-  /* Mobile navbar collapse animations moved to animations.css */
-
-  /* Ensure nav links stack properly and have more padding/margin */
-  .navbar-nav {
-    width: 100%;
-  }
-   .navbar-nav .nav-item:not(:last-child) {
-      margin-bottom: 0.25rem; /* Add space between items */
-  }
-  .navbar-nav .nav-link {
-    padding: 0.75rem 1rem; /* Increased padding */
-    border-radius: 8px; /* Consistent radius */
-    transition: background-color 0.2s ease; /* Add transition */
-  }
-   .light-theme .navbar-nav .nav-link:hover {
-      background-color: rgba(0,0,0,0.05);
-  }
-  .dark-theme .navbar-nav .nav-link:hover {
-      background-color: rgba(255,255,255,0.1);
-  }
-
-  /* Mobile dropdown styles moved to layout.css for consolidation */
-
-
-  /* Navbar toggle styles consolidated in layout.css */
-
-  /* Ensure dropdown menus also get blur on mobile */
-  .apple-navbar .dropdown-menu {
-      backdrop-filter: saturate(180%) blur(10px) !important;
-      -webkit-backdrop-filter: saturate(180%) blur(10px) !important;
-      margin-top: 0.25rem; /* Add a little space */
-  }
-
-  /* Mobile nav item animations moved to animations.css for consolidation */
+  /* Note: All navbar styles have been consolidated in layout.css */
 
 }
 

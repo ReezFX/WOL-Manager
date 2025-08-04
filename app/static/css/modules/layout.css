@@ -115,7 +115,8 @@ body {
     border-radius: var(--navbar-border-radius);
     box-shadow: var(--apple-shadow-sm);
     padding: 0.5rem 0;
-    transition: var(--transition-fast);
+    transition: var(--animation-timing-fast) var(--animation-easing);
+    animation: dropdownFadeIn var(--animation-timing-medium) var(--animation-easing) forwards;
 }
 
 .dark-theme .apple-navbar .dropdown-menu {
@@ -131,7 +132,7 @@ body {
     font-size: 1rem;
     font-weight: 600;
     letter-spacing: -0.01em;
-    transition: var(--transition-fast);
+    transition: var(--animation-timing-fast) var(--animation-easing);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-decoration: none !important;
@@ -139,7 +140,7 @@ body {
 
 /* Dropdown icon animations */
 .dropdown-item i {
-    transition: var(--transition-fast);
+    transition: var(--animation-timing-fast) var(--animation-easing);
     margin-right: 0.6rem;
     width: 1.2em;
     text-align: center;
@@ -156,6 +157,17 @@ body {
 
 .dark-theme .dropdown-item:hover {
     background-color: var(--navbar-hover-dark);
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Fallback for browsers without backdrop-filter support */

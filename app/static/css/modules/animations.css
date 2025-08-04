@@ -1672,17 +1672,17 @@
   .navbar-collapse.collapsing {
     height: 0;
     overflow: hidden;
-    transition: height 0.35s ease;
+    transition: height var(--animation-timing-slow) ease;
   }
   
   .navbar-collapse.collapse.show {
-    animation: mobileMenuFadeSlideIn 0.35s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
+    animation: mobileMenuFadeSlideIn var(--animation-timing-slow) var(--animation-easing) forwards;
     overflow: hidden;
     margin-top: 0.75rem;
     padding: 1rem;
     border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border-color-translucent);
+    box-shadow: var(--apple-shadow-sm);
+    border: 1px solid var(--border-color);
   }
   
   /* Theme-specific mobile menu backgrounds */
@@ -1709,8 +1709,8 @@
   .navbar-collapse.show .navbar-nav .nav-item {
     visibility: visible;
     opacity: 0;
-    animation: mobileNavItemFadeIn 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
-    animation-delay: 0.1s;
+    animation: mobileNavItemFadeIn var(--animation-timing-slow) var(--animation-easing) forwards;
+    animation-delay: var(--animation-timing-fast);
   }
   
   /* Staggered animation delays for nav items */
