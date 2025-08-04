@@ -36,9 +36,6 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.light-theme .apple-navbar {
-  border-bottom-color: rgba(0, 0, 0, 0.06);
-}
 
 .dark-theme .apple-navbar {
   background: linear-gradient(145deg, rgba(var(--navbar-gradient-primary-rgb), 0.65), rgba(var(--navbar-gradient-secondary-rgb), 0.45)) !important;
@@ -82,14 +79,14 @@ body {
 }
 
 .navbar-brand {
-  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, 
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--navbar-font-family);
   color: var(--text-primary);
   font-weight: 600;
   font-size: 1.25rem;
   letter-spacing: -0.02em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-decoration: none !important;
 }
 
 .dark-theme .navbar-brand,
@@ -124,8 +121,7 @@ body {
 
 /* Enhanced dropdown item styling */
 .dropdown-item {
-    font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, 
-      "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--navbar-font-family);
     padding: 0.7rem 1.2rem;
     font-size: 1rem;
     font-weight: 600;
@@ -133,6 +129,7 @@ body {
     transition: background-color 0.15s ease, color 0.15s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-decoration: none !important;
 }
 
 .dropdown-item i {
@@ -146,15 +143,8 @@ body {
     transform: translateX(2px);
 }
 
-/* Remove underlines from dropdown items */
-.dropdown-item:hover,
-.dropdown-item:focus {
-    text-decoration: none !important;
-}
-
 .dark-theme .dropdown-item:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    text-decoration: none !important;
 }
 
 /* Fallback for browsers without backdrop-filter support */
@@ -178,8 +168,7 @@ body {
 
 /* Theme toggle button */
 .theme-toggle-btn {
-    font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, 
-      "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--navbar-font-family);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -253,45 +242,3 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* =============================================
-   COMPREHENSIVE NAVIGATION LINK STYLING
-   Remove underlines from ALL navigation links
-   ============================================= */
-
-/* Remove underlines from all navigation-related links */
-.navbar a,
-.navbar .nav-link,
-.navbar .navbar-brand,
-.apple-navbar a,
-.apple-navbar .nav-link, 
-.apple-navbar .navbar-brand,
-.dropdown-menu a,
-.dropdown-item,
-.navbar-nav a,
-.navbar-nav .nav-link {
-    text-decoration: none !important;
-}
-
-/* Ensure hover states also don't show underlines */
-.navbar a:hover,
-.navbar .nav-link:hover,
-.navbar .navbar-brand:hover,
-.apple-navbar a:hover,
-.apple-navbar .nav-link:hover,
-.apple-navbar .navbar-brand:hover,
-.dropdown-menu a:hover,
-.dropdown-item:hover,
-.navbar-nav a:hover,
-.navbar-nav .nav-link:hover,
-.navbar a:focus,
-.navbar .nav-link:focus,
-.navbar .navbar-brand:focus,
-.apple-navbar a:focus,
-.apple-navbar .nav-link:focus,
-.apple-navbar .navbar-brand:focus,
-.dropdown-menu a:focus,
-.dropdown-item:focus,
-.navbar-nav a:focus,
-.navbar-nav .nav-link:focus {
-    text-decoration: none !important;
-}

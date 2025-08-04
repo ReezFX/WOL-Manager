@@ -48,8 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
    * @param {string} theme - The theme to apply ('light' or 'dark')
    */
   function applyTheme(theme) {
-    const navbar = document.getElementById('main-navbar');
-    const footer = document.getElementById('main-footer');
     const cardHeaders = document.querySelectorAll('.card-header.bg-tertiary-theme');
     
     if (theme === DARK_THEME) {
@@ -61,12 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.classList.remove('light-theme');
       document.body.classList.add('dark-theme');
       document.body.setAttribute('data-bs-theme', 'dark');
-      
-      
-      // Update card headers with bg-tertiary-theme class
-      cardHeaders.forEach(header => {
-        header.style.color = 'var(--text-primary)';
-      });
     } else {
       // Apply light theme to both html and body
       document.documentElement.classList.remove('dark-theme');
@@ -76,24 +68,12 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.classList.remove('dark-theme');
       document.body.classList.add('light-theme');
       document.body.setAttribute('data-bs-theme', 'light');
-      
-      // Update navbar
-      if (navbar) {
-        navbar.classList.remove('navbar-dark');
-        navbar.classList.add('navbar-light');
-      }
-      
-      // Update footer
-      if (footer) {
-        footer.classList.remove('bg-dark');
-        footer.classList.add('bg-light');
-      }
-      
-      // Update card headers with bg-tertiary-theme class
-      cardHeaders.forEach(header => {
-        header.style.color = 'var(--text-primary)';
-      });
     }
+    
+    // Update card headers with bg-tertiary-theme class
+    cardHeaders.forEach(header => {
+      header.style.color = 'var(--text-primary)';
+    });
   }
 
   /**

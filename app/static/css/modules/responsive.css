@@ -88,27 +88,25 @@
       background-color: rgba(255,255,255,0.1);
   }
 
-  /* Larger touch targets for mobile dropdown items with divider */
+  /* Larger touch targets for mobile dropdown items */
   .dropdown-item {
-      padding: 0.8rem 1.2rem; /* Increase padding */
-      font-size: 1rem;
-      min-height: 50px; /* Ensure sufficient height */
+      padding: 0.8rem 1.2rem;
+      min-height: 50px;
       display: flex;
       align-items: center;
-      border-radius: 6px; /* Add radius */
+      border-radius: 6px;
   }
    .dropdown-menu {
-      padding: 0.5rem; /* Add padding around items */
+      padding: 0.5rem;
   }
 
-  /* Add space between mobile dropdown items (removed border) */
+  /* Add space between mobile dropdown items */
   .dropdown-menu .dropdown-item {
-      margin-bottom: 0.1rem; /* Add small margin instead of border */
+      margin-bottom: 0.1rem;
   }
   .dropdown-menu .dropdown-item:last-child {
       margin-bottom: 0;
   }
-  /* Removed old border styles */
 
 
   /* --- Animated Navbar Toggler --- */
