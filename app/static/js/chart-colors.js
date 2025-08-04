@@ -181,7 +181,7 @@ const CHART_CONFIG = {
     line: {
         elements: {
             line: {
-                tension: 0.4,
+                tension: 0,
                 borderWidth: 3,
                 fill: true
             },

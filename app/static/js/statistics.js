@@ -245,7 +245,7 @@ function createWolSuccessChart(container, data) {
                 backgroundColor: 'rgba(23, 162, 184, 0.15)',
                 borderWidth: 3,
                 fill: true,
-                tension: 0.4,
+                tension: 0,
                 pointBackgroundColor: 'rgb(23, 162, 184)',
                 pointBorderColor: 'rgb(13, 110, 140)',
                 pointBorderWidth: 2,

@@ -120,7 +120,7 @@ function initSuccessRateChart() {
                 hoverBackgroundColor: CHART_COLORS.primary.hover,
                 borderWidth: 3,
                 fill: true,
-                tension: 0.3,
+                tension: 0,
                 pointRadius: 5,
                 pointHoverRadius: 8,
                 pointBackgroundColor: CHART_COLORS.gradients.primary.start,
