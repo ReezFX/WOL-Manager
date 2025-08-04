@@ -1637,6 +1637,7 @@
    MOBILE NAVBAR ANIMATIONS
    ============================================= */
 
+/* Mobile menu container fade/slide animation */
 @keyframes mobileMenuFadeSlideIn {
   from {
     opacity: 0;
@@ -1648,16 +1649,75 @@
   }
 }
 
-/* Hamburger icon morph to X */
-
-/* New keyframe for mobile nav items */
+/* Mobile nav item staggered animation */
 @keyframes mobileNavItemFadeIn {
   from {
     opacity: 0;
-    transform: translateY(8px); /* Slight upward movement */
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ===== MOBILE NAVBAR COLLAPSE STYLING ===== */
+
+@media (max-width: 992px) {
+  /* Mobile navbar collapse animation states */
+  .navbar-collapse.collapse {
+    transition: none;
+  }
+  
+  .navbar-collapse.collapsing {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.35s ease;
+  }
+  
+  .navbar-collapse.collapse.show {
+    animation: mobileMenuFadeSlideIn 0.35s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
+    overflow: hidden;
+    margin-top: 0.75rem;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color-translucent);
+  }
+  
+  /* Theme-specific mobile menu backgrounds */
+  .light-theme .navbar-collapse.collapse.show {
+    background: linear-gradient(145deg, rgba(var(--navbar-gradient-primary-rgb), 0.60), rgba(var(--navbar-gradient-secondary-rgb), 0.40));
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.07);
+  }
+  
+  .dark-theme .navbar-collapse.collapse.show {
+    background: linear-gradient(145deg, rgba(var(--navbar-gradient-primary-rgb), 0.65), rgba(var(--navbar-gradient-secondary-rgb), 0.45));
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+  }
+  
+  /* Mobile nav item staggered animations */
+  .navbar-collapse .navbar-nav .nav-item {
+    visibility: hidden;
+    opacity: 0;
+  }
+  
+  .navbar-collapse.show .navbar-nav .nav-item {
+    visibility: visible;
+    opacity: 0;
+    animation: mobileNavItemFadeIn 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
+    animation-delay: 0.1s;
+  }
+  
+  /* Staggered animation delays for nav items */
+  .navbar-collapse.show .navbar-nav .nav-item:nth-child(1) { animation-delay: 0.12s; }
+  .navbar-collapse.show .navbar-nav .nav-item:nth-child(2) { animation-delay: 0.16s; }
+  .navbar-collapse.show .navbar-nav .nav-item:nth-child(3) { animation-delay: 0.20s; }
+  .navbar-collapse.show .navbar-nav .nav-item:nth-child(4) { animation-delay: 0.24s; }
+  .navbar-collapse.show .navbar-nav .nav-item:nth-child(5) { animation-delay: 0.28s; }
+  .navbar-collapse.show .navbar-nav .nav-item:nth-child(6) { animation-delay: 0.32s; }
 }

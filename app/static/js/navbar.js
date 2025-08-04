@@ -1,82 +1,86 @@
 /**
  * Mobile Navigation Enhancement for WoL Manager
  * Handles navbar collapse, dropdown animations, and responsive behavior
+ * Optimized for performance with throttling and event delegation
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Cache DOM elements for better performance
     const navbar = document.getElementById('main-navbar');
     const navbarCollapse = document.getElementById('navbarNav');
     const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
     const dropdownItems = document.querySelectorAll('.dropdown-item');
     
-    // Add icon animations for dropdown items
-    dropdownItems.forEach(item => {
-        const icon = item.querySelector('i');
-        if (icon) {
-            item.addEventListener('mouseover', () => {
-                icon.style.transform = 'translateX(3px)';
-            });
-            
-            item.addEventListener('mouseout', () => {
-                icon.style.transform = 'translateX(0)';
-            });
-        }
-    });
-    
-    // Adjust navbar padding for mobile
-    function adjustNavbarPadding() {
-        if (window.innerWidth < 992) {
-            navbar.style.paddingBottom = '0.9rem';
-        } else {
-            navbar.style.paddingBottom = '0.8rem';
-        }
+    // Throttle function to limit frequency of expensive operations
+    function throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
     }
     
-    // Setup mobile navbar behavior
+    // Cache breakpoint check for mobile
+    let isMobile = window.innerWidth < 992;
+    
+    // Optimized mobile navbar behavior setup
     function setupMobileNavbar() {
-        if (window.innerWidth < 992) {
-            // Close navbar when nav links are clicked (exclude dropdown toggles)
-            navLinks.forEach(link => {
-                if (!link.classList.contains('dropdown-toggle')) {
-                    link.addEventListener('click', () => {
-                        const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
-                        if (bsCollapse && navbarCollapse.classList.contains('show')) {
-                            setTimeout(() => {
-                                bsCollapse.hide();
-                            }, 150);
-                        }
-                    });
-                }
-            });
-            
-            // Close navbar when dropdown items are clicked
-            dropdownItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
-                    if (bsCollapse && navbarCollapse.classList.contains('show')) {
-                        setTimeout(() => {
-                            bsCollapse.hide();
-                        }, 150);
-                    }
-                });
-            });
+        if (isMobile) {
+            // Use event delegation for better performance
+            navbar.addEventListener('click', handleNavbarClick);
+        } else {
+            navbar.removeEventListener('click', handleNavbarClick);
         }
     }
+    
+    // Handle navbar clicks with event delegation
+    function handleNavbarClick(event) {
+        const target = event.target.closest('.nav-link, .dropdown-item');
+        if (!target) return;
+        
+        // Skip dropdown toggles
+        if (target.classList.contains('dropdown-toggle')) return;
+        
+        // Close navbar collapse
+        const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+        if (bsCollapse && navbarCollapse.classList.contains('show')) {
+            setTimeout(() => bsCollapse.hide(), 150);
+        }
+    }
+    
+    // Handle responsive layout changes
+    function handleResize() {
+        const wasMobile = isMobile;
+        isMobile = window.innerWidth < 992;
+        
+        // Only setup mobile behavior if mobile state changed
+        if (wasMobile !== isMobile) {
+            setupMobileNavbar();
+        }
+    }
+    
+    // Throttled resize handler to improve performance
+    const throttledResize = throttle(handleResize, 250);
     
     // Initial setup
-    adjustNavbarPadding();
     setupMobileNavbar();
     
-    // Handle responsive behavior
-    window.addEventListener('resize', function() {
-        adjustNavbarPadding();
-        setupMobileNavbar();
-    });
+    // Event listeners with performance optimizations
+    window.addEventListener('resize', throttledResize, { passive: true });
     
+    // Handle orientation changes with debouncing
     window.addEventListener('orientationchange', function() {
-        setTimeout(function() {
-            adjustNavbarPadding();
-            setupMobileNavbar();
-        }, 100);
+        setTimeout(throttledResize, 100);
+    }, { passive: true });
+    
+    // Clean up event listeners on page unload
+    window.addEventListener('beforeunload', function() {
+        window.removeEventListener('resize', throttledResize);
+        navbar.removeEventListener('click', handleNavbarClick);
     });
 });

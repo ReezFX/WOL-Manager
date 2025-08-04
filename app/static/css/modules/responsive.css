@@ -26,48 +26,7 @@
     transition: padding-top 0.3s ease; /* Add transition for padding changes */
   }
 
-  /* Style the expanded mobile menu with animation */
-   .navbar-collapse.collapse {
-      /* Override Bootstrap's transition */
-      transition: none;
-  }
-  .navbar-collapse.collapsing {
-     /* Keep basic collapsing style but remove transform/opacity transitions */
-      height: 0;
-      overflow: hidden; /* Apply overflow hidden here too */
-      transition: height 0.35s ease; /* Only transition height */
-  }
-  .navbar-collapse.collapse.show {
-    /* Apply the custom animation */
-    animation: mobileMenuFadeSlideIn 0.35s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
-    /* Keep overflow hidden during animation */
-    overflow: hidden; 
-    
-    margin-top: 0.75rem; /* Increased space below navbar */
-    padding: 1rem; /* Increased padding */
-    border-radius: 12px; /* Slightly larger radius */
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* Softer shadow */
-    border: 1px solid var(--border-color-translucent);
-  }
-
-
-  .light-theme .navbar-collapse.collapse.show {
-     /* Match light theme navbar gradient/alpha */
-     background: linear-gradient(145deg, rgba(var(--navbar-gradient-primary-rgb), 0.60), rgba(var(--navbar-gradient-secondary-rgb), 0.40));
-     backdrop-filter: saturate(180%) blur(20px);
-     -webkit-backdrop-filter: saturate(180%) blur(20px);
-     /* Match border */
-     border: 1px solid rgba(0, 0, 0, 0.07);
-  }
-
-  .dark-theme .navbar-collapse.collapse.show {
-     /* Match dark theme navbar gradient/alpha */
-     background: linear-gradient(145deg, rgba(var(--navbar-gradient-primary-rgb), 0.65), rgba(var(--navbar-gradient-secondary-rgb), 0.45));
-     backdrop-filter: saturate(180%) blur(20px);
-     -webkit-backdrop-filter: saturate(180%) blur(20px);
-     /* Match border */
-     border: 1px solid rgba(255, 255, 255, 0.10);
-  }
+  /* Mobile navbar collapse animations moved to animations.css */
 
   /* Ensure nav links stack properly and have more padding/margin */
   .navbar-nav {
@@ -88,75 +47,10 @@
       background-color: rgba(255,255,255,0.1);
   }
 
-  /* Larger touch targets for mobile dropdown items */
-  .dropdown-item {
-      padding: 0.8rem 1.2rem;
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-      border-radius: 6px;
-  }
-   .dropdown-menu {
-      padding: 0.5rem;
-  }
-
-  /* Add space between mobile dropdown items */
-  .dropdown-menu .dropdown-item {
-      margin-bottom: 0.1rem;
-  }
-  .dropdown-menu .dropdown-item:last-child {
-      margin-bottom: 0;
-  }
+  /* Mobile dropdown styles moved to layout.css for consolidation */
 
 
-  /* --- Animated Navbar Toggler --- */
-  .navbar-toggler {
-      padding: 0.5rem; /* Adjust padding */
-      min-width: 48px; /* Slightly larger */
-      min-height: 48px;
-      border-radius: 10px;
-      border: none; /* Remove border */
-      position: relative;
-      overflow: hidden;
-      transition: background-color 0.2s ease;
-  }
-   .navbar-toggler:focus {
-      box-shadow: none; /* Remove focus ring */
-  }
-  .light-theme .navbar-toggler:hover {
-      background-color: rgba(0,0,0,0.05);
-  }
-  .dark-theme .navbar-toggler:hover {
-      background-color: rgba(255,255,255,0.1);
-  }
-
-   /* Default state using the standard SVG icon */
-  .navbar-toggler-icon {
-    /* Use Bootstrap's default SVG icon */
-    background-image: var(--bs-navbar-toggler-icon-bg); /* Use BS variable */
-    height: 1.5em;
-    width: 1.5em;
-    transition: transform 0.3s ease; /* Add transition for smooth effect */
-  }
-
-  /* Animate the icon when the menu is shown */
-  .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
-    /* Rotate the icon slightly for a subtle effect */
-    transform: rotate(90deg);
-    /* Or use a custom icon if you want a more complex animation like hamburger to X */
-    /* Example: background-image: url("data:image/svg+xml,..."); */
-  }
-  /* --- End Animated Navbar Toggler --- */
-
-
-  /* Allow flexible width theme toggle on mobile */
-  .theme-toggle-btn {
-      border-radius: 18px;
-      padding: 0.5rem 0.8rem; /* Adjusted padding */
-      justify-content: flex-start;
-      width: auto; /* Allow natural width */
-      height: auto;
-  }
+  /* Navbar toggle styles consolidated in layout.css */
 
   /* Ensure dropdown menus also get blur on mobile */
   .apple-navbar .dropdown-menu {
@@ -165,31 +59,7 @@
       margin-top: 0.25rem; /* Add a little space */
   }
 
-  /* --- Ensure nav items are hidden by default before animation --- */
-  .navbar-collapse .navbar-nav .nav-item {
-      visibility: hidden; /* Use visibility to prevent layout shifts */
-      opacity: 0;
-  }
-
-  /* --- Apply staggered animation to nav items when menu is shown --- */
-  .navbar-collapse.show .navbar-nav .nav-item {
-      visibility: visible; /* Make visible *only* when animating in */
-      opacity: 0; /* Start animation from opacity 0 */
-      animation: mobileNavItemFadeIn 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
-      /* Base delay to let container start animating */
-      animation-delay: 0.1s; 
-  }
-
-  /* Stagger the delay for each item */
-  .navbar-collapse.show .navbar-nav .nav-item:nth-child(1) { animation-delay: 0.12s; }
-  .navbar-collapse.show .navbar-nav .nav-item:nth-child(2) { animation-delay: 0.16s; }
-  .navbar-collapse.show .navbar-nav .nav-item:nth-child(3) { animation-delay: 0.20s; }
-  .navbar-collapse.show .navbar-nav .nav-item:nth-child(4) { animation-delay: 0.24s; }
-  /* Add more if needed */
-  .navbar-collapse.show .navbar-nav .nav-item:nth-child(5) { animation-delay: 0.28s; } 
-  .navbar-collapse.show .navbar-nav .nav-item:nth-child(6) { animation-delay: 0.32s; }
-
-  /* --- End Staggered Animation --- */
+  /* Mobile nav item animations moved to animations.css for consolidation */
 
 }
 

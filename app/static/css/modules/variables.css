@@ -39,6 +39,25 @@
   --navbar-gradient-primary-rgb: 30, 180, 210;
   --navbar-gradient-secondary-rgb: 20, 130, 160;
   
+  /* Navbar specific variables */
+  --navbar-font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --navbar-height-desktop: 70px;
+  --navbar-height-mobile: 62px;
+  --navbar-padding-desktop: 0.8rem;
+  --navbar-padding-mobile: 0.6rem;
+  --navbar-blur: saturate(180%) blur(28px);
+  --navbar-blur-mobile: saturate(180%) blur(10px);
+  --navbar-border-radius: 8px;
+  --navbar-toggler-size: 48px;
+  --navbar-toggler-border-radius: 10px;
+  --navbar-dropdown-blur: blur(10px);
+  
+  /* Navbar hover states */
+  --navbar-hover-light: rgba(0, 0, 0, 0.05);
+  --navbar-hover-dark: rgba(255, 255, 255, 0.1);
+  --navbar-hover-light-subtle: rgba(0, 0, 0, 0.04);
+  --navbar-hover-dark-subtle: rgba(255, 255, 255, 0.08);
+  
   /* Common variables */
   --transition-speed: 0.3s;
   --border-radius: 1rem;
