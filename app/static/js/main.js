@@ -62,17 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.classList.add('dark-theme');
       document.body.setAttribute('data-bs-theme', 'dark');
       
-      // Update navbar
-      if (navbar) {
-        navbar.classList.remove('navbar-light');
-        navbar.classList.add('navbar-dark');
-      }
-      
-      // Update footer
-      if (footer) {
-        footer.classList.remove('bg-light');
-        footer.classList.add('bg-dark');
-      }
       
       // Update card headers with bg-tertiary-theme class
       cardHeaders.forEach(header => {

@@ -1649,42 +1649,6 @@
 }
 
 /* Hamburger icon morph to X */
-@keyframes morphToX-top {
-  0% { transform: translateY(0) rotate(0); }
-  50% { transform: translateY(8px) rotate(0); } /* Adjust 8px based on icon size/stroke */
-  100% { transform: translateY(8px) rotate(45deg); }
-}
-
-@keyframes morphToX-middle {
-  0% { opacity: 1; }
-  50% { opacity: 0; }
-  100% { opacity: 0; }
-}
-
-@keyframes morphToX-bottom {
-  0% { transform: translateY(0) rotate(0); }
-  50% { transform: translateY(-8px) rotate(0); } /* Adjust 8px based on icon size/stroke */
-  100% { transform: translateY(-8px) rotate(-45deg); }
-}
-
-/* X morph back to Hamburger */
-@keyframes morphToHamburger-top {
-  0% { transform: translateY(8px) rotate(45deg); }
-  50% { transform: translateY(8px) rotate(0); }
-  100% { transform: translateY(0) rotate(0); }
-}
-
-@keyframes morphToHamburger-middle {
-  0% { opacity: 0; }
-  50% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
-@keyframes morphToHamburger-bottom {
-  0% { transform: translateY(-8px) rotate(-45deg); }
-  50% { transform: translateY(-8px) rotate(0); }
-  100% { transform: translateY(0) rotate(0); }
-}
 
 /* New keyframe for mobile nav items */
 @keyframes mobileNavItemFadeIn {

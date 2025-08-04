@@ -2,6 +2,11 @@
    4. LAYOUT STYLING
    ============================================= */
 
+/* Shared navbar font family variable */
+:root {
+  --navbar-font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 /* Base layout */
 body {
   background-color: var(--bg-primary);
@@ -12,44 +17,6 @@ body {
   flex-direction: column;
   padding-top: 70px;
   transition: padding-top 0.3s ease;
-}
-
-/* Navbar */
-.navbar {
-  transition: var(--apple-transition);
-  border-bottom: 1px solid var(--border-color);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 0.75rem 1rem;
-  box-shadow: var(--apple-shadow-sm);
-}
-
-/* Light theme navbar */
-.light-theme .navbar {
-  background: linear-gradient(to right, rgba(var(--primary-color-rgb), 0.3) 0%, rgba(var(--secondary-color-rgb), 0.25) 100%);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.light-theme .navbar.navbar-dark {
-  background: linear-gradient(to right, rgba(var(--secondary-color-rgb), 0.5) 0%, rgba(var(--primary-color-rgb), 0.4) 100%);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.light-theme .navbar.navbar-light {
-  background: linear-gradient(to right, rgba(var(--primary-color-rgb), 0.25) 0%, rgba(var(--accent-color-rgb), 0.15) 100%);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-}
-
-/* Dark theme navbar */
-.dark-theme .navbar {
-  background: linear-gradient(to right, rgba(var(--secondary-color-rgb), 0.4) 0%, rgba(var(--primary-color-rgb), 0.3) 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.dark-theme .navbar.navbar-dark,
-.dark-theme .navbar.navbar-light {
-  background: linear-gradient(to right, rgba(var(--secondary-color-rgb), 0.6) 0%, rgba(var(--primary-color-rgb), 0.4) 100%);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 }
 
 /* Apple navbar styling */
@@ -89,8 +56,7 @@ body {
 }
 
 .apple-navbar .nav-link {
-  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, 
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--navbar-font-family);
   padding: 0.5rem 1rem;
   margin: 0 0.2rem;
   border-radius: 8px;
@@ -100,6 +66,7 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-decoration: none !important;
 }
 
 .apple-navbar .nav-link:hover {
@@ -132,30 +99,6 @@ body {
 
 .dark-theme .navbar-toggler-icon {
   background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255, 255, 255, 0.9)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
-}
-
-.navbar-nav .nav-link {
-  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, 
-    "Helvetica Neue", Arial, sans-serif;
-  padding: 0.5rem 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  transition: color 0.15s ease;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.navbar-nav .nav-link:hover,
-.navbar-nav .nav-link:focus {
-  color: var(--primary-color);
-  text-decoration: none;
-}
-
-.dark-theme .navbar-nav .nav-link:hover,
-.dark-theme .navbar-nav .nav-link:focus {
-  color: rgba(255, 255, 255, 1);
-  text-decoration: none;
 }
 
 .dark-theme .navbar-toggler {
