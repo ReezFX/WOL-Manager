@@ -74,33 +74,33 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4><i class="fas fa-users me-2"></i>User Directory</h4>
-                        <span class="badge bg-primary">{{ users|length }} user{{ 's' if users|length != 1 else '' }}</span>
+                        <span class="badge" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 0.5rem 1rem; font-weight: 600;">{{ users|length }} user{{ 's' if users|length != 1 else '' }}</span>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
                         {% for user in users %}
                         <div class="col-md-6 col-lg-4">
-                            <div class="card user-card h-100 {{ 'border-warning' if user.is_admin else 'border-light' }}">
+                            <div class="card user-card h-100" style="border: 2px solid {{ 'var(--warning-color)' if user.is_admin else 'var(--border-color)' }}; background: var(--card-bg);">
                                 <div class="card-body">
                                     <div class="d-flex align-items-center mb-3">
-                                        <div class="user-avatar me-3">
-                                            <i class="fas {{ 'fa-crown text-warning' if user.is_admin else 'fa-user text-primary' }} fa-2x"></i>
+                                        <div class="user-avatar me-3" style="background: {{ 'linear-gradient(135deg, var(--warning-color), var(--accent-color))' if user.is_admin else 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))' }}; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas {{ 'fa-crown' if user.is_admin else 'fa-user' }} fa-2x" style="color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3);"></i>
                                         </div>
                                         <div class="flex-grow-1">
                                             <h5 class="card-title mb-1">{{ user.username }}</h5>
                                             <div class="user-badges">
                                                 {% if user.is_admin %}
-                                                    <span class="badge bg-warning text-dark">
+                                                    <span class="badge" style="background: linear-gradient(135deg, var(--warning-color), var(--accent-color)); color: white; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                         <i class="fas fa-shield-alt"></i> Administrator
                                                     </span>
                                                 {% else %}
-                                                    <span class="badge bg-primary">
+                                                    <span class="badge" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                         <i class="fas fa-user"></i> {{ user.role or 'User' }}
                                                     </span>
                                                 {% endif %}
                                                 {% if user.id == current_user.id %}
-                                                    <span class="badge bg-success">
+                                                    <span class="badge" style="background: linear-gradient(135deg, var(--success-color), var(--primary-color)); color: white; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                         <i class="fas fa-user-check"></i> You
                                                     </span>
                                                 {% endif %}
@@ -115,26 +115,26 @@
                                                 {% if not user.is_admin %}
                                                     <form action="{{ url_for('admin.promote_user', user_id=user.id) }}" method="post" class="d-inline">
                                                         {{ csrf_form.hidden_tag() }}
-                                                        <button type="submit" class="btn btn-success btn-sm" title="Promote to Admin">
+                                                        <button type="submit" class="btn btn-sm" style="background: linear-gradient(135deg, var(--success-color), var(--primary-color)); color: white; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.3s ease;" title="Promote to Admin" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)';">
                                                             <i class="fas fa-arrow-up"></i> Promote
                                                         </button>
                                                     </form>
                                                 {% else %}
                                                     <form action="{{ url_for('admin.demote_user', user_id=user.id) }}" method="post" class="d-inline">
                                                         {{ csrf_form.hidden_tag() }}
-                                                        <button type="submit" class="btn btn-warning btn-sm" title="Demote User">
+                                                        <button type="submit" class="btn btn-sm" style="background: linear-gradient(135deg, var(--warning-color), var(--accent-color)); color: white; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.3s ease;" title="Demote User" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)';">
                                                             <i class="fas fa-arrow-down"></i> Demote
                                                         </button>
                                                     </form>
                                                 {% endif %}
                                                 
-                                                <a href="{{ url_for('admin.edit_permissions', user_id=user.id) }}" class="btn btn-info btn-sm" title="Edit Permissions">
+                                                <a href="{{ url_for('admin.edit_permissions', user_id=user.id) }}" class="btn btn-sm" style="background: linear-gradient(135deg, var(--info-color), var(--primary-color)); color: white; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.3s ease; text-decoration: none;" title="Edit Permissions" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)';">
                                                     <i class="fas fa-key"></i> Permissions
                                                 </a>
                                                 
                                                 <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user? This will also delete any hosts created by this user and cannot be undone.');">
                                                     {{ csrf_form.hidden_tag() }}
-                                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete User">
+                                                    <button type="submit" class="btn btn-sm" style="background: linear-gradient(135deg, var(--danger-color), #c53030); color: white; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.3s ease;" title="Delete User" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(226, 85, 99, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)';">
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
@@ -228,6 +228,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             .user-card {
                 transition: all 0.3s ease;
+                border-radius: 1rem !important;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+            }
+            
+            .user-card:hover {
+                box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+                transform: translateY(-4px) !important;
             }
             
             .user-avatar {
