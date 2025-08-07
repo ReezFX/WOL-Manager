@@ -38,6 +38,7 @@ python manage.py run
 <summary>📑 <b>Table of Contents</b></summary>
 
 - [Features](#-features)
+- [Application Showcase](#-application-showcase)
 - [System Requirements](#-system-requirements)
 - [Security](#-security)
 - [Contributing](#-contributing)
@@ -56,6 +57,57 @@ python manage.py run
 - 📱 **Responsive UI**: Works on desktop and mobile devices
 - 🌓 **Dark/Light Mode**: Toggle between dark and light themes
 - 🐳 **Docker Support**: Easy deployment using containers
+
+---
+
+## ✨ Application Showcase
+
+<div align="center">
+  <h3>🎨 <strong>Experience WOL-Manager's Beautiful Interface</strong></h3>
+  <p><em>Modern • Responsive • Intuitive</em></p>
+</div>
+
+<br>
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <h4>🌙 <strong>Dark Mode</strong></h4>
+      <img src="app/static/img/Example1.png" alt="WOL-Manager Dark Mode" width="100%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+      <br><br>
+      <em>✨ Sleek dark theme designed for<br>comfortable nighttime usage</em>
+    </td>
+    <td align="center" width="33%">
+      <h4>☀️ <strong>Light Mode</strong></h4>
+      <img src="app/static/img/Example2.png" alt="WOL-Manager Light Mode" width="100%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+      <br><br>
+      <em>🌟 Clean light theme perfect for<br>bright work environments</em>
+    </td>
+    <td align="center" width="33%">
+      <h4>🌐 <strong>Public Access</strong></h4>
+      <img src="app/static/img/Example3.png" alt="WOL-Manager Public Host Feature" width="100%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+      <br><br>
+      <em>🔒 Secure public host access with<br>encrypted permalink protection</em>
+    </td>
+  </tr>
+</table>
+
+<br>
+
+<div align="center">
+  <h4>🎯 <strong>Design Philosophy</strong></h4>
+  <p><em>"Simplicity meets functionality - managing your network devices should be both intuitive and efficient across all themes and features."</em></p>
+  
+  <h4>🚀 <strong>Key Design Features</strong></h4>
+  <table>
+    <tr>
+      <td align="center">📱 <strong>Mobile First</strong><br><em>Fully responsive design</em></td>
+      <td align="center">🎨 <strong>Theme Toggle</strong><br><em>Instant dark/light switching</em></td>
+      <td align="center">🔐 <strong>Secure Access</strong><br><em>Role-based permissions</em></td>
+      <td align="center">⚡ <strong>Fast & Reliable</strong><br><em>Optimized performance</em></td>
+    </tr>
+  </table>
+</div>
 
 ---
 
