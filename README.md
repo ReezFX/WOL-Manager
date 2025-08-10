@@ -1,22 +1,32 @@
 <div align="center">
-  <img src="app/static/img/WOL-Manager-DIsplay.png" alt="WOL-Manager Display" width="650"><br>
-  <h1>WOL-Manager</h1>
-  <b>Wake-on-LAN Device Management, Simplified</b>
-  <br><br>
+  <img src="app/static/img/WOL-Manager-DIsplay.png" alt="WOL-Manager Display" width="720" style="border-radius: 14px;">
+  <p><strong>Wake‑on‑LAN Device Management, Simplified</strong></p>
 
-  <!-- Badges -->
-  <a href="https://github.com/ReezFX/WOL-Manager/releases"><img src="https://img.shields.io/github/v/release/ReezFX/WOL-Manager?style=flat-square" alt="Release"></a>
-  <a href="https://github.com/ReezFX/WOL-Manager/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ReezFX/WOL-Manager?style=flat-square" alt="License"></a>
-  <a href="https://github.com/ReezFX/WOL-Manager/issues"><img src="https://img.shields.io/github/issues/ReezFX/WOL-Manager?style=flat-square" alt="Issues"></a>
-  <a href="https://github.com/ReezFX/WOL-Manager/stargazers"><img src="https://img.shields.io/github/stars/ReezFX/WOL-Manager?style=flat-square" alt="Stars"></a>
-  <a href="https://github.com/ReezFX/WOL-Manager/network/members"><img src="https://img.shields.io/github/forks/ReezFX/WOL-Manager?style=flat-square" alt="Forks"></a>
+  <!-- Badges (modern look) -->
+  <a href="https://github.com/ReezFX/WOL-Manager/releases"><img src="https://img.shields.io/github/v/release/ReezFX/WOL-Manager?style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/ReezFX/WOL-Manager/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ReezFX/WOL-Manager?style=for-the-badge" alt="License"></a>
+  <a href="https://github.com/ReezFX/WOL-Manager/issues"><img src="https://img.shields.io/github/issues/ReezFX/WOL-Manager?style=for-the-badge" alt="Issues"></a>
+  <a href="https://github.com/ReezFX/WOL-Manager/stargazers"><img src="https://img.shields.io/github/stars/ReezFX/WOL-Manager?style=for-the-badge" alt="Stars"></a>
+  <a href="https://github.com/ReezFX/WOL-Manager/network/members"><img src="https://img.shields.io/github/forks/ReezFX/WOL-Manager?style=for-the-badge" alt="Forks"></a>
+
+  <br>
+  <sub>Flask • Wake-on-LAN • Docker • Dark/Light</sub>
 </div>
 
 ---
 
-> **WOL-Manager** is a Flask-based web application that provides a user-friendly interface for managing and waking devices using the Wake-on-LAN (WOL) protocol.
+> WOL-Manager is a Flask-based web application that provides a user-friendly interface for managing and waking devices using the Wake-on-LAN (WOL) protocol.
 
 ---
+
+<div align="center">
+  <a href="#-quick-start"><kbd>Quick Start</kbd></a> •
+  <a href="#-features"><kbd>Features</kbd></a> •
+  <a href="#-application-showcase"><kbd>Showcase</kbd></a> •
+  <a href="#%EF%B8%8F-system-requirements"><kbd>Requirements</kbd></a> •
+  <a href="#-security"><kbd>Security</kbd></a> •
+  <a href="#-contributing"><kbd>Contribute</kbd></a>
+</div>
 
 ## 🚀 Quick Start
 
@@ -30,16 +40,14 @@ pip install -r requirements.txt
 python manage.py run
 ```
 
-> **Full installation and usage guide:** See the [WOL-Manager Wiki](https://github.com/ReezFX/WOL-Manager/wiki)
-
----
+> For full installation and usage, see the [Wiki](https://github.com/ReezFX/WOL-Manager/wiki)
 
 <details>
-<summary>📑 <b>Table of Contents</b></summary>
+<summary>📑 Table of Contents</summary>
 
 - [Features](#-features)
 - [Application Showcase](#-application-showcase)
-- [System Requirements](#-system-requirements)
+- [System Requirements](#%EF%B8%8F-system-requirements)
 - [Security](#-security)
 - [Contributing](#-contributing)
 </details>
@@ -48,66 +56,57 @@ python manage.py run
 
 ## ✨ Features
 
-- 🖥️ **Host Management**: Add, edit, view, and delete networked devices with MAC addresses
-- 🌐 **Wake-on-LAN**: Send magic packets to wake devices remotely
-- 🔐 **User Authentication**: Secure login system with session management (admin-managed user accounts)
-- 🛡️ **Role-based Access Control**: Different permission levels for users and administrators, with host visibility controls
-- 🔗 **Host Status API**: External API endpoint for automated host status updates with token-based authentication
-- 🌍 **Public Host Access**: Configurable public access controls for selected hosts with hash encrypted permalinks
-- 📱 **Responsive UI**: Works on desktop and mobile devices
-- 🌓 **Dark/Light Mode**: Toggle between dark and light themes
-- 🐳 **Docker Support**: Easy deployment using containers
+- 🖥️ <strong>Host Management</strong>: Add, edit, view, and delete networked devices with MAC addresses
+- 🌐 <strong>Wake‑on‑LAN</strong>: Send magic packets to wake devices remotely
+- 🔐 <strong>User Authentication</strong>: Secure login system with session management (admin-managed user accounts)
+- 🛡️ <strong>Role‑based Access Control</strong>: Different permission levels for users and administrators, with host visibility controls
+- 🔗 <strong>Host Status API</strong>: External API endpoint for automated host status updates with token-based authentication
+- 🌍 <strong>Public Host Access</strong>: Configurable public access controls for selected hosts with hash‑encrypted permalinks
+- 📱 <strong>Responsive UI</strong>: Works on desktop and mobile devices
+- 🌓 <strong>Dark/Light Mode</strong>: Toggle between dark and light themes
+- 🐳 <strong>Docker Support</strong>: Easy deployment using containers
 
 ---
 
-## ✨ Application Showcase
+## 🎨 Application Showcase
 
 <div align="center">
-  <h3>🎨 <strong>Experience WOL-Manager's Beautiful Interface</strong></h3>
-  <p><em>Modern • Responsive • Intuitive</em></p>
+  <h3>Experience WOL-Manager in Action</h3>
+  <p><kbd>MODERN</kbd> <kbd>RESPONSIVE</kbd> <kbd>INTUITIVE</kbd></p>
 </div>
 
-<br>
-
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <h4>🌙 <strong>Dark Mode</strong></h4>
-      <img src="app/static/img/Example1.png" alt="WOL-Manager Dark Mode" width="100%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-      <br><br>
-      <em>✨ Sleek dark theme designed for<br>comfortable nighttime usage</em>
-    </td>
-    <td align="center" width="33%">
-      <h4>☀️ <strong>Light Mode</strong></h4>
-      <img src="app/static/img/Example2.png" alt="WOL-Manager Light Mode" width="100%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-      <br><br>
-      <em>🌟 Clean light theme perfect for<br>bright work environments</em>
-    </td>
-    <td align="center" width="33%">
-      <h4>🌐 <strong>Public Access</strong></h4>
-      <img src="app/static/img/Example3.png" alt="WOL-Manager Public Host Feature" width="100%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-      <br><br>
-      <em>🔒 Secure public host access with<br>encrypted permalink protection</em>
-    </td>
-  </tr>
-</table>
-
-<br>
+### 🌓 Theme Switching
 
 <div align="center">
-  <h4>🎯 <strong>Design Philosophy</strong></h4>
-  <p><em>"Simplicity meets functionality - managing your network devices should be both intuitive and efficient across all themes and features."</em></p>
-  
-  <h4>🚀 <strong>Key Design Features</strong></h4>
-  <table>
+  <table border="0" cellspacing="0" cellpadding="10" style="border:none;">
     <tr>
-      <td align="center">📱 <strong>Mobile First</strong><br><em>Fully responsive design</em></td>
-      <td align="center">🎨 <strong>Theme Toggle</strong><br><em>Instant dark/light switching</em></td>
-      <td align="center">🔐 <strong>Secure Access</strong><br><em>Role-based permissions</em></td>
-      <td align="center">⚡ <strong>Fast & Reliable</strong><br><em>Optimized performance</em></td>
+      <td width="50%" align="center" style="border:none;">
+        <h4>🌙 Dark Mode</h4>
+        <img src="app/static/img/Example1.png" alt="WOL-Manager Dark Mode" width="100%" style="border-radius:16px; box-shadow:0 20px 40px rgba(0,0,0,.2);">
+        <br><br>
+        <strong>Perfect for Night Owls</strong><br>
+        <sub>Easy on the eyes • Reduced blue light • OLED-friendly</sub>
+      </td>
+      <td width="50%" align="center" style="border:none;">
+        <h4>☀️ Light Mode</h4>
+        <img src="app/static/img/Example2.png" alt="WOL-Manager Light Mode" width="100%" style="border-radius:16px; box-shadow:0 20px 40px rgba(0,0,0,.1);">
+        <br><br>
+        <strong>Crystal Clear Interface</strong><br>
+        <sub>High contrast • Professional look • Daytime optimized</sub>
+      </td>
     </tr>
   </table>
 </div>
+
+### 🔐 Advanced Features
+
+<div align="center">
+  <img src="app/static/img/Example3.png" alt="WOL-Manager Public Host Feature" width="90%" style="border-radius:16px; box-shadow:0 20px 40px rgba(0,0,0,.15); margin: 20px 0;">
+  <h4>🌐 Public Host Access</h4>
+  <p><strong>Share Access Securely</strong></p>
+</div>
+
+<br>
 
 ---
 
@@ -116,7 +115,7 @@ python manage.py run
 - Python 3.8 or higher (if installing manually)
 - Docker and Docker Compose (if using containerized deployment)
 - Network with support for broadcast UDP packets
-- Devices configured to support Wake-on-LAN
+- Devices configured to support Wake‑on‑LAN
 
 ---
 
@@ -151,5 +150,3 @@ Please adhere to the existing code style and add unit tests for any new function
 <div align="center">
   <sub>Made with ❤️ by <a href="https://github.com/ReezFX">ReezFX</a> and contributors</sub>
 </div>
-
-
