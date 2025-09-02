@@ -1,0 +1,212 @@
+/* =============================================
+   LOGIN PAGE ANIMATIONS MODULE
+   Polished, smooth entry animations for login page
+   ============================================= */
+
+/* Smooth fade in animation */
+@keyframes smoothFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Smooth slide up animation with subtle scale */
+@keyframes smoothSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Smooth slide in from left */
+@keyframes smoothSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Fade in with scale for container */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Apply polished animations to all login elements */
+
+/* 1. Background wrapper - subtle fade in */
+.login-wrapper.animated-gradient {
+  animation: smoothFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 2. Main container - fade in with scale */
+.login-container.animated-entrance {
+  animation: fadeInScale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+/* 3. Header title - slide up */
+.login-header-animated h2 {
+  animation: smoothSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+}
+
+/* 4. Header subtitle - slide up */
+.login-header-animated p {
+  animation: smoothSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+}
+
+/* 5. Alert messages - slide up if present */
+.login-alert-animated {
+  animation: smoothSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
+}
+
+/* 6-9. Form fields - staggered slide in from left */
+.form-field-animated {
+  animation: smoothSlideInLeft 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Username field */
+.form-field-animated:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+/* Password field */
+.form-field-animated:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+/* Remember me checkbox */
+.form-field-animated:nth-child(4),
+.remember-field-animated {
+  animation: smoothSlideInLeft 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s both;
+}
+
+/* Submit button */
+.form-field-animated:nth-child(5),
+.login-button-animated {
+  animation: smoothSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.9s both;
+}
+
+/* 10. Footer - slide up last */
+.login-footer-animated {
+  animation: smoothSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.0s both;
+}
+
+/* Button hover animation enhancement - removed to prevent conflicts */
+/* The hover effects are handled in the main login.html styles */
+
+/* Form field expansion on focus */
+.form-field {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.form-field:focus-within {
+  transform: scale(1.02);
+}
+
+/* Form input focus animations */
+.form-input {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Icon - no movement, only color change */
+.form-field-icon {
+  transition: color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.form-field:focus-within .form-field-icon {
+  opacity: 1;
+}
+
+/* Subtle hover effect for form fields */
+.form-field:hover {
+  transform: scale(1.01);
+}
+
+/* Mobile - faster but smooth animations */
+@media (max-width: 768px) {
+  .login-wrapper.animated-gradient,
+  .login-container.animated-entrance,
+  .login-header-animated h2,
+  .login-header-animated p,
+  .form-field-animated,
+  .remember-field-animated,
+  .login-button-animated,
+  .login-footer-animated,
+  .login-alert-animated {
+    animation-duration: 0.4s;
+  }
+  
+  /* Reduce delays on mobile for faster experience */
+  .login-container.animated-entrance { animation-delay: 0.05s; }
+  .login-header-animated h2 { animation-delay: 0.15s; }
+  .login-header-animated p { animation-delay: 0.2s; }
+  .login-alert-animated { animation-delay: 0.25s; }
+  .form-field-animated:nth-child(2) { animation-delay: 0.3s; }
+  .form-field-animated:nth-child(3) { animation-delay: 0.35s; }
+  .form-field-animated:nth-child(4),
+  .remember-field-animated { animation-delay: 0.4s; }
+  .form-field-animated:nth-child(5),
+  .login-button-animated { animation-delay: 0.45s; }
+  .login-footer-animated { animation-delay: 0.5s; }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Show elements immediately without animation */
+  .login-wrapper.animated-gradient,
+  .login-container.animated-entrance,
+  .login-header-animated h2,
+  .login-header-animated p,
+  .form-field-animated,
+  .remember-field-animated,
+  .login-button-animated,
+  .login-footer-animated,
+  .login-alert-animated {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Performance optimization for animations */
+.login-wrapper,
+.login-container,
+.login-header-animated h2,
+.login-header-animated p,
+.form-field-animated,
+.remember-field-animated,
+.login-button-animated,
+.login-footer-animated,
+.login-alert-animated {
+  will-change: transform, opacity;
+}
+
+/* Clean up will-change after animations complete */
+.login-wrapper.animation-complete,
+.login-container.animation-complete,
+.form-field-animated.animation-complete {
+  will-change: auto;
+}

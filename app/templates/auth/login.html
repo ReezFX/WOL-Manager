@@ -7,6 +7,27 @@
 
 {% block content %}
 <style>
+  /* Hide header/navbar on login page */
+  body header,
+  body .header,
+  body .navbar,
+  body nav,
+  body .navigation,
+  body .nav-wrapper,
+  body .top-bar,
+  body .topbar,
+  body .site-header,
+  body .main-header,
+  body #header,
+  body #navbar,
+  body #navigation,
+  body #nav,
+  body #topbar,
+  body #main-nav,
+  body .main-navigation {
+    display: none !important;
+  }
+  
   /* Hide footer on login page */
   body .footer,
   body .apple-footer,
@@ -667,11 +688,11 @@
   }
 </style>
 
-<div class="login-wrapper">
-  <div class="login-container">
+<div class="login-wrapper animated-gradient">
+  <div class="login-container animated-entrance">
     <div class="login-right">
       <div class="login-form-container">
-        <div class="login-header">
+        <div class="login-header login-header-animated">
           <h2>Sign In</h2>
           <p>Login to access your WOL dashboard</p>
         </div>
@@ -680,7 +701,7 @@
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
               {% for category, message in messages %}
-              <div class="login-alert login-alert-{{ category }}">{{ message }}</div>
+              <div class="login-alert login-alert-{{ category }} login-alert-animated">{{ message }}</div>
               {% endfor %}
             {% endif %}
           {% endwith %}
@@ -689,39 +710,39 @@
           <!-- CSRF token field -->
             {{ form.csrf_token }}
             
-          <div class="form-field">
+          <div class="form-field form-field-animated">
             <div class="form-field-icon">
               <i class="fas fa-user"></i>
             </div>
               {% if form.username.errors %}
-              {{ form.username(class="form-input is-invalid", placeholder="Username") }}
+              {{ form.username(class="form-input form-input-animated is-invalid", placeholder="Username") }}
               <div class="error-message">
                   {% for error in form.username.errors %}
                     <span>{{ error }}</span>
                   {% endfor %}
                 </div>
               {% else %}
-              {{ form.username(class="form-input", placeholder="Username") }}
+              {{ form.username(class="form-input form-input-animated", placeholder="Username") }}
               {% endif %}
             </div>
             
-          <div class="form-field">
+          <div class="form-field form-field-animated">
             <div class="form-field-icon">
               <i class="fas fa-lock"></i>
             </div>
               {% if form.password.errors %}
-              {{ form.password(class="form-input is-invalid", placeholder="Password") }}
+              {{ form.password(class="form-input form-input-animated is-invalid", placeholder="Password") }}
               <div class="error-message">
                   {% for error in form.password.errors %}
                     <span>{{ error }}</span>
                   {% endfor %}
                 </div>
               {% else %}
-              {{ form.password(class="form-input", placeholder="Password") }}
+              {{ form.password(class="form-input form-input-animated", placeholder="Password") }}
               {% endif %}
             </div>
             
-          <div class="form-field remember-field">
+          <div class="form-field form-field-animated remember-field remember-field-animated">
             <label class="remember-checkbox">
               {{ form.remember(class="remember-input") }}
               <span class="remember-checkmark"></span>
@@ -729,8 +750,8 @@
             </label>
             </div>
             
-          <div class="form-field">
-            <button type="submit" class="login-button">
+          <div class="form-field form-field-animated">
+            <button type="submit" class="login-button login-button-animated">
               <span class="button-text">Sign In</span>
               <span class="button-icon"><i class="fas fa-arrow-right"></i></span>
               <div class="button-loader">
@@ -740,7 +761,7 @@
             </div>
           </form>
         
-        <div class="login-footer">
+        <div class="login-footer login-footer-animated">
           <p>Need access? Contact your system administrator.</p>
         </div>
       </div>
@@ -752,6 +773,19 @@
 {% block scripts %}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Clean up will-change after animations complete
+    const animatedElements = document.querySelectorAll(
+      '.login-wrapper, .login-container, .login-header-animated h2, ' +
+      '.login-header-animated p, .form-field-animated, .login-footer-animated, .login-alert-animated'
+    );
+    
+    // Remove will-change after animations are done (max animation delay + duration)
+    setTimeout(() => {
+      animatedElements.forEach(el => {
+        el.classList.add('animation-complete');
+      });
+    }, 1600); // 1.0s max delay + 0.6s duration
+    
     // Form submission animation
     const loginForm = document.getElementById('login-form');
     const loginButton = document.querySelector('.login-button');
