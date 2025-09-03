@@ -168,9 +168,9 @@
   .backup-codes-container {
     background: rgba(var(--warning-color-rgb), 0.1);
     border-left: 3px solid var(--warning-color);
-    padding: 0.875rem;
+    padding: 1rem;
     border-radius: 10px;
-    margin: 0.875rem 0;
+    margin: 1.25rem 0;
   }
 
   .backup-codes-header {
@@ -296,12 +296,34 @@
   .regenerate-button {
     background: linear-gradient(135deg, var(--warning-color) 0%, #f59e0b 100%);
     color: white;
+    width: 100%;
+    padding: 0.875rem 1.5rem !important;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    letter-spacing: 0.02em;
   }
 
   .regenerate-button:hover {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(var(--warning-color-rgb), 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(var(--warning-color-rgb), 0.35);
+  }
+  
+  .regenerate-button:active {
+    transform: translateY(0);
+  }
+  
+  .regenerate-button i {
+    font-size: 1rem;
   }
 
   .action-buttons {
@@ -313,9 +335,9 @@
   .info-message {
     background: rgba(var(--info-color-rgb), 0.1);
     border-left: 3px solid var(--info-color);
-    padding: 0.625rem;
-    border-radius: 6px;
-    margin-bottom: 0.875rem;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
   }
 
   .info-message p {
@@ -335,9 +357,9 @@
   .warning-message {
     background: rgba(var(--danger-color-rgb), 0.1);
     border-left: 3px solid var(--danger-color);
-    padding: 0.625rem;
-    border-radius: 6px;
-    margin: 0.875rem 0;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    margin: 1.25rem 0;
   }
 
   .warning-message p {
@@ -360,9 +382,20 @@
   
   /* Button styling */
   .twofa-button {
-    padding: 0.75rem !important;
-    font-size: 0.9rem !important;
+    padding: 0.875rem 1.5rem !important;
+    font-size: 0.95rem !important;
     border-radius: 10px !important;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  
+  .form-field {
+    margin-bottom: 1rem;
+  }
+  
+  /* Action sections spacing */
+  .form-field-animated:not(:last-child) {
+    margin-bottom: 1rem;
   }
 
   .dark-theme .warning-message ul {
@@ -593,9 +626,9 @@
 
         <!-- Action Buttons -->
         <div class="form-field form-field-animated">
-          <form method="POST" action="{{ url_for('auth.regenerate_backup_codes') }}" id="regenerate-form" style="display: inline-block; width: 100%;">
+          <form method="POST" action="{{ url_for('auth.regenerate_backup_codes') }}" id="regenerate-form">
             {{ csrf_token() }}
-            <button type="submit" class="regenerate-button" style="width: 100%;">
+            <button type="submit" class="regenerate-button">
               <i class="fas fa-sync"></i>
               <span>Regenerate New Codes</span>
             </button>

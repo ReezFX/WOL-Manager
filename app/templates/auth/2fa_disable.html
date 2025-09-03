@@ -156,9 +156,9 @@
   .security-warning {
     background: rgba(var(--danger-color-rgb), 0.1);
     border-left: 3px solid var(--danger-color);
-    padding: 0.625rem;
-    border-radius: 6px;
-    margin-bottom: 0.875rem;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
   }
 
   .security-warning h3 {
@@ -233,7 +233,7 @@
   .button-group {
     display: flex;
     gap: 0.75rem;
-    margin-top: 1rem;
+    margin-top: 1.25rem;
   }
 
   .cancel-button,
@@ -292,9 +292,9 @@
   .info-box {
     background: rgba(var(--info-color-rgb), 0.1);
     border-left: 3px solid var(--info-color);
-    padding: 0.625rem;
-    border-radius: 6px;
-    margin-bottom: 0.875rem;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
   }
 
   .info-box p {
@@ -305,7 +305,13 @@
   }
   
   .twofa-footer {
-    margin-top: 1rem !important;
+    margin-top: 1.5rem !important;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .dark-theme .twofa-footer {
+    border-top-color: rgba(255, 255, 255, 0.1);
   }
   
   .twofa-footer p {

@@ -233,9 +233,9 @@
   .setup-steps {
     background: rgba(var(--info-color-rgb), 0.1);
     border-left: 3px solid var(--info-color);
-    padding: 0.625rem;
-    border-radius: 6px;
-    margin-bottom: 0.875rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
   }
 
   .setup-steps ol {
@@ -278,15 +278,17 @@
   }
 
   .verification-input-group {
-    margin-top: 0.875rem;
+    margin-top: 1.25rem;
+    margin-bottom: 1rem;
   }
 
   .verification-label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     color: #4a5568;
     font-weight: 500;
     text-align: center;
+    font-size: 0.9rem;
   }
 
   .dark-theme .verification-label {
@@ -321,13 +323,24 @@
   
   /* Button styling */
   .twofa-button {
-    padding: 0.75rem !important;
-    font-size: 0.9rem !important;
+    padding: 0.875rem 1.5rem !important;
+    font-size: 0.95rem !important;
     border-radius: 10px !important;
+    margin-top: 0.5rem;
+  }
+  
+  .form-field {
+    margin-bottom: 1rem;
   }
   
   .twofa-footer {
-    margin-top: 1rem !important;
+    margin-top: 1.5rem !important;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .dark-theme .twofa-footer {
+    border-top-color: rgba(255, 255, 255, 0.1);
   }
   
   .back-link {
