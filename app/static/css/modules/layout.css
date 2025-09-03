@@ -345,7 +345,7 @@ body {
   z-index: 10;
   margin-top: auto;
   overflow: hidden;
-  background: transparent;
+  background: #ffffff;
 }
 
 .modern-footer::before {
@@ -363,6 +363,10 @@ body {
   animation: footerRotate 20s linear infinite;
   pointer-events: none;
   z-index: 0;
+}
+
+.dark-theme .modern-footer {
+  background: #1a1a1a;
 }
 
 .dark-theme .modern-footer::before {
