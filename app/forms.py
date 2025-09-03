@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, HiddenField, SelectMultipleField, IntegerField, SelectField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Regexp, Optional, NumberRange
+import re
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -108,3 +109,58 @@ class AppSettingsForm(FlaskForm):
         description='Sets the verbosity level of application logs')
     
     submit = SubmitField('Save Settings')
+
+
+class TwoFactorForm(FlaskForm):
+    """Form for 2FA verification with OTP code"""
+    otp_code = StringField('OTP Code', validators=[
+        DataRequired(message='Please enter your 6-digit code'),
+        Length(min=6, max=6, message='Code must be exactly 6 digits'),
+        Regexp(r'^[0-9]{6}$', message='Code must contain only numbers')
+    ])
+    trust_device = BooleanField('Trust this device for 30 days')
+    submit = SubmitField('Verify')
+    
+    def validate_otp_code(self, field):
+        """Additional validation for OTP code"""
+        if field.data and not field.data.isdigit():
+            raise ValidationError('Code must contain only numbers')
+        if field.data and len(field.data) != 6:
+            raise ValidationError('Code must be exactly 6 digits')
+
+
+class BackupCodeForm(FlaskForm):
+    """Form for 2FA verification with backup code"""
+    backup_code = StringField('Backup Code', validators=[
+        DataRequired(message='Please enter your backup code'),
+        Regexp(r'^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$', message='Invalid backup code format (XXXX-XXXX)')
+    ])
+    submit = SubmitField('Verify Backup Code')
+    
+    def validate_backup_code(self, field):
+        """Clean and validate backup code format"""
+        if field.data:
+            # Remove any spaces and convert to uppercase
+            cleaned = field.data.replace(' ', '').upper()
+            # Check if it matches the format XXXX-XXXX
+            if not re.match(r'^[A-Z0-9]{4}-[A-Z0-9]{4}$', cleaned):
+                raise ValidationError('Backup code must be in format XXXX-XXXX')
+            field.data = cleaned
+
+
+class TwoFactorSetupForm(FlaskForm):
+    """Form for setting up 2FA"""
+    verification_code = StringField('Verification Code', validators=[
+        DataRequired(message='Please enter the verification code from your authenticator app'),
+        Length(min=6, max=6, message='Code must be exactly 6 digits'),
+        Regexp(r'^[0-9]{6}$', message='Code must contain only numbers')
+    ])
+    submit = SubmitField('Enable Two-Factor Authentication')
+
+
+class TwoFactorDisableForm(FlaskForm):
+    """Form for disabling 2FA"""
+    password = PasswordField('Password', validators=[
+        DataRequired(message='Please enter your password to disable 2FA')
+    ])
+    submit = SubmitField('Disable Two-Factor Authentication')

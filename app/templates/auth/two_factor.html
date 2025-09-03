@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}Two-Factor Authentication | WOL Manager{% endblock %}
+
+{# Set this variable to tell base template not to show flash messages #}
+{% set hide_base_flash_messages = true %}
+
+{% block content %}
+<style>
+  /* Hide header/navbar on 2FA page */
+  body header,
+  body .header,
+  body .navbar,
+  body nav,
+  body .navigation,
+  body .nav-wrapper,
+  body .top-bar,
+  body .topbar,
+  body .site-header,
+  body .main-header,
+  body #header,
+  body #navbar,
+  body #navigation,
+  body #nav,
+  body #topbar,
+  body #main-nav,
+  body .main-navigation {
+    display: none !important;
+  }
+  
+  /* Hide footer on 2FA page */
+  body .footer,
+  body .apple-footer,
+  body #main-footer,
+  body footer {
+    display: none !important;
+  }
+  
+  /* Reset body and html for 2FA page */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+  
+  /* Hide main container and any content beneath */
+  body .container,
+  body main,
+  body .main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  /* Prevent any scrolling on mobile */
+  body {
+    touch-action: none !important;
+    -webkit-overflow-scrolling: none !important;
+    overscroll-behavior: none !important;
+  }
+</style>
+
+<div class="twofa-wrapper animated-gradient">
+  <div class="twofa-container animated-entrance">
+    <div class="twofa-content">
+      <div class="twofa-form-container">
+        <!-- Icon Section -->
+        <div class="twofa-icon-wrapper twofa-icon-animated">
+          <div class="twofa-icon">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+        </div>
+        
+        <!-- Header Section -->
+        <div class="twofa-header twofa-header-animated">
+          <h2>Two-Factor Authentication</h2>
+          <p>Enter the 6-digit code from your authenticator app</p>
+        </div>
+        
+        <!-- Show all flash messages in our custom styled format -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+            <div class="twofa-alert twofa-alert-{{ category }} twofa-alert-animated">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.verify_2fa') }}" id="twofa-form" class="twofa-form">
+          <!-- CSRF token field -->
+          {{ form.csrf_token }}
+          
+          <!-- OTP Code Input Fields -->
+          <div class="otp-input-container otp-input-animated">
+            <div class="otp-inputs">
+              <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" data-index="0">
+              <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" data-index="1">
+              <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" data-index="2">
+              <span class="otp-separator">-</span>
+              <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" data-index="3">
+              <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" data-index="4">
+              <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" data-index="5">
+            </div>
+            <!-- Hidden field to store complete OTP code -->
+            <input type="hidden" name="otp_code" id="otp_code" value="">
+          </div>
+          
+          <!-- Error message for OTP -->
+          {% if form.otp_code and form.otp_code.errors %}
+          <div class="error-message error-message-animated">
+            {% for error in form.otp_code.errors %}
+              <span>{{ error }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          
+          <!-- Trust Device Option -->
+          <div class="form-field form-field-animated trust-device-field">
+            <label class="trust-device-checkbox">
+              <input type="checkbox" name="trust_device" class="trust-device-input">
+              <span class="trust-device-checkmark"></span>
+              <span class="trust-device-label">Trust this device for 30 days</span>
+            </label>
+          </div>
+          
+          <!-- Submit Button -->
+          <div class="form-field form-field-animated">
+            <button type="submit" class="twofa-button twofa-button-animated" disabled>
+              <span class="button-text">Verify</span>
+              <span class="button-icon"><i class="fas fa-check"></i></span>
+              <div class="button-loader">
+                <div class="spinner"></div>
+              </div>
+            </button>
+          </div>
+          
+          <!-- Alternative Actions -->
+          <div class="twofa-alternatives twofa-alternatives-animated">
+            <button type="button" class="alternative-link" id="resend-code">
+              <i class="fas fa-redo"></i>
+              <span>Resend Code</span>
+            </button>
+            <span class="separator">•</span>
+            <button type="button" class="alternative-link" id="use-backup">
+              <i class="fas fa-key"></i>
+              <span>Use Backup Code</span>
+            </button>
+          </div>
+        </form>
+        
+        <!-- Footer -->
+        <div class="twofa-footer twofa-footer-animated">
+          <a href="{{ url_for('auth.logout') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Login</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backup Code Modal -->
+<div class="modal-overlay" id="backup-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Enter Backup Code</h3>
+      <button type="button" class="modal-close" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Enter one of your 8-character backup codes</p>
+      <form id="backup-form" method="POST" action="{{ url_for('auth.verify_backup_code') }}">
+        {{ form.csrf_token }}
+        <div class="backup-input-container">
+          <input type="text" 
+                 class="backup-code-input" 
+                 name="backup_code" 
+                 placeholder="XXXX-XXXX" 
+                 maxlength="9" 
+                 pattern="[A-Za-z0-9]{4}-[A-Za-z0-9]{4}"
+                 autocomplete="off">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="cancel-button">Cancel</button>
+          <button type="submit" class="submit-button">Verify Backup Code</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Clean up will-change after animations complete
+    const animatedElements = document.querySelectorAll(
+      '.twofa-wrapper, .twofa-container, .twofa-icon-animated, ' +
+      '.twofa-header-animated h2, .twofa-header-animated p, ' +
+      '.otp-input-animated, .form-field-animated, ' +
+      '.twofa-alternatives-animated, .twofa-footer-animated, ' +
+      '.twofa-alert-animated, .error-message-animated'
+    );
+    
+    // Remove will-change after animations are done
+    setTimeout(() => {
+      animatedElements.forEach(el => {
+        el.classList.add('animation-complete');
+      });
+    }, 1800); // Max animation delay + duration
+    
+    // OTP Input Handling
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const otpHiddenField = document.getElementById('otp_code');
+    const submitButton = document.querySelector('.twofa-button');
+    const form = document.getElementById('twofa-form');
+    
+    // Auto-focus first input
+    if (otpInputs.length > 0) {
+      otpInputs[0].focus();
+    }
+    
+    // Handle input and navigation
+    otpInputs.forEach((input, index) => {
+      // Input event
+      input.addEventListener('input', function(e) {
+        // Allow only numbers
+        this.value = this.value.replace(/[^0-9]/g, '');
+        
+        if (this.value.length === 1) {
+          // Move to next input
+          if (index < otpInputs.length - 1) {
+            otpInputs[index + 1].focus();
+          }
+          
+          // Check if all inputs are filled
+          updateOTPCode();
+        }
+      });
+      
+      // Paste event
+      input.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedData = (e.clipboardData || window.clipboardData).getData('text');
+        const cleanedData = pastedData.replace(/[^0-9]/g, '');
+        
+        if (cleanedData.length >= 6) {
+          // Fill all inputs with pasted data
+          for (let i = 0; i < 6 && i < cleanedData.length; i++) {
+            otpInputs[i].value = cleanedData[i];
+          }
+          updateOTPCode();
+          // Focus last input or submit button
+          if (isOTPComplete()) {
+            submitButton.focus();
+          } else {
+            otpInputs[5].focus();
+          }
+        }
+      });
+      
+      // Keyboard navigation
+      input.addEventListener('keydown', function(e) {
+        // Backspace - move to previous input if current is empty
+        if (e.key === 'Backspace' && this.value === '' && index > 0) {
+          e.preventDefault();
+          otpInputs[index - 1].focus();
+          otpInputs[index - 1].value = '';
+          updateOTPCode();
+        }
+        // Arrow keys navigation
+        else if (e.key === 'ArrowLeft' && index > 0) {
+          e.preventDefault();
+          otpInputs[index - 1].focus();
+        }
+        else if (e.key === 'ArrowRight' && index < otpInputs.length - 1) {
+          e.preventDefault();
+          otpInputs[index + 1].focus();
+        }
+        // Enter key - submit if complete
+        else if (e.key === 'Enter' && isOTPComplete()) {
+          e.preventDefault();
+          form.submit();
+        }
+      });
+      
+      // Focus visual feedback
+      input.addEventListener('focus', function() {
+        this.parentElement.classList.add('focused');
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.classList.remove('focused');
+      });
+    });
+    
+    // Update hidden OTP field and button state
+    function updateOTPCode() {
+      let otpCode = '';
+      otpInputs.forEach(input => {
+        otpCode += input.value;
+      });
+      otpHiddenField.value = otpCode;
+      
+      // Enable/disable submit button
+      if (otpCode.length === 6) {
+        submitButton.disabled = false;
+        submitButton.classList.add('ready');
+      } else {
+        submitButton.disabled = true;
+        submitButton.classList.remove('ready');
+      }
+    }
+    
+    // Check if OTP is complete
+    function isOTPComplete() {
+      return Array.from(otpInputs).every(input => input.value.length === 1);
+    }
+    
+    // Form submission animation
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        submitButton.classList.add('loading');
+      });
+    }
+    
+    // Resend code functionality
+    const resendButton = document.getElementById('resend-code');
+    if (resendButton) {
+      let resendCooldown = false;
+      
+      resendButton.addEventListener('click', function() {
+        if (resendCooldown) return;
+        
+        resendCooldown = true;
+        this.classList.add('loading');
+        
+        // Simulate resend (replace with actual AJAX call)
+        setTimeout(() => {
+          this.classList.remove('loading');
+          this.classList.add('success');
+          this.innerHTML = '<i class="fas fa-check"></i><span>Code Sent!</span>';
+          
+          setTimeout(() => {
+            this.classList.remove('success');
+            this.innerHTML = '<i class="fas fa-redo"></i><span>Resend Code</span>';
+            resendCooldown = false;
+          }, 3000);
+        }, 1000);
+      });
+    }
+    
+    // Backup code modal
+    const backupButton = document.getElementById('use-backup');
+    const backupModal = document.getElementById('backup-modal');
+    const modalClose = backupModal?.querySelector('.modal-close');
+    const cancelButton = backupModal?.querySelector('.cancel-button');
+    const backupInput = backupModal?.querySelector('.backup-code-input');
+    
+    if (backupButton && backupModal) {
+      // Open modal
+      backupButton.addEventListener('click', function() {
+        backupModal.classList.add('active');
+        setTimeout(() => {
+          backupInput?.focus();
+        }, 300);
+      });
+      
+      // Close modal
+      function closeModal() {
+        backupModal.classList.remove('active');
+        backupInput.value = '';
+      }
+      
+      modalClose?.addEventListener('click', closeModal);
+      cancelButton?.addEventListener('click', closeModal);
+      
+      // Close on overlay click
+      backupModal.addEventListener('click', function(e) {
+        if (e.target === backupModal) {
+          closeModal();
+        }
+      });
+      
+      // Close on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && backupModal.classList.contains('active')) {
+          closeModal();
+        }
+      });
+      
+      // Auto-format backup code input
+      if (backupInput) {
+        backupInput.addEventListener('input', function(e) {
+          let value = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+          if (value.length > 4) {
+            value = value.slice(0, 4) + '-' + value.slice(4, 8);
+          }
+          this.value = value;
+        });
+      }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,1034 @@
+/* =============================================
+   TWO-FACTOR AUTHENTICATION STYLES MODULE
+   Modern, responsive 2FA page styling
+   ============================================= */
+
+/* Reset and Base Styles */
+.twofa-wrapper * {
+  box-sizing: border-box;
+}
+
+/* 2FA Page Layout */
+.twofa-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f5fa 0%, #dae7f3 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 1rem;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  z-index: 1040;
+}
+
+.dark-theme .twofa-wrapper {
+  background: linear-gradient(135deg, #2b2d3e 0%, #1a1c2c 100%);
+}
+
+.twofa-container {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+  background: white;
+  position: relative;
+  margin: 0 auto;
+  padding: 3rem;
+  z-index: 1050;
+}
+
+.dark-theme .twofa-container {
+  background: #242535;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+}
+
+/* 2FA Form Panel */
+.twofa-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.twofa-form-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Icon Section */
+.twofa-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.twofa-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(var(--primary-color-rgb), 0.3);
+}
+
+.twofa-icon::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  border-radius: 50%;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+.twofa-icon:hover::before {
+  opacity: 0.3;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.1); opacity: 0.1; }
+}
+
+.twofa-icon i {
+  font-size: 2.5rem;
+  color: white;
+}
+
+/* Header Section */
+.twofa-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.twofa-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 0.5rem;
+}
+
+.dark-theme .twofa-header h2 {
+  color: white;
+}
+
+.twofa-header p {
+  color: #4a5568;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.dark-theme .twofa-header p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* OTP Input Fields */
+.otp-input-container {
+  margin-bottom: 1.5rem;
+}
+
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.otp-inputs.focused {
+  transform: scale(1.02);
+}
+
+.otp-input {
+  width: 50px;
+  height: 60px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  border: 2px solid #cbd5e0;
+  border-radius: 12px;
+  background-color: #fff;
+  color: #1a202c;
+  transition: all 0.3s ease;
+  caret-color: var(--primary-color);
+}
+
+.dark-theme .otp-input {
+  background-color: rgba(30, 30, 35, 0.5);
+  border-color: rgba(80, 80, 85, 0.3);
+  color: white;
+}
+
+.otp-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.15);
+  outline: none;
+  transform: scale(1.05);
+}
+
+.dark-theme .otp-input:focus {
+  box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.25);
+}
+
+.otp-input:hover:not(:focus) {
+  border-color: #a0aec0;
+}
+
+.otp-input:disabled {
+  background-color: #f7fafc;
+  cursor: not-allowed;
+}
+
+.dark-theme .otp-input:disabled {
+  background-color: rgba(30, 30, 35, 0.3);
+}
+
+/* OTP input when filled */
+.otp-input:not(:placeholder-shown) {
+  border-color: var(--success-color);
+  background-color: rgba(var(--success-color-rgb), 0.05);
+}
+
+.dark-theme .otp-input:not(:placeholder-shown) {
+  background-color: rgba(var(--success-color-rgb), 0.1);
+}
+
+/* OTP Separator */
+.otp-separator {
+  font-size: 1.5rem;
+  color: #cbd5e0;
+  font-weight: 300;
+  margin: 0 -0.25rem;
+}
+
+.dark-theme .otp-separator {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Error Messages */
+.error-message {
+  color: #e53e3e;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(229, 62, 62, 0.1);
+  border-radius: 8px;
+  border-left: 3px solid #e53e3e;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Trust Device Checkbox */
+.trust-device-field {
+  margin-bottom: 1.5rem;
+}
+
+.trust-device-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding-left: 35px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  user-select: none;
+  color: #1a202c;
+  font-weight: 500;
+}
+
+.dark-theme .trust-device-checkbox {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.trust-device-checkbox .trust-device-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.trust-device-checkmark {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  height: 22px;
+  width: 22px;
+  background-color: #fff;
+  border: 2px solid #a0aec0;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.dark-theme .trust-device-checkmark {
+  background-color: rgba(30, 30, 35, 0.5);
+  border-color: rgba(80, 80, 85, 0.4);
+}
+
+.trust-device-checkbox:hover .trust-device-checkmark {
+  border-color: var(--primary-color);
+}
+
+.trust-device-input:checked ~ .trust-device-checkmark {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.trust-device-checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.trust-device-input:checked ~ .trust-device-checkmark:after {
+  display: block;
+  animation: checkmark 0.2s ease-in-out;
+}
+
+@keyframes checkmark {
+  0% { opacity: 0; transform: scale(0) rotate(45deg); }
+  100% { opacity: 1; transform: scale(1) rotate(45deg); }
+}
+
+/* Submit Button */
+.twofa-button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.twofa-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.twofa-button.ready:not(:disabled) {
+  animation: readyPulse 0.5s ease;
+}
+
+@keyframes readyPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.twofa-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(var(--primary-color-rgb), 0.4);
+}
+
+.twofa-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.button-text {
+  transition: all 0.3s ease;
+  margin-right: 8px;
+}
+
+.button-icon {
+  opacity: 0;
+  width: 0;
+  transition: all 0.3s ease;
+}
+
+.twofa-button:hover:not(:disabled) .button-icon {
+  opacity: 1;
+  width: 20px;
+}
+
+.button-loader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.twofa-button.loading .button-text,
+.twofa-button.loading .button-icon {
+  opacity: 0;
+}
+
+.twofa-button.loading .button-loader {
+  opacity: 1;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Alternative Actions */
+.twofa-alternatives {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.alternative-link {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+
+.alternative-link:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.1);
+  transform: translateY(-1px);
+}
+
+.alternative-link:active {
+  transform: translateY(0);
+}
+
+.alternative-link i {
+  font-size: 0.85rem;
+  transition: transform 0.3s ease;
+}
+
+.alternative-link:hover i {
+  transform: rotate(360deg);
+}
+
+.alternative-link.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.alternative-link.success {
+  color: var(--success-color);
+}
+
+.separator {
+  color: #cbd5e0;
+  font-size: 1rem;
+}
+
+.dark-theme .separator {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Footer */
+.twofa-footer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.back-link {
+  color: #718096;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.dark-theme .back-link {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.back-link:hover {
+  color: var(--primary-color);
+  background-color: rgba(var(--primary-color-rgb), 0.1);
+  transform: translateX(-2px);
+}
+
+.back-link i {
+  transition: transform 0.3s ease;
+}
+
+.back-link:hover i {
+  transform: translateX(-3px);
+}
+
+/* Alert Styling */
+.twofa-alert {
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 0.5s ease;
+  font-weight: 500;
+  text-align: center;
+}
+
+.twofa-alert-success {
+  background-color: rgba(40, 180, 133, 0.15);
+  color: #28b485;
+  border-left: 4px solid #28b485;
+}
+
+.twofa-alert-danger {
+  background-color: rgba(226, 85, 99, 0.15);
+  color: #e25563;
+  border-left: 4px solid #e25563;
+}
+
+.twofa-alert-warning {
+  background-color: rgba(249, 174, 86, 0.15);
+  color: #f9ae56;
+  border-left: 4px solid #f9ae56;
+}
+
+.twofa-alert-info {
+  background-color: rgba(91, 192, 222, 0.15);
+  color: #5bc0de;
+  border-left: 4px solid #5bc0de;
+}
+
+/* Modal Overlay and Content */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  transform: scale(0.9) translateY(20px);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dark-theme .modal-content {
+  background: #242535;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-overlay.active .modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.modal-header {
+  padding: 1.5rem 1.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dark-theme .modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0;
+}
+
+.dark-theme .modal-header h3 {
+  color: white;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #718096;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1a202c;
+}
+
+.dark-theme .modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-body p {
+  color: #4a5568;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.dark-theme .modal-body p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.backup-input-container {
+  margin-bottom: 1.5rem;
+}
+
+.backup-code-input {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  border: 2px solid #cbd5e0;
+  border-radius: 12px;
+  background-color: #fff;
+  color: #1a202c;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.dark-theme .backup-code-input {
+  background-color: rgba(30, 30, 35, 0.5);
+  border-color: rgba(80, 80, 85, 0.3);
+  color: white;
+}
+
+.backup-code-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.15);
+  outline: none;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.cancel-button,
+.submit-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.cancel-button:hover {
+  background-color: #cbd5e0;
+}
+
+.dark-theme .cancel-button {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dark-theme .cancel-button:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.submit-button {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+}
+
+.submit-button:hover {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(var(--primary-color-rgb), 0.3);
+}
+
+/* Responsive Adjustments */
+
+/* Large tablets and small desktops */
+@media (max-width: 1200px) {
+  .twofa-container {
+    max-width: 420px;
+    margin: 2rem;
+  }
+}
+
+/* Tablets and smaller screens */
+@media (max-width: 992px) {
+  .twofa-wrapper {
+    padding: 1.5rem;
+  }
+  
+  .twofa-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 2.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  }
+  
+  .twofa-header h2 {
+    font-size: 1.6rem;
+  }
+  
+  .otp-input {
+    width: 45px;
+    height: 55px;
+    font-size: 1.4rem;
+  }
+}
+
+/* Small tablets and large phones */
+@media (max-width: 768px) {
+  .twofa-wrapper {
+    padding: 1rem;
+  }
+  
+  .twofa-container {
+    max-width: 380px;
+    margin: 0 auto;
+    padding: 2rem;
+    border-radius: 20px;
+  }
+  
+  .twofa-icon {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .twofa-icon i {
+    font-size: 2rem;
+  }
+  
+  .twofa-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .twofa-header p {
+    font-size: 0.9rem;
+  }
+  
+  .otp-inputs {
+    gap: 0.5rem;
+  }
+  
+  .otp-input {
+    width: 42px;
+    height: 50px;
+    font-size: 1.3rem;
+    border-radius: 10px;
+  }
+  
+  .twofa-button {
+    padding: 0.9rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Standard mobile phones */
+@media (max-width: 576px) {
+  .twofa-wrapper {
+    padding: 0.5rem 1rem;
+  }
+  
+  .twofa-container {
+    max-width: 340px;
+    margin: 0 0.5rem;
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .twofa-icon-wrapper {
+    margin-bottom: 1.5rem;
+  }
+  
+  .twofa-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .twofa-icon i {
+    font-size: 1.75rem;
+  }
+  
+  .twofa-header {
+    margin-bottom: 1.5rem;
+  }
+  
+  .twofa-header h2 {
+    font-size: 1.35rem;
+  }
+  
+  .twofa-header p {
+    font-size: 0.85rem;
+  }
+  
+  .otp-inputs {
+    gap: 0.4rem;
+  }
+  
+  .otp-input {
+    width: 38px;
+    height: 45px;
+    font-size: 1.2rem;
+    border-radius: 8px;
+  }
+  
+  .otp-separator {
+    font-size: 1.2rem;
+    margin: 0 -0.2rem;
+  }
+  
+  .twofa-button {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+  
+  .twofa-alternatives {
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+  
+  .alternative-link {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+  }
+  
+  .twofa-footer {
+    margin-top: 1.5rem;
+  }
+  
+  .back-link {
+    font-size: 0.85rem;
+  }
+}
+
+/* Very small phones and narrow screens */
+@media (max-width: 480px) {
+  .twofa-wrapper {
+    padding: 0.75rem;
+  }
+  
+  .twofa-container {
+    max-width: 320px;
+    margin: 0 auto;
+    padding: 1.75rem 1.25rem;
+    border-radius: 14px;
+  }
+  
+  .twofa-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .otp-inputs {
+    gap: 0.35rem;
+  }
+  
+  .otp-input {
+    width: 36px;
+    height: 42px;
+    font-size: 1.1rem;
+  }
+  
+  .trust-device-checkbox {
+    font-size: 0.9rem;
+    padding-left: 30px;
+  }
+  
+  .trust-device-checkmark {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    max-width: 350px;
+  }
+}
+
+/* Ultra-small screens */
+@media (max-width: 360px) {
+  .twofa-wrapper {
+    padding: 0.5rem;
+  }
+  
+  .twofa-container {
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+  }
+  
+  .twofa-icon {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .twofa-icon i {
+    font-size: 1.5rem;
+  }
+  
+  .twofa-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .twofa-header p {
+    font-size: 0.8rem;
+  }
+  
+  .otp-inputs {
+    gap: 0.25rem;
+  }
+  
+  .otp-input {
+    width: 34px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .otp-separator {
+    font-size: 1rem;
+  }
+  
+  .twofa-button {
+    padding: 0.7rem;
+    font-size: 0.85rem;
+  }
+  
+  .alternative-link {
+    font-size: 0.8rem;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 600px) and (orientation: landscape) {
+  .twofa-wrapper {
+    padding: 0.5rem;
+    align-items: flex-start;
+  }
+  
+  .twofa-container {
+    max-width: 400px;
+    margin: 1rem auto;
+    padding: 1.5rem;
+  }
+  
+  .twofa-icon-wrapper {
+    margin-bottom: 1rem;
+  }
+  
+  .twofa-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .twofa-icon i {
+    font-size: 1.5rem;
+  }
+  
+  .twofa-header {
+    margin-bottom: 1.25rem;
+  }
+  
+  .twofa-header h2 {
+    font-size: 1.4rem;
+  }
+  
+  .otp-input {
+    width: 40px;
+    height: 45px;
+    font-size: 1.2rem;
+  }
+  
+  .twofa-footer {
+    margin-top: 1rem;
+  }
+}

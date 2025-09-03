@@ -1,0 +1,321 @@
+/* =============================================
+   2FA PAGE ANIMATIONS MODULE
+   Polished, smooth entry animations for 2FA page
+   ============================================= */
+
+/* Smooth fade in animation */
+@keyframes smoothFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Smooth slide up animation with subtle scale */
+@keyframes smoothSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Smooth slide in from left */
+@keyframes smoothSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Fade in with scale for container */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Icon zoom in animation */
+@keyframes iconZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(-180deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* OTP input field pop in */
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Fade in up animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply polished animations to all 2FA elements */
+
+/* 1. Background wrapper - subtle fade in */
+.twofa-wrapper.animated-gradient {
+  animation: smoothFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 2. Main container - fade in with scale */
+.twofa-container.animated-entrance {
+  animation: fadeInScale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+/* 3. Icon - zoom in with rotation */
+.twofa-icon-animated {
+  animation: iconZoomIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+}
+
+/* 4. Header title - slide up */
+.twofa-header-animated h2 {
+  animation: smoothSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
+}
+
+/* 5. Header subtitle - slide up */
+.twofa-header-animated p {
+  animation: smoothSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both;
+}
+
+/* 6. Alert messages - slide up if present */
+.twofa-alert-animated {
+  animation: smoothSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.7s both;
+}
+
+/* 7. OTP input container - pop in effect */
+.otp-input-animated {
+  animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s both;
+}
+
+/* Individual OTP inputs - staggered pop in */
+.otp-input-animated .otp-input {
+  opacity: 0;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.otp-input-animated .otp-input:nth-child(1) { animation-delay: 0.9s; }
+.otp-input-animated .otp-input:nth-child(2) { animation-delay: 0.95s; }
+.otp-input-animated .otp-input:nth-child(3) { animation-delay: 1.0s; }
+/* Skip separator (4th child) */
+.otp-input-animated .otp-input:nth-child(5) { animation-delay: 1.05s; }
+.otp-input-animated .otp-input:nth-child(6) { animation-delay: 1.1s; }
+.otp-input-animated .otp-input:nth-child(7) { animation-delay: 1.15s; }
+
+/* OTP separator fade in */
+.otp-input-animated .otp-separator {
+  opacity: 0;
+  animation: smoothFadeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.0s both;
+}
+
+/* 8. Error messages - slide up */
+.error-message-animated {
+  animation: smoothSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s both;
+}
+
+/* 9. Form fields - staggered slide in from left */
+.form-field-animated {
+  animation: smoothSlideInLeft 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Trust device checkbox field */
+.form-field-animated.trust-device-field {
+  animation-delay: 1.3s;
+}
+
+/* Submit button field */
+.form-field-animated:last-of-type {
+  animation-delay: 1.4s;
+}
+
+/* Submit button special animation */
+.twofa-button-animated {
+  animation: smoothSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.4s both;
+}
+
+/* 10. Alternative actions - slide up */
+.twofa-alternatives-animated {
+  animation: smoothSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s both;
+}
+
+/* 11. Footer - slide up last */
+.twofa-footer-animated {
+  animation: smoothSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.6s both;
+}
+
+/* Form field expansion on focus */
+.form-field {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.form-field:focus-within {
+  transform: scale(1.02);
+}
+
+/* OTP input focus animations */
+.otp-input {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Subtle hover effect for form fields */
+.form-field:hover {
+  transform: scale(1.01);
+}
+
+/* Shield icon subtle animation */
+@keyframes shieldPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.twofa-icon {
+  animation: shieldPulse 3s ease-in-out infinite;
+  animation-delay: 2s; /* Start after entrance animations */
+}
+
+/* Success animation for verified OTP */
+@keyframes successPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--success-color-rgb), 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(var(--success-color-rgb), 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--success-color-rgb), 0); }
+}
+
+.otp-input.verified {
+  animation: successPulse 0.5s ease;
+  border-color: var(--success-color) !important;
+  background-color: rgba(var(--success-color-rgb), 0.1) !important;
+}
+
+/* Mobile - faster but smooth animations */
+@media (max-width: 768px) {
+  .twofa-wrapper.animated-gradient,
+  .twofa-container.animated-entrance,
+  .twofa-icon-animated,
+  .twofa-header-animated h2,
+  .twofa-header-animated p,
+  .otp-input-animated,
+  .form-field-animated,
+  .twofa-button-animated,
+  .twofa-alternatives-animated,
+  .twofa-footer-animated,
+  .twofa-alert-animated,
+  .error-message-animated {
+    animation-duration: 0.4s;
+  }
+  
+  /* Reduce delays on mobile for faster experience */
+  .twofa-container.animated-entrance { animation-delay: 0.05s; }
+  .twofa-icon-animated { animation-delay: 0.15s; }
+  .twofa-header-animated h2 { animation-delay: 0.25s; }
+  .twofa-header-animated p { animation-delay: 0.3s; }
+  .twofa-alert-animated { animation-delay: 0.35s; }
+  .otp-input-animated { animation-delay: 0.4s; }
+  
+  /* Faster OTP input stagger on mobile */
+  .otp-input-animated .otp-input:nth-child(1) { animation-delay: 0.45s; }
+  .otp-input-animated .otp-input:nth-child(2) { animation-delay: 0.475s; }
+  .otp-input-animated .otp-input:nth-child(3) { animation-delay: 0.5s; }
+  .otp-input-animated .otp-input:nth-child(5) { animation-delay: 0.525s; }
+  .otp-input-animated .otp-input:nth-child(6) { animation-delay: 0.55s; }
+  .otp-input-animated .otp-input:nth-child(7) { animation-delay: 0.575s; }
+  .otp-input-animated .otp-separator { animation-delay: 0.5s; }
+  
+  .error-message-animated { animation-delay: 0.6s; }
+  .form-field-animated.trust-device-field { animation-delay: 0.65s; }
+  .form-field-animated:last-of-type,
+  .twofa-button-animated { animation-delay: 0.7s; }
+  .twofa-alternatives-animated { animation-delay: 0.75s; }
+  .twofa-footer-animated { animation-delay: 0.8s; }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Show elements immediately without animation */
+  .twofa-wrapper.animated-gradient,
+  .twofa-container.animated-entrance,
+  .twofa-icon-animated,
+  .twofa-header-animated h2,
+  .twofa-header-animated p,
+  .otp-input-animated,
+  .otp-input-animated .otp-input,
+  .otp-input-animated .otp-separator,
+  .form-field-animated,
+  .twofa-button-animated,
+  .twofa-alternatives-animated,
+  .twofa-footer-animated,
+  .twofa-alert-animated,
+  .error-message-animated {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Performance optimization for animations */
+.twofa-wrapper,
+.twofa-container,
+.twofa-icon-animated,
+.twofa-header-animated h2,
+.twofa-header-animated p,
+.otp-input-animated,
+.form-field-animated,
+.twofa-button-animated,
+.twofa-alternatives-animated,
+.twofa-footer-animated,
+.twofa-alert-animated,
+.error-message-animated {
+  will-change: transform, opacity;
+}
+
+/* Clean up will-change after animations complete */
+.twofa-wrapper.animation-complete,
+.twofa-container.animation-complete,
+.twofa-icon-animated.animation-complete,
+.otp-input-animated.animation-complete,
+.form-field-animated.animation-complete {
+  will-change: auto;
+}

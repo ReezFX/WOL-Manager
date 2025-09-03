@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Setup Two-Factor Authentication | WOL Manager{% endblock %}
+
+{# Set this variable to tell base template not to show flash messages #}
+{% set hide_base_flash_messages = true %}
+
+{% block content %}
+<style>
+  /* Hide header/navbar on 2FA setup page */
+  body header,
+  body .header,
+  body .navbar,
+  body nav,
+  body .navigation,
+  body .nav-wrapper,
+  body .top-bar,
+  body .topbar,
+  body .site-header,
+  body .main-header,
+  body #header,
+  body #navbar,
+  body #navigation,
+  body #nav,
+  body #topbar,
+  body #main-nav,
+  body .main-navigation {
+    display: none !important;
+  }
+  
+  /* Hide footer on 2FA setup page */
+  body .footer,
+  body .apple-footer,
+  body #main-footer,
+  body footer {
+    display: none !important;
+  }
+  
+  /* Reset body and html for 2FA setup page */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+  
+  /* Hide main container and any content beneath */
+  body .container,
+  body main,
+  body .main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  /* Prevent any scrolling on mobile */
+  body {
+    touch-action: none !important;
+    -webkit-overflow-scrolling: none !important;
+    overscroll-behavior: none !important;
+  }
+
+  /* Additional setup-specific styles */
+  .setup-container {
+    max-width: 500px;
+    overflow-y: auto;
+    max-height: 90vh;
+  }
+
+  .qr-code-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    border: 2px solid #e2e8f0;
+  }
+
+  .dark-theme .qr-code-container {
+    background: rgba(30, 30, 35, 0.5);
+    border-color: rgba(80, 80, 85, 0.3);
+  }
+
+  .qr-code-container img {
+    max-width: 200px;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+  }
+
+  .manual-entry {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .dark-theme .manual-entry {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .secret-code {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    background: rgba(var(--primary-color-rgb), 0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    word-break: break-all;
+    user-select: all;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 0.5rem;
+  }
+
+  .copy-button {
+    margin-left: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+  }
+
+  .copy-button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-1px);
+  }
+
+  .copy-button.copied {
+    background: var(--success-color);
+  }
+
+  .setup-steps {
+    background: rgba(var(--info-color-rgb), 0.1);
+    border-left: 4px solid var(--info-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .setup-steps ol {
+    margin: 0.5rem 0 0 1.5rem;
+    padding: 0;
+  }
+
+  .setup-steps li {
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+  }
+
+  .dark-theme .setup-steps li {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .app-suggestions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .app-badge {
+    padding: 0.4rem 0.8rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+  }
+
+  .dark-theme .app-badge {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .verification-input-group {
+    margin-top: 1.5rem;
+  }
+
+  .verification-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .dark-theme .verification-label {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .verification-input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.3em;
+    border: 2px solid #cbd5e0;
+    border-radius: 12px;
+    background-color: #fff;
+    color: #1a202c;
+    transition: all 0.3s ease;
+  }
+
+  .dark-theme .verification-input {
+    background-color: rgba(30, 30, 35, 0.5);
+    border-color: rgba(80, 80, 85, 0.3);
+    color: white;
+  }
+
+  .verification-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.15);
+    outline: none;
+  }
+</style>
+
+<div class="twofa-wrapper animated-gradient">
+  <div class="twofa-container setup-container animated-entrance">
+    <div class="twofa-content">
+      <div class="twofa-form-container">
+        <!-- Icon Section -->
+        <div class="twofa-icon-wrapper twofa-icon-animated">
+          <div class="twofa-icon">
+            <i class="fas fa-lock"></i>
+          </div>
+        </div>
+        
+        <!-- Header Section -->
+        <div class="twofa-header twofa-header-animated">
+          <h2>Setup Two-Factor Authentication</h2>
+          <p>Enhance your account security with 2FA</p>
+        </div>
+
+        <!-- Setup Instructions -->
+        <div class="setup-steps otp-input-animated">
+          <strong>Setup Instructions:</strong>
+          <ol>
+            <li>Install an authenticator app on your phone</li>
+            <li>Scan the QR code below or enter the secret manually</li>
+            <li>Enter the 6-digit code from your app to verify</li>
+          </ol>
+        </div>
+
+        <!-- QR Code Section -->
+        <div class="qr-code-container form-field-animated">
+          <img src="{{ qr_code }}" alt="2FA QR Code" />
+          
+          <div class="manual-entry">
+            <small class="text-muted">Can't scan? Enter this code manually:</small>
+            <div style="margin-top: 0.5rem;">
+              <span class="secret-code" id="secret-code">{{ secret }}</span>
+              <button type="button" class="copy-button" onclick="copySecret()">
+                <i class="fas fa-copy"></i> Copy
+              </button>
+            </div>
+          </div>
+
+          <div class="app-suggestions">
+            <span class="app-badge">Google Authenticator</span>
+            <span class="app-badge">Microsoft Authenticator</span>
+            <span class="app-badge">Authy</span>
+          </div>
+        </div>
+
+        <!-- Verification Form -->
+        <form method="POST" action="{{ url_for('auth.setup_2fa') }}" id="setup-form" class="twofa-form">
+          {{ form.csrf_token }}
+          
+          <div class="verification-input-group form-field-animated">
+            <label class="verification-label">Enter verification code from your app:</label>
+            {{ form.verification_code(class="verification-input", placeholder="000000", maxlength="6", autocomplete="off") }}
+            {% if form.verification_code.errors %}
+            <div class="error-message error-message-animated">
+              {% for error in form.verification_code.errors %}
+                <span>{{ error }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="form-field form-field-animated">
+            <button type="submit" class="twofa-button twofa-button-animated">
+              <span class="button-text">Enable Two-Factor Authentication</span>
+              <span class="button-icon"><i class="fas fa-shield-alt"></i></span>
+              <div class="button-loader">
+                <div class="spinner"></div>
+              </div>
+            </button>
+          </div>
+        </form>
+
+        <!-- Cancel Link -->
+        <div class="twofa-footer twofa-footer-animated">
+          <a href="{{ url_for('auth.profile') }}" class="back-link">
+            <i class="fas fa-times"></i>
+            <span>Cancel Setup</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copySecret() {
+    const secretElement = document.getElementById('secret-code');
+    const button = event.target.closest('.copy-button');
+    
+    // Copy to clipboard
+    const range = document.createRange();
+    range.selectNode(secretElement);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    
+    try {
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+      
+      // Update button to show success
+      const originalHTML = button.innerHTML;
+      button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      button.classList.add('copied');
+      
+      setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('copied');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('setup-form');
+    const submitButton = document.querySelector('.twofa-button');
+    
+    if (form && submitButton) {
+      form.addEventListener('submit', function(e) {
+        submitButton.classList.add('loading');
+      });
+    }
+
+    // Auto-format verification code input
+    const verificationInput = document.querySelector('.verification-input');
+    if (verificationInput) {
+      verificationInput.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+      });
+    }
+  });
+</script>
+{% endblock %}

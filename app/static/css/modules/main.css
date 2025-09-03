@@ -7,6 +7,8 @@
 @import 'themes.css';
 @import 'animations.css';
 @import 'login-animations.css';
+@import 'twofa.css';
+@import 'twofa-animations.css';
 @import 'layout.css';
 @import 'buttons.css';
 @import 'components.css';

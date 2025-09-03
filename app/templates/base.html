@@ -105,8 +105,21 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user-circle me-1"></i>{{ current_user.username }}
+                            {% if current_user.twofa_enabled %}
+                            <span class="badge bg-success ms-1" title="2FA Enabled">
+                                <i class="fas fa-shield-alt" style="font-size: 0.7rem;"></i>
+                            </span>
+                            {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                    <i class="fas fa-user me-1"></i>My Profile
+                                    {% if current_user.twofa_enabled %}
+                                    <span class="badge bg-success ms-2">2FA</span>
+                                    {% endif %}
+                                </a>
+                            </li>
                             <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
                                 <i class="fas fa-key me-1"></i>Change Password
                             </a></li>

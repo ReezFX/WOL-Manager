@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% block title %}2FA Setup Complete | WOL Manager{% endblock %}
+
+{# Set this variable to tell base template not to show flash messages #}
+{% set hide_base_flash_messages = true %}
+
+{% block content %}
+<style>
+  /* Hide header/navbar on 2FA complete page */
+  body header,
+  body .header,
+  body .navbar,
+  body nav,
+  body .navigation,
+  body .nav-wrapper,
+  body .top-bar,
+  body .topbar,
+  body .site-header,
+  body .main-header,
+  body #header,
+  body #navbar,
+  body #navigation,
+  body #nav,
+  body #topbar,
+  body #main-nav,
+  body .main-navigation {
+    display: none !important;
+  }
+  
+  /* Hide footer on 2FA complete page */
+  body .footer,
+  body .apple-footer,
+  body #main-footer,
+  body footer {
+    display: none !important;
+  }
+  
+  /* Reset body and html for 2FA complete page */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+  
+  /* Hide main container and any content beneath */
+  body .container,
+  body main,
+  body .main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  /* Prevent any scrolling on mobile */
+  body {
+    touch-action: none !important;
+    -webkit-overflow-scrolling: none !important;
+    overscroll-behavior: none !important;
+  }
+
+  /* Success-specific styles */
+  .success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--success-color) 0%, #22c55e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(var(--success-color-rgb), 0.3);
+    animation: successBounce 0.6s ease;
+  }
+
+  @keyframes successBounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  .success-icon i {
+    font-size: 2.5rem;
+    color: white;
+    animation: checkIn 0.6s ease 0.3s both;
+  }
+
+  @keyframes checkIn {
+    from { 
+      opacity: 0;
+      transform: scale(0) rotate(-360deg);
+    }
+    to { 
+      opacity: 1;
+      transform: scale(1) rotate(0);
+    }
+  }
+
+  .backup-codes-container {
+    background: rgba(var(--warning-color-rgb), 0.1);
+    border-left: 4px solid var(--warning-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin: 1.5rem 0;
+  }
+
+  .backup-codes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .backup-codes-header h3 {
+    color: var(--warning-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .backup-codes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .backup-codes-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .backup-code-item {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.75rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+    letter-spacing: 0.1em;
+    color: #2d3748;
+    transition: all 0.3s ease;
+  }
+
+  .dark-theme .backup-code-item {
+    background: rgba(30, 30, 35, 0.5);
+    border-color: rgba(80, 80, 85, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .backup-code-item:hover {
+    transform: scale(1.02);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .download-button,
+  .print-button {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .download-button {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .download-button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-1px);
+  }
+
+  .print-button {
+    background: #f7fafc;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+  }
+
+  .dark-theme .print-button {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .print-button:hover {
+    background: #e2e8f0;
+  }
+
+  .dark-theme .print-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .warning-message {
+    background: rgba(var(--danger-color-rgb), 0.1);
+    border-left: 4px solid var(--danger-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+  }
+
+  .warning-message p {
+    color: var(--danger-color);
+    font-weight: 500;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .warning-message ul {
+    margin: 0.5rem 0 0 1.5rem;
+    padding: 0;
+    color: #4a5568;
+  }
+
+  .dark-theme .warning-message ul {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .success-message {
+    background: rgba(var(--success-color-rgb), 0.1);
+    border-left: 4px solid var(--success-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .success-message h3 {
+    color: var(--success-color);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+  }
+
+  .success-message p {
+    color: #4a5568;
+    margin: 0;
+  }
+
+  .dark-theme .success-message p {
+    color: rgba(255, 255, 255, 0.8);
+  }
+</style>
+
+<div class="twofa-wrapper animated-gradient">
+  <div class="twofa-container animated-entrance">
+    <div class="twofa-content">
+      <div class="twofa-form-container">
+        <!-- Success Icon -->
+        <div class="twofa-icon-wrapper twofa-icon-animated">
+          <div class="success-icon">
+            <i class="fas fa-check"></i>
+          </div>
+        </div>
+        
+        <!-- Header Section -->
+        <div class="twofa-header twofa-header-animated">
+          <h2>2FA Successfully Enabled!</h2>
+          <p>Your account is now protected with two-factor authentication</p>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message otp-input-animated">
+          <h3>🎉 Setup Complete!</h3>
+          <p>Save your backup codes in a secure location</p>
+        </div>
+
+        <!-- Backup Codes Section -->
+        <div class="backup-codes-container form-field-animated">
+          <div class="backup-codes-header">
+            <h3><i class="fas fa-key"></i> Your Backup Codes</h3>
+            <div class="action-buttons">
+              <button type="button" class="print-button" onclick="printCodes()">
+                <i class="fas fa-print"></i> Print
+              </button>
+              <button type="button" class="download-button" onclick="downloadCodes()">
+                <i class="fas fa-download"></i> Save
+              </button>
+            </div>
+          </div>
+          
+          <div class="backup-codes-grid" id="backup-codes">
+            {% for code in backup_codes %}
+              <div class="backup-code-item">{{ code }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Warning Message -->
+        <div class="warning-message form-field-animated">
+          <p><i class="fas fa-exclamation-triangle"></i> Important Security Information:</p>
+          <ul>
+            <li>Each backup code can only be used once</li>
+            <li>Store these codes in a safe place (not on your computer)</li>
+            <li>You'll need these if you lose access to your authenticator app</li>
+            <li>You can regenerate new codes from your profile at any time</li>
+          </ul>
+        </div>
+
+        <!-- Continue Button -->
+        <div class="form-field form-field-animated">
+          <a href="{{ url_for('auth.profile') }}" class="twofa-button twofa-button-animated" style="text-decoration: none;">
+            <span class="button-text">Continue to Profile</span>
+            <span class="button-icon"><i class="fas fa-arrow-right"></i></span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function downloadCodes() {
+    const codes = [];
+    document.querySelectorAll('.backup-code-item').forEach(item => {
+      codes.push(item.textContent.trim());
+    });
+    
+    const content = `WOL Manager - Two-Factor Authentication Backup Codes
+Generated: ${new Date().toLocaleString()}
+
+IMPORTANT: Keep these codes in a safe place. Each code can only be used once.
+
+Your Backup Codes:
+${codes.map((code, index) => `${index + 1}. ${code}`).join('\n')}
+
+These codes allow you to access your account if you lose access to your authenticator app.
+Store them securely and do not share them with anyone.`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'wol-manager-2fa-backup-codes.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    // Show confirmation
+    const button = event.target.closest('.download-button');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
+    setTimeout(() => {
+      button.innerHTML = originalHTML;
+    }, 2000);
+  }
+  
+  function printCodes() {
+    const codes = [];
+    document.querySelectorAll('.backup-code-item').forEach(item => {
+      codes.push(item.textContent.trim());
+    });
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>WOL Manager - 2FA Backup Codes</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { color: #333; font-size: 24px; }
+          .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 10px; margin: 20px 0; border-radius: 4px; }
+          .codes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+          .code { font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ddd; text-align: center; background: #f8f9fa; }
+          .footer { margin-top: 30px; font-size: 12px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <h1>WOL Manager - Two-Factor Authentication Backup Codes</h1>
+        <div class="warning">
+          <strong>⚠️ Important:</strong> Keep these codes in a safe place. Each code can only be used once.
+        </div>
+        <div class="codes">
+          ${codes.map(code => `<div class="code">${code}</div>`).join('')}
+        </div>
+        <div class="footer">
+          <p>Generated: ${new Date().toLocaleString()}</p>
+          <p>These codes allow you to access your account if you lose access to your authenticator app.</p>
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  }
+</script>
+{% endblock %}

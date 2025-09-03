@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}Disable Two-Factor Authentication | WOL Manager{% endblock %}
+
+{# Set this variable to tell base template not to show flash messages #}
+{% set hide_base_flash_messages = true %}
+
+{% block content %}
+<style>
+  /* Hide header/navbar on 2FA disable page */
+  body header,
+  body .header,
+  body .navbar,
+  body nav,
+  body .navigation,
+  body .nav-wrapper,
+  body .top-bar,
+  body .topbar,
+  body .site-header,
+  body .main-header,
+  body #header,
+  body #navbar,
+  body #navigation,
+  body #nav,
+  body #topbar,
+  body #main-nav,
+  body .main-navigation {
+    display: none !important;
+  }
+  
+  /* Hide footer on 2FA disable page */
+  body .footer,
+  body .apple-footer,
+  body #main-footer,
+  body footer {
+    display: none !important;
+  }
+  
+  /* Reset body and html for 2FA disable page */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+  
+  /* Hide main container and any content beneath */
+  body .container,
+  body main,
+  body .main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  /* Prevent any scrolling on mobile */
+  body {
+    touch-action: none !important;
+    -webkit-overflow-scrolling: none !important;
+    overscroll-behavior: none !important;
+  }
+
+  /* Warning-specific styles */
+  .warning-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(var(--danger-color-rgb), 0.3);
+  }
+
+  .warning-icon i {
+    font-size: 2.5rem;
+    color: white;
+    animation: warningPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes warningPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .security-warning {
+    background: rgba(var(--danger-color-rgb), 0.1);
+    border-left: 4px solid var(--danger-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .security-warning h3 {
+    color: var(--danger-color);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .security-warning ul {
+    margin: 0.5rem 0 0 1.5rem;
+    padding: 0;
+    color: #4a5568;
+  }
+
+  .dark-theme .security-warning ul {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .security-warning li {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+  }
+
+  .password-field {
+    position: relative;
+  }
+
+  .password-input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    font-size: 1rem;
+    border: 2px solid #cbd5e0;
+    border-radius: 12px;
+    background-color: #fff;
+    color: #1a202c;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+
+  .dark-theme .password-input {
+    background-color: rgba(30, 30, 35, 0.5);
+    border-color: rgba(80, 80, 85, 0.3);
+    color: white;
+  }
+
+  .password-input:focus {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 4px rgba(var(--danger-color-rgb), 0.15);
+    outline: none;
+  }
+
+  .password-field-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4a5568;
+    font-size: 1.1rem;
+    z-index: 1;
+    transition: all 0.3s ease;
+  }
+
+  .dark-theme .password-field-icon {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .password-field:focus-within .password-field-icon {
+    color: var(--danger-color);
+  }
+
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .cancel-button,
+  .disable-button {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.03em;
+  }
+
+  .cancel-button {
+    background: #f7fafc;
+    color: #4a5568;
+    border: 2px solid #e2e8f0;
+  }
+
+  .dark-theme .cancel-button {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .cancel-button:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+  }
+
+  .dark-theme .cancel-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .disable-button {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  .disable-button:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(var(--danger-color-rgb), 0.4);
+  }
+
+  .disable-button:active {
+    transform: translateY(0);
+  }
+
+  .info-box {
+    background: rgba(var(--info-color-rgb), 0.1);
+    border-left: 4px solid var(--info-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .info-box p {
+    color: #4a5568;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  .dark-theme .info-box p {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .info-box strong {
+    color: var(--info-color);
+  }
+</style>
+
+<div class="twofa-wrapper animated-gradient">
+  <div class="twofa-container animated-entrance">
+    <div class="twofa-content">
+      <div class="twofa-form-container">
+        <!-- Warning Icon -->
+        <div class="twofa-icon-wrapper twofa-icon-animated">
+          <div class="warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+        </div>
+        
+        <!-- Header Section -->
+        <div class="twofa-header twofa-header-animated">
+          <h2>Disable Two-Factor Authentication</h2>
+          <p>This will reduce your account security</p>
+        </div>
+
+        <!-- Security Warning -->
+        <div class="security-warning otp-input-animated">
+          <h3><i class="fas fa-shield-alt"></i> Security Warning</h3>
+          <ul>
+            <li>Your account will be less secure without 2FA</li>
+            <li>Anyone with your password can access your account</li>
+            <li>All backup codes will be invalidated</li>
+            <li>Trusted devices will be forgotten</li>
+          </ul>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box form-field-animated">
+          <p><strong>Note:</strong> You can re-enable two-factor authentication at any time from your profile settings. Your authenticator app configuration will need to be set up again.</p>
+        </div>
+
+        <!-- Disable Form -->
+        <form method="POST" action="{{ url_for('auth.disable_2fa') }}" id="disable-form" class="twofa-form">
+          {{ form.csrf_token }}
+          
+          <div class="form-field form-field-animated password-field">
+            <div class="password-field-icon">
+              <i class="fas fa-lock"></i>
+            </div>
+            {{ form.password(class="password-input", placeholder="Enter your password to confirm") }}
+            {% if form.password.errors %}
+            <div class="error-message error-message-animated">
+              {% for error in form.password.errors %}
+                <span>{{ error }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="button-group form-field-animated">
+            <a href="{{ url_for('auth.profile') }}" class="cancel-button">
+              <span>Cancel</span>
+            </a>
+            <button type="submit" class="disable-button">
+              <span class="button-text">Disable 2FA</span>
+              <div class="button-loader">
+                <div class="spinner"></div>
+              </div>
+            </button>
+          </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="twofa-footer twofa-footer-animated">
+          <p style="color: #718096; font-size: 0.85rem; text-align: center; margin: 0;">
+            Consider keeping 2FA enabled for maximum security
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('disable-form');
+    const disableButton = document.querySelector('.disable-button');
+    
+    if (form && disableButton) {
+      form.addEventListener('submit', function(e) {
+        // Add confirmation dialog
+        const confirmed = confirm(
+          'Are you sure you want to disable two-factor authentication?\n\n' +
+          'Your account will be less secure without 2FA protection.'
+        );
+        
+        if (!confirmed) {
+          e.preventDefault();
+          return false;
+        }
+        
+        // Show loading state
+        disableButton.classList.add('loading');
+      });
+    }
+
+    // Focus password input
+    const passwordInput = document.querySelector('.password-input');
+    if (passwordInput) {
+      passwordInput.focus();
+    }
+  });
+</script>
+{% endblock %}

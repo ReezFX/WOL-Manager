@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+
+{% block title %}Backup Codes | WOL Manager{% endblock %}
+
+{# Set this variable to tell base template not to show flash messages #}
+{% set hide_base_flash_messages = true %}
+
+{% block content %}
+<style>
+  /* Hide header/navbar on backup codes page */
+  body header,
+  body .header,
+  body .navbar,
+  body nav,
+  body .navigation,
+  body .nav-wrapper,
+  body .top-bar,
+  body .topbar,
+  body .site-header,
+  body .main-header,
+  body #header,
+  body #navbar,
+  body #navigation,
+  body #nav,
+  body #topbar,
+  body #main-nav,
+  body .main-navigation {
+    display: none !important;
+  }
+  
+  /* Hide footer on backup codes page */
+  body .footer,
+  body .apple-footer,
+  body #main-footer,
+  body footer {
+    display: none !important;
+  }
+  
+  /* Reset body and html for backup codes page */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+  
+  /* Hide main container and any content beneath */
+  body .container,
+  body main,
+  body .main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  /* Prevent any scrolling on mobile */
+  body {
+    touch-action: none !important;
+    -webkit-overflow-scrolling: none !important;
+    overscroll-behavior: none !important;
+  }
+
+  /* Backup codes specific styles */
+  .key-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--warning-color) 0%, #f59e0b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(var(--warning-color-rgb), 0.3);
+  }
+
+  .key-icon i {
+    font-size: 2.5rem;
+    color: white;
+  }
+
+  .regenerated-badge {
+    background: linear-gradient(135deg, var(--success-color) 0%, #22c55e 100%);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 1rem;
+    animation: badgePop 0.5s ease;
+  }
+
+  @keyframes badgePop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  .backup-codes-container {
+    background: rgba(var(--warning-color-rgb), 0.1);
+    border-left: 4px solid var(--warning-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin: 1.5rem 0;
+  }
+
+  .backup-codes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .backup-codes-header h3 {
+    color: var(--warning-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .backup-codes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .backup-codes-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .backup-code-item {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.75rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+    letter-spacing: 0.1em;
+    color: #2d3748;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dark-theme .backup-code-item {
+    background: rgba(30, 30, 35, 0.5);
+    border-color: rgba(80, 80, 85, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .backup-code-item:hover {
+    transform: scale(1.02);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .backup-code-item.new {
+    animation: codeHighlight 1s ease;
+  }
+
+  @keyframes codeHighlight {
+    0% { background: rgba(var(--success-color-rgb), 0.3); }
+    100% { background: white; }
+  }
+
+  .dark-theme .backup-code-item.new {
+    animation: codeHighlightDark 1s ease;
+  }
+
+  @keyframes codeHighlightDark {
+    0% { background: rgba(var(--success-color-rgb), 0.3); }
+    100% { background: rgba(30, 30, 35, 0.5); }
+  }
+
+  .download-button,
+  .print-button,
+  .regenerate-button {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .download-button {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .download-button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-1px);
+  }
+
+  .print-button {
+    background: #f7fafc;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+  }
+
+  .dark-theme .print-button {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .print-button:hover {
+    background: #e2e8f0;
+  }
+
+  .dark-theme .print-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .regenerate-button {
+    background: linear-gradient(135deg, var(--warning-color) 0%, #f59e0b 100%);
+    color: white;
+  }
+
+  .regenerate-button:hover {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(var(--warning-color-rgb), 0.3);
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .info-message {
+    background: rgba(var(--info-color-rgb), 0.1);
+    border-left: 4px solid var(--info-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .info-message p {
+    color: #4a5568;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  .dark-theme .info-message p {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .info-message strong {
+    color: var(--info-color);
+  }
+
+  .warning-message {
+    background: rgba(var(--danger-color-rgb), 0.1);
+    border-left: 4px solid var(--danger-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+  }
+
+  .warning-message p {
+    color: var(--danger-color);
+    font-weight: 500;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .warning-message ul {
+    margin: 0.5rem 0 0 1.5rem;
+    padding: 0;
+    color: #4a5568;
+  }
+
+  .dark-theme .warning-message ul {
+    color: rgba(255, 255, 255, 0.8);
+  }
+</style>
+
+<div class="twofa-wrapper animated-gradient">
+  <div class="twofa-container animated-entrance">
+    <div class="twofa-content">
+      <div class="twofa-form-container">
+        <!-- Icon Section -->
+        <div class="twofa-icon-wrapper twofa-icon-animated">
+          <div class="key-icon">
+            <i class="fas fa-key"></i>
+          </div>
+        </div>
+        
+        <!-- Header Section -->
+        <div class="twofa-header twofa-header-animated">
+          {% if regenerated %}
+            <div class="regenerated-badge">
+              <i class="fas fa-sync"></i> Codes Regenerated
+            </div>
+          {% endif %}
+          <h2>Your Backup Codes</h2>
+          <p>Use these codes if you lose access to your authenticator app</p>
+        </div>
+
+        {% if regenerated %}
+        <!-- Regeneration Success Message -->
+        <div class="info-message otp-input-animated">
+          <p><strong><i class="fas fa-check-circle"></i> Success!</strong> Your backup codes have been regenerated. Previous codes are no longer valid.</p>
+        </div>
+        {% endif %}
+
+        <!-- Backup Codes Section -->
+        <div class="backup-codes-container form-field-animated">
+          <div class="backup-codes-header">
+            <h3><i class="fas fa-shield-alt"></i> Recovery Codes</h3>
+            <div class="action-buttons">
+              <button type="button" class="print-button" onclick="printCodes()">
+                <i class="fas fa-print"></i> Print
+              </button>
+              <button type="button" class="download-button" onclick="downloadCodes()">
+                <i class="fas fa-download"></i> Save
+              </button>
+            </div>
+          </div>
+          
+          <div class="backup-codes-grid" id="backup-codes">
+            {% for code in backup_codes %}
+              <div class="backup-code-item {% if regenerated %}new{% endif %}">{{ code }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Warning Message -->
+        <div class="warning-message form-field-animated">
+          <p><i class="fas fa-exclamation-triangle"></i> Important Security Information:</p>
+          <ul>
+            <li>Each backup code can only be used once</li>
+            <li>Store these codes in a secure location</li>
+            <li>Do not store these codes on your computer</li>
+            <li>You have {{ backup_codes|length }} codes available</li>
+          </ul>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-field form-field-animated">
+          <form method="POST" action="{{ url_for('auth.regenerate_backup_codes') }}" id="regenerate-form" style="display: inline-block; width: 100%;">
+            {{ csrf_token() }}
+            <button type="submit" class="regenerate-button" style="width: 100%;">
+              <i class="fas fa-sync"></i>
+              <span>Regenerate New Codes</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Back to Profile Button -->
+        <div class="form-field form-field-animated">
+          <a href="{{ url_for('auth.profile') }}" class="twofa-button twofa-button-animated" style="text-decoration: none;">
+            <span class="button-text">Back to Profile</span>
+            <span class="button-icon"><i class="fas fa-arrow-left"></i></span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function downloadCodes() {
+    const codes = [];
+    document.querySelectorAll('.backup-code-item').forEach(item => {
+      codes.push(item.textContent.trim());
+    });
+    
+    const content = `WOL Manager - Two-Factor Authentication Backup Codes
+Generated: ${new Date().toLocaleString()}
+{% if regenerated %}Status: REGENERATED - Previous codes are invalid{% endif %}
+
+IMPORTANT: Keep these codes in a safe place. Each code can only be used once.
+
+Your Backup Codes:
+${codes.map((code, index) => `${index + 1}. ${code}`).join('\n')}
+
+Total Available: ${codes.length} codes
+
+These codes allow you to access your account if you lose access to your authenticator app.
+Store them securely and do not share them with anyone.
+
+WARNING: If you regenerate new codes, these codes will become invalid.`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'wol-manager-2fa-backup-codes.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    // Show confirmation
+    const button = event.target.closest('.download-button');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
+    setTimeout(() => {
+      button.innerHTML = originalHTML;
+    }, 2000);
+  }
+  
+  function printCodes() {
+    const codes = [];
+    document.querySelectorAll('.backup-code-item').forEach(item => {
+      codes.push(item.textContent.trim());
+    });
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>WOL Manager - 2FA Backup Codes</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { color: #333; font-size: 24px; }
+          .status { background: #d4edda; border: 1px solid #28a745; padding: 10px; margin: 20px 0; border-radius: 4px; color: #155724; }
+          .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 10px; margin: 20px 0; border-radius: 4px; }
+          .codes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+          .code { font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ddd; text-align: center; background: #f8f9fa; }
+          .footer { margin-top: 30px; font-size: 12px; color: #666; }
+          @media print { .status { background: #f0f0f0 !important; } }
+        </style>
+      </head>
+      <body>
+        <h1>WOL Manager - Two-Factor Authentication Backup Codes</h1>
+        {% if regenerated %}
+        <div class="status">
+          <strong>✓ REGENERATED:</strong> These are new codes. Previous codes are no longer valid.
+        </div>
+        {% endif %}
+        <div class="warning">
+          <strong>⚠️ Important:</strong> Keep these codes in a safe place. Each code can only be used once.
+        </div>
+        <p><strong>Total Available:</strong> ${codes.length} codes</p>
+        <div class="codes">
+          ${codes.map(code => `<div class="code">${code}</div>`).join('')}
+        </div>
+        <div class="footer">
+          <p>Generated: ${new Date().toLocaleString()}</p>
+          <p>These codes allow you to access your account if you lose access to your authenticator app.</p>
+          <p style="color: #dc3545;">WARNING: If you regenerate new codes, these codes will become invalid.</p>
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const regenerateForm = document.getElementById('regenerate-form');
+    
+    if (regenerateForm) {
+      regenerateForm.addEventListener('submit', function(e) {
+        const confirmed = confirm(
+          'Are you sure you want to regenerate your backup codes?\n\n' +
+          '⚠️ This will invalidate all your current backup codes.\n' +
+          'Any unused codes will no longer work.'
+        );
+        
+        if (!confirmed) {
+          e.preventDefault();
+          return false;
+        }
+      });
+    }
+
+    // Add highlight animation to new codes
+    {% if regenerated %}
+    setTimeout(() => {
+      document.querySelectorAll('.backup-code-item.new').forEach(item => {
+        item.classList.remove('new');
+      });
+    }, 2000);
+    {% endif %}
+  });
+</script>
+{% endblock %}

@@ -25,3 +25,6 @@ pytz
 python-dateutil
 requests>=2.31.0
 packaging>=21.0
+pyotp==2.9.0
+qrcode==7.4.2
+Pillow==10.3.0

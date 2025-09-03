@@ -1,40 +1,712 @@
 {% extends "base.html" %}
 
+{% block title %}User Profile | WOL Manager{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">User Profile</h4>
+<style>
+    /* Profile Page Enhanced Styling */
+    .profile-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 0;
+    }
+    
+    /* Hero Profile Section */
+    .profile-hero {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+        border-radius: 1.5rem;
+        padding: 3rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .profile-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: float 20s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(10deg); }
+    }
+    
+    .profile-hero-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    .profile-avatar-container {
+        position: relative;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--primary-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        position: relative;
+        animation: pulse-subtle 3s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-subtle {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .profile-avatar-badge {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        width: 35px;
+        height: 35px;
+        background: var(--success-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .profile-info {
+        flex: 1;
+        color: white;
+    }
+    
+    .profile-name {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .profile-meta {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        opacity: 0.95;
+    }
+    
+    .profile-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .profile-meta-item i {
+        font-size: 1.1rem;
+    }
+    
+    /* Modern Card Grid */
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Enhanced Card Styling */
+    .profile-card {
+        background: var(--bg-card);
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid var(--border-color);
+    }
+    
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .profile-card-header {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .profile-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+        box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+    }
+    
+    .profile-card-title {
+        flex: 1;
+    }
+    
+    .profile-card-title h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .profile-card-title small {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+    
+    .profile-card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Security Status Badge */
+    .security-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+        animation: fadeInUp 0.5s ease;
+    }
+    
+    .security-status.enabled {
+        background: linear-gradient(135deg, rgba(var(--success-color-rgb), 0.15), rgba(var(--success-color-rgb), 0.05));
+        color: var(--success-color);
+        border: 1px solid rgba(var(--success-color-rgb), 0.3);
+    }
+    
+    .security-status.disabled {
+        background: linear-gradient(135deg, rgba(var(--warning-color-rgb), 0.15), rgba(var(--warning-color-rgb), 0.05));
+        color: var(--warning-color);
+        border: 1px solid rgba(var(--warning-color-rgb), 0.3);
+    }
+    
+    .security-status-icon {
+        font-size: 1.5rem;
+        animation: pulse-icon 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-icon {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-item {
+        padding: 1rem;
+        background: var(--bg-tertiary);
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+    
+    .info-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .info-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .info-value {
+        font-size: 1.125rem;
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+    
+    /* Action Buttons */
+    .action-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .action-button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .action-button:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-primary-gradient {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+        color: white;
+    }
+    
+    .btn-success-gradient {
+        background: linear-gradient(135deg, var(--success-color) 0%, rgba(40, 180, 133, 0.8) 100%);
+        color: white;
+    }
+    
+    .btn-danger-gradient {
+        background: linear-gradient(135deg, var(--danger-color) 0%, rgba(226, 85, 99, 0.8) 100%);
+        color: white;
+    }
+    
+    .btn-warning-gradient {
+        background: linear-gradient(135deg, var(--warning-color) 0%, rgba(249, 174, 86, 0.8) 100%);
+        color: #212529;
+    }
+    
+    /* Backup Codes Section */
+    .backup-codes-section {
+        background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1rem 0;
+        border: 1px solid var(--border-color);
+    }
+    
+    .backup-codes-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .backup-codes-count {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .backup-codes-count .badge {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+    }
+    
+    /* Trusted Devices */
+    .trusted-devices {
+        margin-top: 1.5rem;
+    }
+    
+    .device-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: var(--bg-tertiary);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+    
+    .device-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .device-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .device-icon {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+    
+    /* Security Tips */
+    .security-tips {
+        background: linear-gradient(135deg, rgba(var(--info-color-rgb), 0.1), rgba(var(--info-color-rgb), 0.05));
+        border: 1px solid rgba(var(--info-color-rgb), 0.3);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+    }
+    
+    .security-tips-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--info-color);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+    
+    .security-tips ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: var(--text-secondary);
+    }
+    
+    .security-tips li {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Quick Actions Footer */
+    .quick-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-in {
+        animation: fadeInUp 0.5s ease forwards;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .profile-hero {
+            padding: 2rem;
+        }
+        
+        .profile-hero-content {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .profile-name {
+            font-size: 2rem;
+        }
+        
+        .profile-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .quick-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="profile-wrapper">
+    <!-- Hero Section -->
+    <div class="profile-hero animate-in">
+        <div class="profile-hero-content">
+            <div class="profile-avatar-container">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                    {% if current_user.twofa_enabled %}
+                    <div class="profile-avatar-badge">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    {% endif %}
                 </div>
-                <div class="card-body">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    
-                    <div class="mb-3">
-                        <h5>Username</h5>
-                        <p class="form-control-static">{{ current_user.username }}</p>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name">{{ current_user.username }}</h1>
+                <div class="profile-meta">
+                    <div class="profile-meta-item">
+                        <i class="fas fa-id-badge"></i>
+                        <span>{{ current_user.role|title }} Account</span>
                     </div>
-                    
-                    <div class="mb-3">
-                        <h5>Role</h5>
-                        <p class="form-control-static">{{ current_user.role }}</p>
+                    <div class="profile-meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Joined {{ current_user.created_at.strftime('%B %Y') if current_user.created_at else 'Recently' }}</span>
                     </div>
-                    
-                    <div class="d-grid gap-2 mt-4">
-                        <a href="{{ url_for('auth.change_password') }}" class="btn btn-warning">Change Password</a>
-                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Home</a>
+                    {% if current_user.twofa_enabled %}
+                    <div class="profile-meta-item">
+                        <i class="fas fa-lock"></i>
+                        <span>2FA Active</span>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show animate-in" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content Grid -->
+    <div class="profile-grid">
+        <!-- Account Information Card -->
+        <div class="profile-card animate-in" style="animation-delay: 0.1s;">
+            <div class="profile-card-header">
+                <div class="profile-card-icon">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="profile-card-title">
+                    <h5>Account Information</h5>
+                    <small>Manage your account details</small>
+                </div>
+            </div>
+            <div class="profile-card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Username</div>
+                        <div class="info-value">{{ current_user.username }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Role</div>
+                        <div class="info-value">{{ current_user.role|title }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Member Since</div>
+                        <div class="info-value">{{ current_user.created_at.strftime('%b %d, %Y') if current_user.created_at else 'N/A' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Status</div>
+                        <div class="info-value">Active</div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('auth.change_password') }}" class="action-button btn-warning-gradient">
+                        <i class="fas fa-key"></i>
+                        <span>Change Password</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Settings Card -->
+        <div class="profile-card animate-in" style="animation-delay: 0.2s;">
+            <div class="profile-card-header">
+                <div class="profile-card-icon" style="background: linear-gradient(135deg, var(--success-color) 0%, var(--accent-color) 100%);">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="profile-card-title">
+                    <h5>Security Settings</h5>
+                    <small>Two-Factor Authentication</small>
+                </div>
+            </div>
+            <div class="profile-card-body">
+                {% if current_user.twofa_enabled %}
+                    <!-- 2FA Enabled -->
+                    <div class="security-status enabled">
+                        <i class="fas fa-check-circle security-status-icon"></i>
+                        <div>
+                            <strong>2FA is Active</strong>
+                            <div class="small">Your account is protected</div>
+                        </div>
+                    </div>
+
+                    <!-- Backup Codes -->
+                    <div class="backup-codes-section">
+                        <div class="backup-codes-header">
+                            <div class="backup-codes-count">
+                                <i class="fas fa-key"></i>
+                                <span>Backup Codes</span>
+                                <span class="badge">{{ current_user.twofa_backup_codes|length if current_user.twofa_backup_codes else 0 }}</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="regenerateBackupCodes()">
+                                <i class="fas fa-sync"></i> Regenerate
+                            </button>
+                        </div>
+                        <small class="text-muted">Use these codes if you lose access to your authenticator</small>
+                    </div>
+
+                    <!-- Trusted Devices -->
+                    {% if current_user.twofa_trusted_devices %}
+                    <div class="trusted-devices">
+                        <h6 class="mb-2">Trusted Devices</h6>
+                        {% for device in current_user.twofa_trusted_devices[:3] %}
+                        <div class="device-item">
+                            <div class="device-info">
+                                <div class="device-icon">
+                                    <i class="fas fa-desktop"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-500">{{ device.info if device.info else 'Unknown Device' }}</div>
+                                    <div class="small text-muted">Added {{ device.added[:10] if device.added else 'Unknown' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-3">
+                        <a href="{{ url_for('auth.disable_2fa') }}" class="action-button btn-danger-gradient">
+                            <i class="fas fa-times-circle"></i>
+                            <span>Disable 2FA</span>
+                        </a>
+                    </div>
+                {% else %}
+                    <!-- 2FA Disabled -->
+                    <div class="security-status disabled">
+                        <i class="fas fa-exclamation-triangle security-status-icon"></i>
+                        <div>
+                            <strong>2FA is Not Active</strong>
+                            <div class="small">Enable for enhanced security</div>
+                        </div>
+                    </div>
+
+                    <p class="text-muted mt-3 mb-3">
+                        Two-factor authentication adds an extra layer of security by requiring a verification code from your authenticator app.
+                    </p>
+
+                    <a href="{{ url_for('auth.setup_2fa') }}" class="action-button btn-success-gradient">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Enable 2FA</span>
+                    </a>
+                {% endif %}
+
+                <!-- Security Tips -->
+                <div class="security-tips">
+                    <div class="security-tips-title">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Security Tips</span>
+                    </div>
+                    <ul class="small mb-0">
+                        <li>Use a unique, strong password</li>
+                        <li>Enable 2FA for maximum protection</li>
+                        <li>Store backup codes safely</li>
+                        <li>Review trusted devices regularly</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{{ url_for('main.dashboard') }}" class="action-button btn-secondary">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('host.list_hosts') }}" class="action-button btn-secondary">
+            <i class="fas fa-laptop"></i>
+            <span>Manage Hosts</span>
+        </a>
+    </div>
 </div>
+
+<!-- Regenerate Backup Codes Form (Hidden) -->
+<form id="regenerateBackupCodesForm" method="POST" action="{{ url_for('auth.regenerate_backup_codes') }}" style="display: none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Regenerate backup codes with confirmation
+    function regenerateBackupCodes() {
+        if (confirm('This will invalidate all existing backup codes. Are you sure you want to continue?')) {
+            document.getElementById('regenerateBackupCodesForm').submit();
+        }
+    }
+
+    // Add staggered animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.animate-in');
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '1';
+            }, 100 * index);
+        });
+
+        // Add hover effect to info items
+        const infoItems = document.querySelectorAll('.info-item');
+        infoItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.background = 'var(--bg-secondary)';
+            });
+            item.addEventListener('mouseleave', function() {
+                this.style.background = 'var(--bg-tertiary)';
+            });
+        });
+    });
+</script>
 {% endblock %}
 

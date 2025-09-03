@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 import logging
 import sys
@@ -11,10 +11,18 @@ from sqlalchemy.exc import SQLAlchemyError
 from flask_wtf import FlaskForm
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, EqualTo, Length, ValidationError
+import pyotp
+import qrcode
+from io import BytesIO
+import base64
+import secrets
+import string
+from datetime import datetime, timedelta
+import hashlib
 
 from app.models import User, Role
 from app import db_session
-from app.forms import LoginForm
+from app.forms import LoginForm, TwoFactorForm, BackupCodeForm, TwoFactorSetupForm, TwoFactorDisableForm
 from flask_wtf.csrf import validate_csrf, ValidationError as CSRFValidationError
 
 # Create the auth blueprint
@@ -164,12 +172,29 @@ def login():
                 # Standardize on Flask-Login
                 login_user(user, remember=remember)
                 session.permanent = True
+                session['remember_me'] = remember
                 
-                # Log successful login
-                access_logger.info(f"User '{user.username}' logged in successfully")
-                flash('Login successful!', 'success')
-                
-                return redirect(request.args.get('next') or url_for('main.index'))
+                # Check if user has 2FA enabled
+                if user.twofa_enabled:
+                    # Check for trusted device token
+                    device_token = request.cookies.get('device_token')
+                    if device_token and verify_device_token(user, device_token):
+                        # Device is trusted, skip 2FA
+                        session['2fa_verified'] = True
+                        access_logger.info(f"User '{user.username}' logged in with trusted device")
+                        flash('Login successful!', 'success')
+                        return redirect(request.args.get('next') or url_for('main.index'))
+                    else:
+                        # Require 2FA verification
+                        session['2fa_verified'] = False
+                        access_logger.info(f"User '{user.username}' requires 2FA verification")
+                        return redirect(url_for('auth.verify_2fa'))
+                else:
+                    # No 2FA, proceed normally
+                    session['2fa_verified'] = True  # Mark as verified for consistency
+                    access_logger.info(f"User '{user.username}' logged in successfully")
+                    flash('Login successful!', 'success')
+                    return redirect(request.args.get('next') or url_for('main.index'))
             else:
                 # Log failed login attempt
                 failure_reason = "Invalid password" if user else "User not found"
@@ -266,4 +291,285 @@ def refresh_csrf_token():
         response.headers['Strict-Transport-Security'] = 'max-age=31536000'
     
     return response
+
+
+# ============================================
+# 2FA Helper Functions
+# ============================================
+
+def generate_backup_codes(count=10):
+    """Generate a list of backup codes for 2FA."""
+    codes = []
+    for _ in range(count):
+        # Generate 8-character codes in format XXXX-XXXX
+        code = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+        formatted_code = f"{code[:4]}-{code[4:]}"
+        codes.append(formatted_code)
+    return codes
+
+
+def generate_device_token():
+    """Generate a secure token for trusted devices."""
+    return secrets.token_urlsafe(32)
+
+
+def verify_device_token(user, token):
+    """Verify if a device token is valid and not expired."""
+    if not user.twofa_trusted_devices:
+        return False
+    
+    current_time = datetime.utcnow()
+    for device in user.twofa_trusted_devices:
+        if device['token'] == token:
+            # Check if token is expired (30 days)
+            expiry = datetime.fromisoformat(device['expiry'])
+            if current_time < expiry:
+                return True
+            else:
+                # Remove expired token
+                user.twofa_trusted_devices.remove(device)
+                db_session.commit()
+    return False
+
+
+def add_trusted_device(user, token, device_info=None):
+    """Add a trusted device token to user's account."""
+    if not user.twofa_trusted_devices:
+        user.twofa_trusted_devices = []
+    
+    # Remove any existing token for this device (based on user agent)
+    user_agent = request.headers.get('User-Agent', 'Unknown')
+    user.twofa_trusted_devices = [
+        d for d in user.twofa_trusted_devices 
+        if d.get('user_agent') != user_agent
+    ]
+    
+    device = {
+        'token': token,
+        'added': datetime.utcnow().isoformat(),
+        'expiry': (datetime.utcnow() + timedelta(days=30)).isoformat(),
+        'user_agent': user_agent,
+        'ip': request.remote_addr,
+        'info': device_info or 'Trusted Device'
+    }
+    
+    user.twofa_trusted_devices.append(device)
+    db_session.commit()
+
+
+def generate_qr_code(user, secret):
+    """Generate QR code for 2FA setup."""
+    # Create TOTP URI
+    totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
+        name=user.username,
+        issuer_name='WOL Manager'
+    )
+    
+    # Generate QR code
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(totp_uri)
+    qr.make(fit=True)
+    
+    # Create image
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convert to base64
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    img_str = base64.b64encode(buffer.getvalue()).decode()
+    
+    return f"data:image/png;base64,{img_str}"
+
+
+# ============================================
+# 2FA Routes
+# ============================================
+
+@auth.route('/2fa/verify', methods=['GET', 'POST'])
+@login_required
+def verify_2fa():
+    """Verify 2FA code after successful password authentication."""
+    # Check if user has 2FA enabled
+    if not current_user.twofa_enabled:
+        return redirect(url_for('main.index'))
+    
+    # Check if already verified in this session
+    if session.get('2fa_verified'):
+        return redirect(url_for('main.index'))
+    
+    form = TwoFactorForm()
+    
+    if form.validate_on_submit():
+        otp_code = form.otp_code.data
+        trust_device = form.trust_device.data
+        
+        # Verify OTP code
+        totp = pyotp.TOTP(current_user.twofa_secret)
+        if totp.verify(otp_code, valid_window=1):  # Allow 30 second window
+            # Mark 2FA as verified in session
+            session['2fa_verified'] = True
+            
+            # Handle trusted device
+            if trust_device:
+                token = generate_device_token()
+                add_trusted_device(current_user, token)
+                # Set cookie for trusted device
+                response = redirect(url_for('main.index'))
+                response.set_cookie(
+                    'device_token',
+                    token,
+                    max_age=30*24*60*60,  # 30 days
+                    secure=request.is_secure,
+                    httponly=True,
+                    samesite='Lax'
+                )
+                
+                access_logger.info(f"User '{current_user.username}' verified 2FA and trusted device")
+                flash('Two-factor authentication successful. This device has been trusted.', 'success')
+                return response
+            
+            access_logger.info(f"User '{current_user.username}' verified 2FA")
+            flash('Two-factor authentication successful!', 'success')
+            return redirect(url_for('main.index'))
+        else:
+            access_logger.warning(f"Failed 2FA verification for user '{current_user.username}'")
+            flash('Invalid verification code. Please try again.', 'danger')
+    
+    return render_template('auth/two_factor.html', form=form)
+
+
+@auth.route('/2fa/backup', methods=['POST'])
+@login_required
+def verify_backup_code():
+    """Verify backup code as alternative to OTP."""
+    if not current_user.twofa_enabled:
+        return redirect(url_for('main.index'))
+    
+    form = BackupCodeForm()
+    
+    if form.validate_on_submit():
+        backup_code = form.backup_code.data.upper()
+        
+        # Check if backup code is valid
+        if current_user.twofa_backup_codes and backup_code in current_user.twofa_backup_codes:
+            # Remove used backup code
+            current_user.twofa_backup_codes.remove(backup_code)
+            current_user.twofa_last_used_backup = backup_code
+            db_session.commit()
+            
+            # Mark 2FA as verified
+            session['2fa_verified'] = True
+            
+            access_logger.info(f"User '{current_user.username}' used backup code for 2FA")
+            flash(f'Backup code verified successfully. You have {len(current_user.twofa_backup_codes)} backup codes remaining.', 'warning')
+            return redirect(url_for('main.index'))
+        else:
+            access_logger.warning(f"Invalid backup code attempt for user '{current_user.username}'")
+            flash('Invalid backup code.', 'danger')
+    
+    return redirect(url_for('auth.verify_2fa'))
+
+
+@auth.route('/2fa/setup', methods=['GET', 'POST'])
+@login_required
+def setup_2fa():
+    """Setup 2FA for user account."""
+    if current_user.twofa_enabled:
+        flash('Two-factor authentication is already enabled.', 'info')
+        return redirect(url_for('auth.profile'))
+    
+    form = TwoFactorSetupForm()
+    
+    # Generate or retrieve secret from session
+    if 'temp_2fa_secret' not in session:
+        session['temp_2fa_secret'] = pyotp.random_base32()
+    
+    secret = session['temp_2fa_secret']
+    
+    if form.validate_on_submit():
+        # Verify the code to ensure user has set up their authenticator
+        totp = pyotp.TOTP(secret)
+        if totp.verify(form.verification_code.data, valid_window=1):
+            # Enable 2FA for user
+            current_user.twofa_enabled = True
+            current_user.twofa_secret = secret
+            current_user.twofa_backup_codes = generate_backup_codes()
+            db_session.commit()
+            
+            # Clear temp secret from session
+            session.pop('temp_2fa_secret', None)
+            
+            access_logger.info(f"User '{current_user.username}' enabled 2FA")
+            
+            # Show backup codes
+            return render_template(
+                'auth/2fa_setup_complete.html',
+                backup_codes=current_user.twofa_backup_codes
+            )
+        else:
+            flash('Invalid verification code. Please try again.', 'danger')
+    
+    # Generate QR code
+    qr_code = generate_qr_code(current_user, secret)
+    
+    return render_template(
+        'auth/2fa_setup.html',
+        form=form,
+        qr_code=qr_code,
+        secret=secret
+    )
+
+
+@auth.route('/2fa/disable', methods=['GET', 'POST'])
+@login_required
+def disable_2fa():
+    """Disable 2FA for user account."""
+    if not current_user.twofa_enabled:
+        flash('Two-factor authentication is not enabled.', 'info')
+        return redirect(url_for('auth.profile'))
+    
+    form = TwoFactorDisableForm()
+    
+    if form.validate_on_submit():
+        # Verify password
+        if check_password(current_user.password_hash, form.password.data):
+            # Disable 2FA
+            current_user.twofa_enabled = False
+            current_user.twofa_secret = None
+            current_user.twofa_backup_codes = []
+            current_user.twofa_trusted_devices = []
+            db_session.commit()
+            
+            # Clear 2FA session
+            session.pop('2fa_verified', None)
+            
+            access_logger.info(f"User '{current_user.username}' disabled 2FA")
+            flash('Two-factor authentication has been disabled.', 'success')
+            return redirect(url_for('auth.profile'))
+        else:
+            flash('Incorrect password.', 'danger')
+    
+    return render_template('auth/2fa_disable.html', form=form)
+
+
+@auth.route('/2fa/regenerate-backup-codes', methods=['POST'])
+@login_required
+def regenerate_backup_codes():
+    """Regenerate backup codes for 2FA."""
+    if not current_user.twofa_enabled:
+        flash('Two-factor authentication is not enabled.', 'danger')
+        return redirect(url_for('auth.profile'))
+    
+    # Generate new backup codes
+    current_user.twofa_backup_codes = generate_backup_codes()
+    db_session.commit()
+    
+    access_logger.info(f"User '{current_user.username}' regenerated backup codes")
+    
+    return render_template(
+        'auth/2fa_backup_codes.html',
+        backup_codes=current_user.twofa_backup_codes,
+        regenerated=True
+    )
 

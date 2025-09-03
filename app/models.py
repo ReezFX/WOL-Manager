@@ -83,6 +83,13 @@ class User(Base, UserMixin):
     permissions = Column(JSONType, default=lambda: {})
     created_at = Column(DateTime, default=datetime.utcnow)
     
+    # Two-Factor Authentication fields
+    twofa_enabled = Column(Boolean, default=False, nullable=False)
+    twofa_secret = Column(String(32), nullable=True)  # Base32 encoded secret for TOTP
+    twofa_backup_codes = Column(JSONType, default=lambda: [])  # List of backup codes
+    twofa_trusted_devices = Column(JSONType, default=lambda: [])  # List of trusted device tokens
+    twofa_last_used_backup = Column(String(16), nullable=True)  # Track last used backup code to prevent reuse
+    
     # Relationships
     hosts = relationship('Host', back_populates='created_by_user', cascade="all, delete-orphan")
     roles = relationship('Role', secondary=user_roles, back_populates='users')
