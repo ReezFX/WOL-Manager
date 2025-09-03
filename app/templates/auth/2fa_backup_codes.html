@@ -627,7 +627,7 @@
         <!-- Action Buttons -->
         <div class="form-field form-field-animated">
           <form method="POST" action="{{ url_for('auth.regenerate_backup_codes') }}" id="regenerate-form">
-            {{ csrf_token() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="regenerate-button">
               <i class="fas fa-sync"></i>
               <span>Regenerate New Codes</span>
