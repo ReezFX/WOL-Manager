@@ -42,8 +42,7 @@
     padding: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    overflow: hidden !important;
-    position: fixed !important;
+    position: relative !important;
     top: 0 !important;
     left: 0 !important;
   }
@@ -54,30 +53,123 @@
   body .main {
     padding: 0 !important;
     margin: 0 !important;
-    overflow: hidden !important;
-  }
-  
-  /* Prevent any scrolling on mobile */
-  body {
-    touch-action: none !important;
-    -webkit-overflow-scrolling: none !important;
-    overscroll-behavior: none !important;
   }
 
-  /* Additional setup-specific styles */
+  /* Enhanced wrapper styling */
+  .twofa-wrapper {
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    padding: 1rem !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    padding-top: 1rem !important;
+  }
+
+  /* Setup container specific styles */
   .setup-container {
-    max-width: 500px;
-    overflow-y: auto;
-    max-height: 90vh;
+    max-width: 460px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem !important;
+    position: relative;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* Better mobile scrolling */
+  @media (max-width: 768px) {
+    .twofa-wrapper {
+      padding: 0.75rem !important;
+      padding-top: 0.75rem !important;
+    }
+    
+    .setup-container {
+      margin: 0 auto;
+      padding: 1.25rem !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .twofa-wrapper {
+      padding: 0.5rem !important;
+      padding-top: 0.5rem !important;
+    }
+    
+    .setup-container {
+      padding: 1rem !important;
+      margin: 0 auto;
+    }
+  }
+
+  /* Custom scrollbar styling */
+  .twofa-wrapper::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .twofa-wrapper::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+
+  .twofa-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .twofa-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .dark-theme .twofa-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .dark-theme .twofa-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .dark-theme .twofa-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Icon and header sizing */
+  .twofa-icon-wrapper {
+    margin-bottom: 1rem !important;
+  }
+  
+  .twofa-icon {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .twofa-icon i {
+    font-size: 1.5rem !important;
+  }
+  
+  .twofa-header {
+    margin-bottom: 1rem !important;
+  }
+  
+  .twofa-header h2 {
+    font-size: 1.35rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .twofa-header p {
+    font-size: 0.85rem !important;
   }
 
   .qr-code-container {
     background: white;
-    padding: 1.5rem;
-    border-radius: 16px;
-    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
     text-align: center;
-    border: 2px solid #e2e8f0;
+    border: 1px solid #e2e8f0;
   }
 
   .dark-theme .qr-code-container {
@@ -86,15 +178,15 @@
   }
 
   .qr-code-container img {
-    max-width: 200px;
+    max-width: 160px;
     height: auto;
     margin: 0 auto;
     display: block;
   }
 
   .manual-entry {
-    margin-top: 1rem;
-    padding-top: 1rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
     border-top: 1px solid #e2e8f0;
   }
 
@@ -104,28 +196,28 @@
 
   .secret-code {
     font-family: 'Courier New', monospace;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--primary-color);
     background: rgba(var(--primary-color-rgb), 0.1);
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
     word-break: break-all;
     user-select: all;
     cursor: pointer;
     display: inline-block;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
   }
 
   .copy-button {
     margin-left: 0.5rem;
-    padding: 0.4rem 0.8rem;
+    padding: 0.3rem 0.6rem;
     background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     transition: all 0.3s ease;
   }
 
@@ -140,20 +232,22 @@
 
   .setup-steps {
     background: rgba(var(--info-color-rgb), 0.1);
-    border-left: 4px solid var(--info-color);
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
+    border-left: 3px solid var(--info-color);
+    padding: 0.625rem;
+    border-radius: 6px;
+    margin-bottom: 0.875rem;
   }
 
   .setup-steps ol {
-    margin: 0.5rem 0 0 1.5rem;
+    margin: 0.25rem 0 0 1rem;
     padding: 0;
   }
 
   .setup-steps li {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
     color: #4a5568;
+    font-size: 0.8rem;
+    line-height: 1.3;
   }
 
   .dark-theme .setup-steps li {
@@ -163,16 +257,16 @@
   .app-suggestions {
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    margin-top: 1rem;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
     flex-wrap: wrap;
   }
 
   .app-badge {
-    padding: 0.4rem 0.8rem;
+    padding: 0.25rem 0.5rem;
     background: #f7fafc;
-    border-radius: 8px;
-    font-size: 0.85rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
     color: #4a5568;
     border: 1px solid #e2e8f0;
   }
@@ -184,7 +278,7 @@
   }
 
   .verification-input-group {
-    margin-top: 1.5rem;
+    margin-top: 0.875rem;
   }
 
   .verification-label {
@@ -201,13 +295,13 @@
 
   .verification-input {
     width: 100%;
-    padding: 1rem;
-    font-size: 1.5rem;
+    padding: 0.625rem;
+    font-size: 1.1rem;
     font-weight: 600;
     text-align: center;
     letter-spacing: 0.3em;
     border: 2px solid #cbd5e0;
-    border-radius: 12px;
+    border-radius: 10px;
     background-color: #fff;
     color: #1a202c;
     transition: all 0.3s ease;
@@ -221,8 +315,110 @@
 
   .verification-input:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.15);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.15);
     outline: none;
+  }
+  
+  /* Button styling */
+  .twofa-button {
+    padding: 0.75rem !important;
+    font-size: 0.9rem !important;
+    border-radius: 10px !important;
+  }
+  
+  .twofa-footer {
+    margin-top: 1rem !important;
+  }
+  
+  .back-link {
+    font-size: 0.85rem !important;
+    padding: 0.4rem 0.8rem !important;
+  }
+
+  /* Compact spacing for smaller screens */
+  @media (max-width: 576px) {
+    .setup-steps {
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    
+    .qr-code-container {
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .verification-input {
+      padding: 0.75rem;
+      font-size: 1.25rem;
+    }
+    
+    .manual-entry {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+    }
+    
+    .secret-code {
+      font-size: 1rem;
+      padding: 0.625rem 0.875rem;
+    }
+  }
+
+  /* Ultra-compact for very small screens */
+  @media (max-height: 700px) {
+    .twofa-icon-wrapper {
+      margin-bottom: 1.25rem;
+    }
+    
+    .twofa-icon {
+      width: 60px;
+      height: 60px;
+    }
+    
+    .twofa-icon i {
+      font-size: 2rem;
+    }
+    
+    .twofa-header {
+      margin-bottom: 1.25rem;
+    }
+    
+    .twofa-header h2 {
+      font-size: 1.5rem;
+    }
+    
+    .twofa-header p {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Landscape mode adjustments */
+  @media (max-height: 600px) and (orientation: landscape) {
+    .setup-container {
+      margin: 0.5rem auto;
+      padding: 1.5rem !important;
+    }
+    
+    .twofa-icon-wrapper {
+      margin-bottom: 1rem;
+    }
+    
+    .twofa-header {
+      margin-bottom: 1rem;
+    }
+    
+    .setup-steps {
+      padding: 0.625rem;
+      margin-bottom: 0.875rem;
+    }
+    
+    .qr-code-container {
+      padding: 0.875rem;
+      margin-bottom: 0.875rem;
+    }
+    
+    .qr-code-container img {
+      max-width: 150px;
+    }
   }
 </style>
 
