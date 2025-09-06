@@ -1,0 +1,183 @@
+<!-- Navigation Dock Component -->
+<!-- Glass Navbar Dock -->
+<div class="navbar-dock-wrapper" id="navbarDock">
+    <!-- Collapsed state - minimal circular button -->
+    <button class="navbar-dock-collapsed" id="navbarDockCollapsed" onclick="expandNavDock()" aria-label="Expand navigation">
+    </button>
+    
+    <!-- Expanded state - full navbar -->
+    <nav class="navbar-dock" id="navbarDockExpanded">
+        <!-- Dashboard -->
+        <a href="{{ url_for('main.dashboard') }}" class="nav-dock-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+            <i class="ph ph-house"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <!-- Hosts Dropdown -->
+        <button class="nav-dock-item" onclick="openNavPanel('hosts')">
+            <i class="ph ph-desktop-tower"></i>
+            <span>Hosts</span>
+            {% if pending_hosts_count is defined and pending_hosts_count > 0 %}
+            <span class="nav-badge">{{ pending_hosts_count }}</span>
+            {% endif %}
+        </button>
+
+        <div class="nav-dock-separator"></div>
+
+        <!-- Admin Panel (if user has admin permissions) -->
+        {% if current_user.is_admin %}
+        <button class="nav-dock-item" onclick="openNavPanel('admin')">
+            <i class="ph ph-gear"></i>
+            <span>Admin</span>
+        </button>
+        {% endif %}
+
+        <!-- Profile -->
+        <button class="nav-dock-item" onclick="openNavPanel('profile')">
+            <i class="ph ph-user-circle"></i>
+            <span>Profile</span>
+        </button>
+
+        <div class="nav-dock-separator"></div>
+
+        <!-- Theme Toggle -->
+        <button class="nav-theme-toggle" onclick="toggleNavTheme()" id="navThemeToggle">
+            <i class="ph ph-moon" id="nav-theme-icon"></i>
+        </button>
+    </nav>
+</div>
+
+<!-- Overlay for panels -->
+<div class="nav-overlay" onclick="closeNavPanel()"></div>
+
+<!-- Slide-out Panel: Hosts -->
+<div class="nav-slide-panel" id="hosts-panel">
+    <div class="nav-panel-header">
+        <div class="nav-panel-title">
+            <i class="ph ph-desktop-tower"></i>
+            <span>Hosts Management</span>
+        </div>
+        <button class="nav-panel-close" onclick="closeNavPanel()">
+            <i class="ph ph-x"></i>
+        </button>
+    </div>
+    <div class="nav-panel-content">
+        <div class="nav-panel-section">
+            <div class="nav-panel-section-title">Quick Actions</div>
+            <a href="{{ url_for('host.add_host') }}" class="nav-panel-item">
+                <i class="ph ph-plus-circle"></i>
+                <div class="nav-panel-item-content">
+                    <div class="nav-panel-item-title">Add New Host</div>
+                    <div class="nav-panel-item-desc">Register a new device for Wake-on-LAN</div>
+                </div>
+            </a>
+            <a href="{{ url_for('host.list_hosts') }}" class="nav-panel-item">
+                <i class="ph ph-list"></i>
+                <div class="nav-panel-item-content">
+                    <div class="nav-panel-item-title">All Hosts</div>
+                    <div class="nav-panel-item-desc">View and manage all registered devices</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Slide-out Panel: Admin -->
+{% if current_user.is_admin %}
+<div class="nav-slide-panel" id="admin-panel">
+    <div class="nav-panel-header">
+        <div class="nav-panel-title">
+            <i class="ph ph-gear"></i>
+            <span>Administration</span>
+        </div>
+        <button class="nav-panel-close" onclick="closeNavPanel()">
+            <i class="ph ph-x"></i>
+        </button>
+    </div>
+    <div class="nav-panel-content">
+        <div class="nav-panel-section">
+            <div class="nav-panel-section-title">User Management</div>
+            <a href="{{ url_for('admin.list_users') }}" class="nav-panel-item">
+                <i class="ph ph-users-three"></i>
+                <div class="nav-panel-item-content">
+                    <div class="nav-panel-item-title">Users</div>
+                    <div class="nav-panel-item-desc">Manage user accounts and permissions</div>
+                </div>
+            </a>
+        </div>
+        <div class="nav-panel-section">
+            <div class="nav-panel-section-title">System</div>
+            <a href="{{ url_for('admin.settings') }}" class="nav-panel-item">
+                <i class="ph ph-sliders"></i>
+                <div class="nav-panel-item-content">
+                    <div class="nav-panel-item-title">Settings</div>
+                    <div class="nav-panel-item-desc">Configure system preferences</div>
+                </div>
+            </a>
+            <a href="{{ url_for('admin.view_logs') }}" class="nav-panel-item">
+                <i class="ph ph-activity"></i>
+                <div class="nav-panel-item-content">
+                    <div class="nav-panel-item-title">System Logs</div>
+                    <div class="nav-panel-item-desc">Monitor system activity and errors</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Slide-out Panel: Profile -->
+<div class="nav-slide-panel" id="profile-panel">
+    <div class="nav-panel-header">
+        <div class="nav-panel-title">
+            <i class="ph ph-user-circle"></i>
+            <span>{{ current_user.username }}</span>
+        </div>
+        <button class="nav-panel-close" onclick="closeNavPanel()">
+            <i class="ph ph-x"></i>
+        </button>
+    </div>
+    <div class="nav-panel-content">
+        <a href="{{ url_for('auth.profile') }}" class="nav-panel-item">
+            <i class="ph ph-user"></i>
+            <div class="nav-panel-item-content">
+                <div class="nav-panel-item-title">My Profile</div>
+                <div class="nav-panel-item-desc">Edit profile and preferences</div>
+            </div>
+        </a>
+        <a href="{{ url_for('auth.change_password') }}" class="nav-panel-item">
+            <i class="ph ph-key"></i>
+            <div class="nav-panel-item-content">
+                <div class="nav-panel-item-title">Change Password</div>
+                <div class="nav-panel-item-desc">Update your account password</div>
+            </div>
+        </a>
+        {% if current_user.two_factor_enabled %}
+        <a href="{{ url_for('auth.disable_2fa') }}" class="nav-panel-item">
+            <i class="ph ph-shield-slash"></i>
+            <div class="nav-panel-item-content">
+                <div class="nav-panel-item-title">Disable 2FA</div>
+                <div class="nav-panel-item-desc">Turn off two-factor authentication</div>
+            </div>
+        </a>
+        {% else %}
+        <a href="{{ url_for('auth.setup_2fa') }}" class="nav-panel-item">
+            <i class="ph ph-shield-check"></i>
+            <div class="nav-panel-item-content">
+                <div class="nav-panel-item-title">Enable 2FA</div>
+                <div class="nav-panel-item-desc">Add two-factor authentication</div>
+            </div>
+        </a>
+        {% endif %}
+        <div class="nav-panel-section">
+            <div class="nav-panel-section-title">Session</div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-panel-item nav-panel-item-danger">
+                <i class="ph ph-sign-out"></i>
+                <div class="nav-panel-item-content">
+                    <div class="nav-panel-item-title">Logout</div>
+                    <div class="nav-panel-item-desc">Sign out of your account</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
