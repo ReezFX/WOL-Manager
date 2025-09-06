@@ -200,7 +200,7 @@ function enhanceStatusBadges(container = document) {
  */
 function autoEnhanceInteractiveElements(container = document) {
   // Add press animation to all buttons without having to add btn-animate-press to each
-  container.querySelectorAll('.btn:not(.btn-animate-press):not(.btn-close):not(.navbar-toggler)').forEach(btn => {
+  container.querySelectorAll('.btn:not(.btn-animate-press):not(.btn-close)').forEach(btn => {
     btn.classList.add('btn-animate-press');
   });
   
@@ -262,8 +262,8 @@ function autoEnhanceInteractiveElements(container = document) {
   
   // Enhance form submissions that don't have the data-animate attribute
   container.querySelectorAll('form:not([data-animate])').forEach(form => {
-    // Don't touch navigation or search forms
-    if (form.classList.contains('navbar-form') || form.classList.contains('search-form')) {
+    // Don't touch search forms
+    if (form.classList.contains('search-form')) {
       return;
     }
     

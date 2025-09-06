@@ -10,11 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.classList.add('dark-theme');
     document.body.setAttribute('data-bs-theme', 'dark');
 
-    // Hide the theme toggle button
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    if (themeToggleBtn) {
-      themeToggleBtn.style.display = 'none';
-    }
+    // Theme toggle button removed with navbar
 
     // Stop further theme initialization/listeners for index page
     return; 
@@ -94,61 +90,22 @@ document.addEventListener('DOMContentLoaded', function() {
     applyTheme(newTheme);
     saveThemePreference(newTheme);
     
-    // Update any theme toggle buttons (assumes they have a .theme-toggle class)
-    updateToggleButtons(newTheme);
+    // Theme toggle functionality preserved but buttons removed with navbar
   }
 
   /**
    * Update the state of theme toggle buttons based on current theme
    * @param {string} theme - The current theme
+   * Note: Theme toggle buttons removed with navbar, but function preserved for potential future use
    */
   function updateToggleButtons(theme) {
-    const toggleButtons = document.querySelectorAll('.theme-toggle');
-    toggleButtons.forEach(button => {
-      if (button.tagName === 'INPUT' && button.type === 'checkbox') {
-        button.checked = theme === DARK_THEME;
-      } else {
-        // For other button types, update text or icons
-        if (theme === DARK_THEME) {
-          button.setAttribute('aria-label', 'Switch to light mode');
-        } else {
-          button.setAttribute('aria-label', 'Switch to dark mode');
-        }
-      }
-    });
-    
-    // Handle specific theme toggle button with ID 'theme-toggle'
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    
-    if (themeToggle && themeIcon) {
-      if (theme === DARK_THEME) {
-        // In dark mode, show sun icon (to switch to light)
-        themeIcon.classList.remove('fa-moon');
-        themeIcon.classList.add('fa-sun');
-      } else {
-        // In light mode, show moon icon (to switch to dark)
-        themeIcon.classList.remove('fa-sun');
-        themeIcon.classList.add('fa-moon');
-      }
-    }
+    // Function preserved but no buttons to update after navbar removal
   }
 
   // Initialize theme on page load
   const initialTheme = getPreferredTheme();
   applyTheme(initialTheme);
-  updateToggleButtons(initialTheme);
-
-  // Attach event listeners to any theme toggle buttons
-  document.querySelectorAll('.theme-toggle').forEach(button => {
-    button.addEventListener('click', toggleTheme);
-  });
-  
-  // Make sure to attach listener to the specific theme-toggle button
-  const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle) {
-    themeToggle.addEventListener('click', toggleTheme);
-  }
+  // Theme toggle buttons removed with navbar
 
   // Listen for system preference changes
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
@@ -157,7 +114,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Only change theme automatically if user hasn't set a preference
     if (!localStorage.getItem(THEME_STORAGE_KEY)) {
       applyTheme(systemTheme);
-      updateToggleButtons(systemTheme);
     }
   });
 
@@ -305,13 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fix colors when page loads
   fixModalPreElementColors();
   
-  // Fix colors when the theme changes
-  document.querySelectorAll('.theme-toggle').forEach(button => {
-    button.addEventListener('click', function() {
-      // Small timeout to ensure theme has been applied before fixing colors
-      setTimeout(fixModalPreElementColors, 50);
-    });
-  });
+  // Theme toggle buttons removed with navbar - theme changes now only via programmatic calls
 
   // Create a MutationObserver to watch for nodes added to modals
   const modalObserver = new MutationObserver(function(mutationsList) {

@@ -7,9 +7,6 @@
   .card-header h1 { font-size: 1.75rem; }
   .card-header h2 { font-size: 1.5rem; }
   .card-header h3 { font-size: 1.3rem; }
-  
-  /* Note: All navbar styles have been consolidated in layout.css */
-
 }
 
 @media (max-width: 768px) {
@@ -40,11 +37,6 @@
   /* Button spacing in card footers */
   .card-footer-buttons { gap: 0.25rem; }
   .card-footer-buttons .btn { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
-
-  /* Reduce navbar brand logo size on very small screens */
-  .navbar-brand img {
-    height: 28px !important; /* Use !important to override potential inline height */
-  }
 }
 
 /* === Responsive Host Card Layout === */

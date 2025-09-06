@@ -51,101 +51,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg apple-navbar" id="main-navbar">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <img src="{{ url_for('static', filename='img/wol-manager-logo.png') }}" alt="WoL Manager Logo" class="me-2" height="32">
-                <img src="{{ url_for('static', filename='img/wol-manager-title.png') }}" alt="WoL Manager" height="32">
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link hover-elevate" href="{{ url_for('main.dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link hover-elevate" href="{{ url_for('host.list_hosts') }}">
-                            <i class="fas fa-laptop me-1"></i>Hosts
-                        </a>
-                    </li>
-                    {% if current_user.is_admin %}
-                    <li class="nav-item dropdown">
-                      <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-shield-alt fa-fw"></i> Admin
-                      </a>
-                      <ul class="dropdown-menu">
-                        <li>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_users') }}">
-                            <i class="fas fa-users fa-fw"></i> Users
-                          </a>
-                        </li>
-                        <li>
-                          <a class="dropdown-item" href="{{ url_for('admin.settings') }}">
-                            <i class="fas fa-cog fa-fw"></i> Settings
-                          </a>
-                        </li>
-                        <li>
-                          <a class="dropdown-item" href="{{ url_for('admin.view_logs') }}">
-                            <i class="fas fa-file-alt fa-fw"></i> Logs
-                          </a>
-                        </li>
-                      </ul>
-                    </li>
-                    {% endif %}
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1"></i>{{ current_user.username }}
-                            {% if current_user.twofa_enabled %}
-                            <span class="badge bg-success ms-1" title="2FA Enabled">
-                                <i class="fas fa-shield-alt" style="font-size: 0.7rem;"></i>
-                            </span>
-                            {% endif %}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
-                                    <i class="fas fa-user me-1"></i>My Profile
-                                    {% if current_user.twofa_enabled %}
-                                    <span class="badge bg-success ms-2">2FA</span>
-                                    {% endif %}
-                                </a>
-                            </li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
-                                <i class="fas fa-key me-1"></i>Change Password
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                <i class="fas fa-sign-out-alt me-1"></i>Logout
-                            </a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">
-                            <i class="fas fa-sign-in-alt me-1"></i>Login
-                        </a>
-                    </li>
-                    {% endif %}
-                    <li class="nav-item ms-2">
-                        <button class="theme-toggle-btn btn nav-link py-1 px-2 rounded-circle action-button btn-animate-press" id="theme-toggle">
-                            <i class="fas fa-moon" id="theme-icon"></i>
-                            <span class="d-lg-none ms-1">Toggle Theme</span>
-                        </button>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
     <!-- Update Notification Banner -->
     {% if update_available and latest_version %}
@@ -330,8 +235,5 @@
     
     <!-- Scripts Block -->
     {% block scripts %}{% endblock %}
-    
-    <!-- Mobile Navigation Enhancement Script -->
-    <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
 </body>
 </html>
