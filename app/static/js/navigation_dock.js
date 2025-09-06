@@ -10,6 +10,7 @@ let lastScrollY = 0;
 let collapseThreshold = 30; // Collapse after 10px of scrolling down
 let expandThreshold = 50; // Expand when within 15px of top
 let expandDelay = null; // Delay timer for expanding
+let navIndicator = null; // Reference to the sliding indicator element
 
 /**
  * Opens a navigation panel
@@ -197,6 +198,69 @@ function handleNavScroll() {
 }
 
 /**
+ * Create and initialize the sliding indicator
+ */
+function initSlidingIndicator() {
+    const navDock = document.getElementById('navbarDockExpanded');
+    if (!navDock) return;
+    
+    // Create indicator element if it doesn't exist
+    navIndicator = document.createElement('div');
+    navIndicator.className = 'nav-indicator';
+    navDock.appendChild(navIndicator);
+    
+    // Get all hoverable items (nav items and theme toggle)
+    const hoverableItems = navDock.querySelectorAll('.nav-dock-item, .nav-theme-toggle');
+    
+    hoverableItems.forEach(item => {
+        item.addEventListener('mouseenter', function(e) {
+            // Skip separators
+            if (this.classList.contains('nav-dock-separator')) return;
+            
+            // Calculate position and size
+            const rect = this.getBoundingClientRect();
+            const dockRect = navDock.getBoundingClientRect();
+            
+            // Update indicator position and size
+            navIndicator.style.left = `${rect.left - dockRect.left}px`;
+            navIndicator.style.width = `${rect.width}px`;
+            
+            // Add hovering class to the item
+            this.classList.add('hovering');
+            
+            // Add smooth scale effect
+            navIndicator.style.transform = 'scale(1)';
+        });
+        
+        item.addEventListener('mouseleave', function(e) {
+            this.classList.remove('hovering');
+        });
+    });
+    
+    // Hide indicator when mouse leaves the dock
+    navDock.addEventListener('mouseleave', function(e) {
+        // Check if we're really leaving the dock area
+        if (!e.relatedTarget || !navDock.contains(e.relatedTarget)) {
+            navIndicator.style.transform = 'scale(0.95)';
+            
+            // Remove hovering class from all items
+            hoverableItems.forEach(item => {
+                item.classList.remove('hovering');
+            });
+        }
+    });
+    
+    // Set initial position on active item if exists
+    const activeItem = navDock.querySelector('.nav-dock-item.active');
+    if (activeItem) {
+        const rect = activeItem.getBoundingClientRect();
+        const dockRect = navDock.getBoundingClientRect();
+        navIndicator.style.left = `${rect.left - dockRect.left}px`;
+        navIndicator.style.width = `${rect.width}px`;
+    }
+}
+
+/**
  * Initialize navigation dock
  */
 function initNavigationDock() {
@@ -213,6 +277,9 @@ function initNavigationDock() {
             wrapper.classList.remove('initial');
         }, 500);
     }
+    
+    // Initialize sliding indicator
+    initSlidingIndicator();
     
     // Set up scroll listener - responsive and immediate
     let ticking = false;
@@ -292,12 +359,21 @@ function initNavigationDock() {
  */
 function updateActiveNavItems() {
     const currentPath = window.location.pathname;
+    const navDock = document.getElementById('navbarDockExpanded');
     
     document.querySelectorAll('.nav-dock-item').forEach(item => {
         if (item.tagName === 'A') {
             const itemPath = new URL(item.href).pathname;
             if (currentPath === itemPath) {
                 item.classList.add('active');
+                
+                // Update indicator position to active item
+                if (navIndicator && navDock) {
+                    const rect = item.getBoundingClientRect();
+                    const dockRect = navDock.getBoundingClientRect();
+                    navIndicator.style.left = `${rect.left - dockRect.left}px`;
+                    navIndicator.style.width = `${rect.width}px`;
+                }
             } else {
                 item.classList.remove('active');
             }
