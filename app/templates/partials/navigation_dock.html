@@ -1,10 +1,10 @@
 <!-- Navigation Dock Component -->
+<!-- Collapsed state - minimal circular button (positioned outside wrapper for proper backdrop-filter) -->
+<button class="navbar-dock-collapsed" id="navbarDockCollapsed" onclick="expandNavDock()" aria-label="Expand navigation">
+</button>
+
 <!-- Glass Navbar Dock -->
 <div class="navbar-dock-wrapper" id="navbarDock">
-    <!-- Collapsed state - minimal circular button -->
-    <button class="navbar-dock-collapsed" id="navbarDockCollapsed" onclick="expandNavDock()" aria-label="Expand navigation">
-    </button>
-    
     <!-- Expanded state - full navbar -->
     <nav class="navbar-dock" id="navbarDockExpanded">
         <!-- Dashboard -->

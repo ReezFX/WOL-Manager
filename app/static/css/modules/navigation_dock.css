@@ -41,6 +41,13 @@
     --nav-danger-hover: rgba(226, 85, 99, 0.1);
 }
 
+/* Navigation Dock Spacer - ensures content starts below dock */
+.navigation-dock-spacer {
+    height: 80px; /* Space for dock (height + top margin + padding) */
+    width: 100%;
+    display: block;
+}
+
 /* Glass Navbar Dock - Centered */
 .navbar-dock-wrapper {
     position: fixed;
@@ -51,6 +58,13 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     justify-content: center;
+    /* Prevent wrapper from interfering with collapsed button's backdrop-filter */
+    pointer-events: none;
+}
+
+/* Re-enable pointer events for the actual navbar */
+.navbar-dock-wrapper .navbar-dock {
+    pointer-events: auto;
 }
 
 /* Wrapper states */
@@ -61,6 +75,9 @@
 .navbar-dock-wrapper.collapsed {
     /* Keep the same centering transform */
     transform: translateX(-50%);
+    /* Ensure wrapper doesn't interfere with backdrop-filter when collapsed */
+    opacity: 1;
+    pointer-events: none;
 }
 
 @keyframes slideDown {
@@ -92,14 +109,18 @@
     visibility: visible;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    transform-origin: center center;
+    /* Ensure this doesn't interfere with collapsed button's backdrop-filter */
+    isolation: isolate;
 }
 
 /* Hidden state for expanded dock */
 .navbar-dock.hidden {
     opacity: 0;
     visibility: hidden;
-    transform: scale(0.8);
+    transform: scale(0);
     pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Collapsed minimal circular button */
@@ -107,8 +128,9 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
+    /* Ensure proper glass effect with layered backgrounds */
     background: var(--nav-glass-bg);
-    backdrop-filter: blur(24px) saturate(200%);  /* Enhanced blur */
+    backdrop-filter: blur(24px) saturate(200%);
     -webkit-backdrop-filter: blur(24px) saturate(200%);
     border: 1px solid var(--nav-glass-border);
     cursor: pointer;
@@ -118,11 +140,26 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
     visibility: hidden;
-    transform: scale(0);
-    position: absolute;  /* Changed from relative to absolute for centering */
+    transform: translateX(-50%) scale(0);
+    transform-origin: center center;
+    position: fixed;  /* Fixed positioning relative to viewport */
+    top: 1rem;  /* Same as navbar-dock-wrapper */
     left: 50%;
-    margin-left: -12px;  /* Half the width to center perfectly */
+    z-index: 102;  /* Higher than wrapper and navbar to ensure proper layering */
     overflow: hidden;
+    pointer-events: none;  /* Start with none, JS will enable when visible */
+    will-change: transform, opacity;  /* Optimize for animations */
+}
+
+/* Ensure backdrop-filter works with a pseudo-element approach if needed */
+.navbar-dock-collapsed::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    z-index: -1;
 }
 
 /* Pulse animation to indicate it's clickable */
@@ -144,13 +181,21 @@
 .navbar-dock-collapsed.visible {
     opacity: 0.8;
     visibility: visible;
-    transform: scale(1);
-    animation: subtlePulse 3s ease-in-out infinite;
+    transform: translateX(-50%) scale(1);
+    animation: subtlePulse 3s ease-in-out infinite, maintainCenter 0s linear;
+    pointer-events: auto;  /* Enable clicking when visible */
+}
+
+/* Animation to maintain centering during pulse */
+@keyframes maintainCenter {
+    from, to {
+        transform: translateX(-50%) scale(1);
+    }
 }
 
 .navbar-dock-collapsed:hover {
     opacity: 1;
-    transform: scale(1.5);
+    transform: translateX(-50%) scale(1.5);
     box-shadow: 
         0 6px 20px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.3),
@@ -158,7 +203,7 @@
 }
 
 .navbar-dock-collapsed:active {
-    transform: scale(1.3);
+    transform: translateX(-50%) scale(1.3);
 }
 
 /* Sliding Indicator */
@@ -496,16 +541,54 @@
 
 /* Mobile Responsive Design */
 @media (max-width: 768px) {
+    .navigation-dock-spacer {
+        height: 70px; /* Slightly less space on tablets */
+    }
+    
     .navbar-dock-wrapper {
-        width: calc(100% - 2rem);
-        left: 1rem;
+        width: auto;
+        max-width: calc(100% - 2rem);
+        left: 50%;
         top: 1rem;
-        transform: none;
+        transform: translateX(-50%);
     }
     
     .navbar-dock {
         padding: 0.5rem;
         border-radius: 20px;
+        transform-origin: center center;
+    }
+    
+    /* Ensure hidden state animation works properly on mobile */
+    .navbar-dock.hidden {
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(0);
+        pointer-events: none;
+    }
+    
+    /* Center the collapsed button on mobile */
+    .navbar-dock-collapsed {
+        left: 50%;
+        transform: translateX(-50%) scale(0);
+        transform-origin: center center;
+    }
+    
+    .navbar-dock-collapsed.visible {
+        transform: translateX(-50%) scale(1);
+    }
+    
+    .navbar-dock-collapsed:hover {
+        transform: translateX(-50%) scale(1.5);
+    }
+    
+    .navbar-dock-collapsed:active {
+        transform: translateX(-50%) scale(1.3);
+    }
+    
+    /* Keep wrapper centered during collapse */
+    .navbar-dock-wrapper.collapsed {
+        transform: translateX(-50%);
     }
     
     .nav-dock-item {
@@ -535,9 +618,33 @@
 }
 
 @media (max-width: 480px) {
+    .navigation-dock-spacer {
+        height: 65px; /* Even less space on small mobile */
+    }
+    
     .navbar-dock-wrapper {
-        width: calc(100% - 1rem);
-        left: 0.5rem;
+        width: auto;
+        max-width: calc(100% - 1rem);
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    /* Ensure collapsed button stays centered on small screens */
+    .navbar-dock-collapsed {
+        left: 50%;
+        transform: translateX(-50%) scale(0);
+    }
+    
+    .navbar-dock-collapsed.visible {
+        transform: translateX(-50%) scale(1);
+    }
+    
+    .navbar-dock-collapsed:hover {
+        transform: translateX(-50%) scale(1.5);
+    }
+    
+    .navbar-dock-collapsed:active {
+        transform: translateX(-50%) scale(1.3);
     }
     
     .nav-dock-item {

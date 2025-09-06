@@ -7,8 +7,8 @@
 let currentNavPanel = null;
 let isDockCollapsed = false;
 let lastScrollY = 0;
-let collapseThreshold = 30; // Collapse after 10px of scrolling down
-let expandThreshold = 50; // Expand when within 15px of top
+let collapseThreshold = 40; // Collapse after 10px of scrolling down
+let expandThreshold = 75; // Expand when within 15px of top
 let expandDelay = null; // Delay timer for expanding
 let navIndicator = null; // Reference to the sliding indicator element
 
