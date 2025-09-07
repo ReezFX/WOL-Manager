@@ -16,42 +16,9 @@ function initializeUpdateChecker() {
     
     if (!checkButton) return; // Exit if elements don't exist
     
-    // Load initial version info
-    loadVersionInfo();
-    
     // Set up click handler for manual update check
     checkButton.addEventListener('click', function() {
         checkForUpdates();
-    });
-}
-
-/**
- * Load current version information
- */
-function loadVersionInfo() {
-    const headers = {
-        'X-Requested-With': 'XMLHttpRequest'
-    };
-    
-    // Add CSRF token if available
-    if (window.csrfToken) {
-        headers['X-CSRFToken'] = window.csrfToken;
-    }
-    
-    fetch('/admin/api/version-info', {
-        method: 'GET',
-        headers: headers
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            updateVersionDisplay(data.data);
-        } else {
-            console.error('Error loading version info:', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Network error loading version info:', error);
     });
 }
 
@@ -64,7 +31,8 @@ function checkForUpdates() {
     
     // Disable button and show loading state
     checkButton.disabled = true;
-    checkButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    checkButton.classList.add('loading');
+    checkButton.innerHTML = '<i class="ph ph-spinner"></i> <span>Checking...</span>';
     
     // Hide any previous status messages
     statusAlert.classList.add('d-none');
@@ -98,7 +66,8 @@ function checkForUpdates() {
     .finally(() => {
         // Re-enable button and restore original text
         checkButton.disabled = false;
-        checkButton.innerHTML = '<i class="fas fa-sync-alt"></i> Check for Updates';
+        checkButton.classList.remove('loading');
+        checkButton.innerHTML = '<i class="ph ph-arrow-clockwise"></i> <span>Check for Updates</span>';
     });
 }
 
@@ -115,7 +84,15 @@ function updateVersionDisplay(data) {
     }
     
     if (remoteVersionEl) {
-        remoteVersionEl.textContent = data.remote_version || 'Unknown';
+        // Check if the element contains a spinner (initial load state)
+        const spinnerSpan = remoteVersionEl.querySelector('.settings-text-secondary');
+        if (spinnerSpan) {
+            // Replace the entire spinner span with just the version text
+            remoteVersionEl.textContent = data.remote_version || 'Unknown';
+        } else {
+            // Just update the text content
+            remoteVersionEl.textContent = data.remote_version || 'Unknown';
+        }
     }
     
     if (lastCheckedEl && data.last_check) {
@@ -134,28 +111,28 @@ function showUpdateStatus(data) {
     
     if (data.check_error) {
         // Show error message
-        statusAlert.className = 'alert alert-warning mt-3';
+        statusAlert.className = 'settings-about-alert alert-warning';
         statusAlert.innerHTML = `
-            <i class="fas fa-exclamation-triangle me-2"></i>
+            <i class="ph ph-warning-circle me-2"></i>
             <strong>Check failed:</strong> ${escapeHtml(data.check_error)}
         `;
         statusAlert.classList.remove('d-none');
     } else if (data.update_available) {
         // Show update available message
-        statusAlert.className = 'alert alert-info mt-3';
+        statusAlert.className = 'settings-about-alert alert-info';
         statusAlert.innerHTML = `
-            <i class="fas fa-download me-2"></i>
+            <i class="ph ph-download me-2"></i>
             <strong>Update available!</strong> Version ${escapeHtml(data.remote_version)} is now available.
             <a href="https://github.com/${escapeHtml(data.github_repo)}/releases/latest" class="alert-link" target="_blank">
-                View release notes <i class="fas fa-external-link-alt ms-1"></i>
+                View release notes <i class="ph ph-arrow-square-out ms-1"></i>
             </a>
         `;
         statusAlert.classList.remove('d-none');
     } else {
         // Show up-to-date message
-        statusAlert.className = 'alert alert-success mt-3';
+        statusAlert.className = 'settings-about-alert alert-success';
         statusAlert.innerHTML = `
-            <i class="fas fa-check-circle me-2"></i>
+            <i class="ph ph-check-circle me-2"></i>
             <strong>Up to date!</strong> You are running the latest version.
         `;
         statusAlert.classList.remove('d-none');
@@ -177,9 +154,9 @@ function showError(message) {
     
     if (!statusAlert) return;
     
-    statusAlert.className = 'alert alert-danger mt-3';
+    statusAlert.className = 'settings-about-alert alert-danger';
     statusAlert.innerHTML = `
-        <i class="fas fa-exclamation-circle me-2"></i>
+        <i class="ph ph-x-circle me-2"></i>
         <strong>Error:</strong> ${escapeHtml(message)}
     `;
     statusAlert.classList.remove('d-none');

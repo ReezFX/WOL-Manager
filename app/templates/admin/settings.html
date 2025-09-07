@@ -5,31 +5,45 @@
 {# Set this variable to tell base template not to show flash messages #}
 {% set hide_base_flash_messages = true %}
 
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="https://unpkg.com/phosphor-icons@1.4.2/src/css/icons.css">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-  <div class="row">
-    <div class="col-md-12">
-      <div class="card">
-        <div class="card-header bg-tertiary-theme">
-          <h2 class="card-title">Application Settings</h2>
-        </div>
-        <div class="card-body">
+<div class="settings-page">
+  <div class="settings-container">
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <h2 class="settings-card-title">
+          <i class="ph ph-sliders-horizontal"></i>
+          Application Settings
+        </h2>
+      </div>
+      <div class="settings-card-body">
           <form id="settingsForm" method="POST" action="{{ url_for('admin.settings') }}" data-animate="true" data-show-success="true">
             {{ form.hidden_tag() }}
             
-            <div class="row mb-4">
-              <div class="col-md-12">
-                <h4>Password Policy</h4>
-                <hr>
+            <!-- Password Policy Section -->
+            <div class="settings-section">
+              <div class="settings-section-header">
+                <div class="settings-section-icon">
+                  <i class="ph ph-lock"></i>
+                </div>
+                <h4 class="settings-section-title">Password Policy</h4>
               </div>
-            </div>
             
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <div class="form-group">
-                  {{ form.min_password_length.label(class="form-label") }}
-                  {{ form.min_password_length(class="form-control" + (" is-invalid" if form.min_password_length.errors else "")) }}
-                  <small class="form-text text-muted">Minimum number of characters required for user passwords.</small>
+              <div class="settings-grid">
+                <div class="settings-form-group">
+                  <label class="settings-form-label">
+                    <i class="ph ph-text-aa"></i>
+                    {{ form.min_password_length.label.text }}
+                  </label>
+                  {{ form.min_password_length(class="settings-form-control" + (" is-invalid" if form.min_password_length.errors else "")) }}
+                  <div class="settings-help-text">
+                    <i class="ph ph-info"></i>
+                    <span>Minimum number of characters required for user passwords.</span>
+                  </div>
                   {% if form.min_password_length.errors %}
                     <div class="invalid-feedback d-block">
                       {% for error in form.min_password_length.errors %}
@@ -38,12 +52,17 @@
                     </div>
                   {% endif %}
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group">
-                  {{ form.password_expiration_days.label(class="form-label") }}
-                  {{ form.password_expiration_days(class="form-control" + (" is-invalid" if form.password_expiration_days.errors else "")) }}
-                  <small class="form-text text-muted">Number of days until users must change their password. Use 0 for no expiration.</small>
+                
+                <div class="settings-form-group">
+                  <label class="settings-form-label">
+                    <i class="ph ph-calendar-x"></i>
+                    {{ form.password_expiration_days.label.text }}
+                  </label>
+                  {{ form.password_expiration_days(class="settings-form-control" + (" is-invalid" if form.password_expiration_days.errors else "")) }}
+                  <div class="settings-help-text">
+                    <i class="ph ph-info"></i>
+                    <span>Number of days until users must change their password. Use 0 for no expiration.</span>
+                  </div>
                   {% if form.password_expiration_days.errors %}
                     <div class="invalid-feedback d-block">
                       {% for error in form.password_expiration_days.errors %}
@@ -53,38 +72,66 @@
                   {% endif %}
                 </div>
               </div>
-            </div>
             
-            <div class="row mb-4">
-              <div class="col-md-6">
-                <div class="form-check form-switch">
-                  {{ form.require_special_characters(class="form-check-input") }}
-                  {{ form.require_special_characters.label(class="form-check-label") }}
-                  <div class="form-text text-muted">Require at least one special character in passwords.</div>
+              <div class="settings-grid">
+                <div class="settings-form-group">
+                  <div class="settings-switch-container">
+                    <label class="settings-switch">
+                      {{ form.require_special_characters(style="display:none;") }}
+                      <span class="settings-switch-slider"></span>
+                    </label>
+                    <div>
+                      <label class="settings-switch-label" for="{{ form.require_special_characters.id }}">
+                        {{ form.require_special_characters.label.text }}
+                      </label>
+                      <div class="settings-help-text">
+                        <i class="ph ph-asterisk"></i>
+                        <span>Require at least one special character in passwords.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="settings-form-group">
+                  <div class="settings-switch-container">
+                    <label class="settings-switch">
+                      {{ form.require_numbers(style="display:none;") }}
+                      <span class="settings-switch-slider"></span>
+                    </label>
+                    <div>
+                      <label class="settings-switch-label" for="{{ form.require_numbers.id }}">
+                        {{ form.require_numbers.label.text }}
+                      </label>
+                      <div class="settings-help-text">
+                        <i class="ph ph-hash"></i>
+                        <span>Require at least one number in passwords.</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="form-check form-switch">
-                  {{ form.require_numbers(class="form-check-input") }}
-                  {{ form.require_numbers.label(class="form-check-label") }}
-                  <div class="form-text text-muted">Require at least one number in passwords.</div>
+            </div>
+            
+            <!-- Session Management Section -->
+            <div class="settings-section">
+              <div class="settings-section-header">
+                <div class="settings-section-icon">
+                  <i class="ph ph-timer"></i>
                 </div>
+                <h4 class="settings-section-title">Session Management</h4>
               </div>
-            </div>
             
-            <div class="row mb-4">
-              <div class="col-md-12">
-                <h4>Session Management</h4>
-                <hr>
-              </div>
-            </div>
-            
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <div class="form-group">
-                  {{ form.session_timeout_minutes.label(class="form-label") }}
-                  {{ form.session_timeout_minutes(class="form-control" + (" is-invalid" if form.session_timeout_minutes.errors else "")) }}
-                  <small class="form-text text-muted">Number of minutes until a user session expires due to inactivity.</small>
+              <div class="settings-grid">
+                <div class="settings-form-group">
+                  <label class="settings-form-label">
+                    <i class="ph ph-hourglass-medium"></i>
+                    {{ form.session_timeout_minutes.label.text }}
+                  </label>
+                  {{ form.session_timeout_minutes(class="settings-form-control" + (" is-invalid" if form.session_timeout_minutes.errors else "")) }}
+                  <div class="settings-help-text">
+                    <i class="ph ph-info"></i>
+                    <span>Number of minutes until a user session expires due to inactivity.</span>
+                  </div>
                   {% if form.session_timeout_minutes.errors %}
                     <div class="invalid-feedback d-block">
                       {% for error in form.session_timeout_minutes.errors %}
@@ -93,12 +140,17 @@
                     </div>
                   {% endif %}
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group">
-                  {{ form.max_concurrent_sessions.label(class="form-label") }}
-                  {{ form.max_concurrent_sessions(class="form-control" + (" is-invalid" if form.max_concurrent_sessions.errors else "")) }}
-                  <small class="form-text text-muted">Maximum number of active sessions per user. Use 0 for unlimited.</small>
+                
+                <div class="settings-form-group">
+                  <label class="settings-form-label">
+                    <i class="ph ph-users"></i>
+                    {{ form.max_concurrent_sessions.label.text }}
+                  </label>
+                  {{ form.max_concurrent_sessions(class="settings-form-control" + (" is-invalid" if form.max_concurrent_sessions.errors else "")) }}
+                  <div class="settings-help-text">
+                    <i class="ph ph-info"></i>
+                    <span>Maximum number of active sessions per user. Use 0 for unlimited.</span>
+                  </div>
                   {% if form.max_concurrent_sessions.errors %}
                     <div class="invalid-feedback d-block">
                       {% for error in form.max_concurrent_sessions.errors %}
@@ -110,24 +162,31 @@
               </div>
             </div>
             
-            <div class="row mb-4">
-              <div class="col-md-12">
-                <h4>Logging Configuration</h4>
-                <hr>
+            <!-- Logging Configuration Section -->
+            <div class="settings-section">
+              <div class="settings-section-header">
+                <div class="settings-section-icon">
+                  <i class="ph ph-activity"></i>
+                </div>
+                <h4 class="settings-section-title">Logging Configuration</h4>
               </div>
-            </div>
             
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <div class="form-group">
-                  {{ form.log_profile.label(class="form-label") }}
-                  {{ form.log_profile(class="form-control") }}
-                  <small class="form-text text-muted">{{ form.log_profile.description }}</small>
-                  <div class="profile-indicator">
-                    <i class="fas fa-info-circle"></i>
-                    <div class="profile-indicator-content">
-                      <span class="profile-indicator-label">Current active profile from environment</span>
-                      <span id="current-log-profile" class="profile-indicator-value">{{ current_log_profile }}</span>
+              <div class="settings-grid">
+                <div class="settings-form-group">
+                  <label class="settings-form-label">
+                    <i class="ph ph-chart-line"></i>
+                    {{ form.log_profile.label.text }}
+                  </label>
+                  {{ form.log_profile(class="settings-form-control") }}
+                  <div class="settings-help-text">
+                    <i class="ph ph-info"></i>
+                    <span>{{ form.log_profile.description }}</span>
+                  </div>
+                  <div class="settings-profile-indicator">
+                    <i class="ph ph-broadcast"></i>
+                    <div class="settings-profile-indicator-content">
+                      <div class="settings-profile-indicator-label">Current active profile from environment</div>
+                      <div id="current-log-profile" class="settings-profile-indicator-value">{{ current_log_profile }}</div>
                     </div>
                   </div>
                   {% if form.log_profile.errors %}
@@ -141,20 +200,23 @@
               </div>
             </div>
             
-            <div class="row mt-4">
-              <div class="col-md-12">
-                <div id="save-animation-container" class="float-end">
-                  <button type="submit" class="btn btn-primary action-button btn-animate-press">
-                    <i class="fas fa-save me-2"></i>Save Settings
-                  </button>
-                </div>
+            <!-- Actions -->
+            <div class="settings-actions">
+              <div id="save-animation-container">
+                <button type="submit" class="settings-btn settings-btn-primary">
+                  <i class="ph ph-floppy-disk"></i>
+                  <span>Save Settings</span>
+                </button>
               </div>
             </div>
           </form>
         </div>
       </div>
-      <!-- About Section -->
-      {% include 'admin/_about.html' %}
+      
+      <!-- About Section with Glass Style -->
+      <div class="settings-about-card">
+        {% include 'admin/_about.html' %}
+      </div>
     </div>
   </div>
 </div>
@@ -166,15 +228,33 @@
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add animation to cards when page loads
-    document.querySelectorAll('.card').forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
+    // Initialize custom switch controls to sync with hidden checkboxes
+    document.querySelectorAll('.settings-switch input[type="checkbox"]').forEach(checkbox => {
+        // Set initial state of custom switch based on checkbox state
+        const slider = checkbox.nextElementSibling;
+        if (checkbox.checked && slider) {
+            checkbox.style.display = 'none';
+        }
+        
+        // Handle click on switch slider
+        if (slider) {
+            slider.addEventListener('click', function(e) {
+                e.preventDefault();
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+            });
+        }
+    });
+    
+    // Add staggered animation to sections
+    document.querySelectorAll('.settings-section').forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
         
         setTimeout(() => {
-            card.style.transition = 'all 0.5s var(--animation-spring)';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
+            section.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
         }, 100 + (index * 150)); // Staggered animation
     });
     
@@ -186,6 +266,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const submitButton = this.querySelector('button[type="submit"]');
             const saveContainer = document.getElementById('save-animation-container');
+            
+            // Add loading class to button
+            submitButton.classList.add('loading');
+            const originalIcon = submitButton.querySelector('i').className;
+            submitButton.querySelector('i').className = 'ph ph-spinner';
             
             // Show loading state
             if (typeof window.setButtonLoading === 'function') {
@@ -213,25 +298,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                // Store button HTML to restore it later
-                const buttonHTML = saveContainer.innerHTML;
+                // Remove loading state
+                submitButton.classList.remove('loading');
+                submitButton.querySelector('i').className = originalIcon;
                 
                 if (data.success) {
-                    // Show animation for settings saved
-                    if (typeof window.showSaveAnimation === 'function' && saveContainer) {
-                        // Empty the container and show animation
-                        saveContainer.innerHTML = '';
-                        window.showSaveAnimation(saveContainer, function() {
-                            // When animation is complete, restore the button
-                            saveContainer.innerHTML = buttonHTML;
-                            
-                            // Make sure the button is not in loading state after restoration
-                            const restoredButton = saveContainer.querySelector('button');
-                            if (restoredButton && typeof window.setButtonLoading === 'function') {
-                                window.setButtonLoading(restoredButton, false);
-                            }
-                        });
-                    }
+                    // Show success animation
+                    const successHTML = `
+                        <div class="settings-save-animation">
+                            <i class="ph ph-check-circle"></i>
+                            <span>Settings saved successfully!</span>
+                        </div>
+                    `;
+                    
+                    // Temporarily replace button with success message
+                    const originalHTML = saveContainer.innerHTML;
+                    saveContainer.innerHTML = successHTML;
+                    
+                    // Restore button after animation
+                    setTimeout(() => {
+                        saveContainer.innerHTML = originalHTML;
+                        // Re-bind submit handler since we replaced the HTML
+                        const newButton = saveContainer.querySelector('button');
+                        if (newButton) {
+                            newButton.addEventListener('click', function(e) {
+                                settingsForm.dispatchEvent(new Event('submit'));
+                            });
+                        }
+                    }, 3000);
                     
                     // Show success toast
                     if (typeof window.showToast === 'function') {
@@ -246,8 +340,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 } else {
-                    // For errors, just restore the button without animation
-                    saveContainer.innerHTML = buttonHTML;
+                    // Remove loading state for errors
+                    submitButton.classList.remove('loading');
+                    submitButton.querySelector('i').className = originalIcon;
                     
                     // Show error messages
                     if (data.errors) {
@@ -269,11 +364,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error:', error);
                 
                 // Reset button state
-                if (typeof window.setButtonLoading === 'function') {
-                    window.setButtonLoading(submitButton, false);
-                } else {
-                    submitButton.disabled = false;
-                }
+                submitButton.classList.remove('loading');
+                submitButton.querySelector('i').className = originalIcon;
+                submitButton.disabled = false;
                 
                 // Show error toast
                 if (typeof window.showToast === 'function') {

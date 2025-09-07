@@ -145,7 +145,7 @@ class Host(Base):
     
     # Relationships
     created_by_user = relationship('User', back_populates='hosts')
-    wol_logs = relationship('WolLog', back_populates='device')
+    wol_logs = relationship('WolLog', back_populates='device', cascade="all, delete-orphan")
     
     def __repr__(self):
         return f'<Host {self.name} ({self.mac_address})>'
