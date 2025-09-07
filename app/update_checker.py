@@ -9,6 +9,7 @@ import time
 from typing import Dict, Optional, Tuple
 import requests
 from packaging import version
+from datetime import datetime
 from app.logging_config import get_logger
 
 logger = get_logger('app.update_checker')
@@ -105,9 +106,32 @@ class UpdateChecker:
             logger.error(f"Error comparing versions {local_ver} vs {remote_ver}: {str(e)}")
             return False
     
-    def check_for_updates(self) -> Dict[str, any]:
+    def _save_to_database(self) -> None:
+        """Save update check results to database."""
+        try:
+            # Import here to avoid circular imports
+            from app import db_session
+            from app.models import AppSettings
+            
+            settings = AppSettings.get_settings(db_session)
+            settings.local_version = self.local_version
+            settings.remote_version = self.remote_version
+            settings.update_available = self.update_available
+            settings.last_update_check = datetime.utcnow()
+            settings.check_error = self.check_error
+            
+            db_session.commit()
+            logger.info("Update check results saved to database")
+        except Exception as e:
+            logger.error(f"Failed to save update check results to database: {str(e)}")
+            # Don't re-raise - we don't want database issues to break the checker
+    
+    def check_for_updates(self, save_to_db: bool = True) -> Dict[str, any]:
         """
         Check for updates and return status information.
+        
+        Args:
+            save_to_db: Whether to save results to database (default: True)
         
         Returns:
             Dictionary with update status information
@@ -140,6 +164,10 @@ class UpdateChecker:
                         
                     self.last_check = current_time
                     logger.info(f"Update check completed. Update available: {self.update_available}")
+                    
+                    # Save to database if requested
+                    if save_to_db:
+                        self._save_to_database()
                 else:
                     self.check_error = "Failed to fetch remote version"
                     logger.warning("Update check failed: Could not fetch remote version")
@@ -197,6 +225,9 @@ class UpdateChecker:
                         
                     self.last_check = current_time
                     logger.info(f"Force update check completed. Update available: {self.update_available}")
+                    
+                    # Always save force check results to database
+                    self._save_to_database()
                 else:
                     self.check_error = "Failed to fetch remote version"
                     logger.warning("Force update check failed: Could not fetch remote version")
@@ -209,14 +240,22 @@ class UpdateChecker:
     
     def _background_check(self) -> None:
         """Background thread function for periodic update checks."""
+        # Perform initial check immediately
+        initial_delay = 10  # Wait 10 seconds for app to fully initialize
+        time.sleep(initial_delay)
+        
+        try:
+            logger.info("Performing initial background update check...")
+            self.check_for_updates(save_to_db=True)
+        except Exception as e:
+            logger.error(f"Error in initial background update check: {str(e)}")
+        
+        # Then continue with periodic checks
         while True:
             time.sleep(self.check_interval)
             try:
-                # Skip check if one was performed recently
-                if time.time() - self.last_check < self.check_interval:
-                    continue
-                
-                self.check_for_updates()
+                logger.info("Performing scheduled background update check...")
+                self.check_for_updates(save_to_db=True)
             except Exception as e:
                 logger.error(f"Error in background update checker: {str(e)}")
                 # Wait a bit before retrying to avoid spinning

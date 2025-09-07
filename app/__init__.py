@@ -189,7 +189,19 @@ def create_app(config_name=None):
     # Add context processor for version information and update status
     @app.context_processor
     def inject_version_info():
-        """Inject version information and update status into all templates."""
+        """Inject version information and update status into templates - ONLY for admin users."""
+        from flask_login import current_user
+        
+        # Security: Only expose version information to authenticated admin users
+        # This prevents information disclosure to potential attackers
+        if not current_user.is_authenticated or not current_user.is_admin:
+            return {
+                'app_version': None,
+                'update_available': False,
+                'latest_version': None,
+                'github_repo': 'ReezFX/WOL-Manager'
+            }
+        
         try:
             from app.models import AppSettings
             import os
@@ -294,8 +306,6 @@ def create_app(config_name=None):
     try:
         from app.update_checker import init_update_checker
         update_checker = init_update_checker()
-        # Perform initial check in background
-        threading.Thread(target=lambda: update_checker.check_for_updates(), daemon=True).start()
         logger.info("Update checker service started successfully")
     except Exception as e:
         logger.error(f"Failed to start update checker service: {str(e)}")

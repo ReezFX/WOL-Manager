@@ -50,6 +50,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/animations.css') }}">
     <!-- Navigation Dock CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/navigation_dock.css') }}">
+    <!-- Update Banner CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/update_banner.css') }}">
     <!-- Statistics CSS loaded LAST to ensure maximum priority and prevent overrides -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/statistics.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -62,22 +64,27 @@
         <div class="navigation-dock-spacer"></div>
     {% endif %}
 
-    <!-- Update Notification Banner -->
-    {% if update_available and latest_version %}
-    <div class="alert alert-info alert-dismissible fade show m-0 border-0 rounded-0" role="alert" id="update-notification">
+    <!-- Update Notification Banner - Only for authenticated admin users -->
+    {% if current_user.is_authenticated and current_user.is_admin and update_available and latest_version %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert" id="update-notification">
         <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <i class="fas fa-download me-2"></i>
-                    <strong>Update available!</strong> Version {{ latest_version }} is now available. You are currently running version {{ app_version }}.
-                    <a href="https://github.com/{{ github_repo }}/releases/latest" class="alert-link" target="_blank">View release notes</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="update-content">
+                <div class="update-info">
+                    <i class="fas fa-download"></i>
+                    <div class="update-text">
+                        <strong>Update Ready!</strong>
+                        <span class="version-info">
+                            <span class="version-badge">{{ latest_version }}</span>
+                            available
+                        </span>
+                        <span class="current-version">Current: {{ app_version }}</span>
+                    </div>
                 </div>
-                <div class="col-md-4 text-md-end mt-2 mt-md-0">
-                    <a href="https://github.com/{{ github_repo }}/releases/latest" class="btn btn-outline-primary btn-sm me-2" target="_blank">
-                        <i class="fas fa-external-link-alt me-1"></i>Download
-                    </a>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+                <a href="https://github.com/{{ github_repo }}/releases/latest" class="btn btn-outline-primary btn-sm" target="_blank">
+                    <i class="fas fa-arrow-up-right-from-square"></i>
+                    <span>Download</span>
+                </a>
             </div>
         </div>
     </div>
@@ -179,8 +186,10 @@
                         <div class="col-md-6 text-center text-md-start">
                             <div class="footer-copyright">
                                 <span class="copyright-text">&copy; {{ now.year }} WoL Manager</span>
+                                {% if current_user.is_authenticated and current_user.is_admin %}
                                 <span class="footer-separator">•</span>
                                 <span class="version-badge">v{{ app_version }}</span>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
