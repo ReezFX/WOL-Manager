@@ -73,92 +73,6 @@
     opacity: 0.7;
 }
 
-/* Option 2: Dots Separator */
-.section-separator.dots {
-    margin: 2.5rem 0 1.5rem 0;
-    text-align: center;
-}
-
-.section-separator.dots .separator-line {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0;
-    background: transparent;
-    border: none;
-}
-
-.section-separator.dots .separator-line::before,
-.section-separator.dots .separator-line::after {
-    content: '•••';
-    color: var(--border-color);
-    font-size: 1.5rem;
-    letter-spacing: 0.5rem;
-    opacity: 0.3;
-}
-
-.section-separator.dots .separator-content {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.section-separator.dots .separator-icon {
-    color: var(--primary-color);
-    font-size: 1.25rem;
-}
-
-.section-separator.dots .separator-title {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    opacity: 0.8;
-}
-
-/* Option 3: Minimal with Icon Only */
-.section-separator.minimal {
-    margin: 2rem 0 1.5rem 0;
-    text-align: center;
-}
-
-.section-separator.minimal .separator-line {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem 0;
-    background: transparent;
-    border: none;
-}
-
-.section-separator.minimal .separator-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-}
-
-.section-separator.minimal .separator-icon {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: 50%;
-    color: var(--primary-color);
-    font-size: 1.1rem;
-}
-
-.section-separator.minimal .separator-title {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    opacity: 0.9;
-}
 
 /* Fix for refresh button positioning with new separators */
 .section-separator .separator-controls {
@@ -184,11 +98,5 @@
     
     .section-separator.simple-line .separator-line::before {
         display: none;
-    }
-    
-    .section-separator.dots .separator-line::before,
-    .section-separator.dots .separator-line::after {
-        content: '••';
-        letter-spacing: 0.3rem;
     }
 }
