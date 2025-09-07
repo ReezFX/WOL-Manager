@@ -118,7 +118,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-4">
     <!-- Wake animation overlay -->
     <div class="wake-animation-overlay" id="wakeAnimationOverlay">
         <div class="wake-animation-container">
@@ -179,18 +179,34 @@
         </div>
     </div>
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h2">Hosts Management</h1>
-        <a href="{{ url_for('host.add_host') }}" class="btn btn-primary action-button btn-animate-press" data-animate-create="true">
-            <i class="fas fa-plus me-2"></i>Add New Host
-        </a>
+    <!-- Dashboard-style Header -->
+    <div class="dashboard-header card-animate-in" style="animation-delay: 0.1s;">
+        <div class="dashboard-header-content">
+            <h1 class="dashboard-title">Hosts Management</h1>
+            <p class="dashboard-subtitle">View and manage all registered devices</p>
+        </div>
+        <div class="dashboard-header-actions">
+            <a href="{{ url_for('host.add_host') }}" class="btn btn-primary btn-apple">
+                <i class="fas fa-plus me-1"></i> Add New Host
+            </a>
+        </div>
+    </div>
+    
+    <!-- Hosts Section Separator -->
+    <div class="section-separator simple-line card-animate-in" style="animation-delay: 0.3s;">
+        <div class="separator-line">
+            <div class="separator-content">
+                <i class="fas fa-server separator-icon"></i>
+                <h3 class="separator-title">All Hosts</h3>
+            </div>
+        </div>
     </div>
     
     {% if hosts %}
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="host-grid">
         {% for host in hosts %}
         <div class="col host-column" id="host-column-{{ host.id }}">
-            <div class="card h-auto shadow host-card" id="host-card-{{ host.id }}" data-host-id="{{ host.id }}">
+            <div class="card h-auto shadow host-card card-animate-in hover-elevate" id="host-card-{{ host.id }}" data-host-id="{{ host.id }}" style="animation-delay: {{ 0.4 + (loop.index0 * 0.1) }}s;">
                 <!-- Card Header - Only contains status badge and public URL badge -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
@@ -356,8 +372,15 @@
         </div>
     </div>
     {% else %}
-    <div class="alert alert-info">
-        <p class="mb-0">No hosts found. <a href="{{ url_for('host.add_host') }}">Add your first host</a> to get started!</p>
+    <div class="alert alert-info card-animate-in" style="animation-delay: 0.4s;" role="alert">
+        <h4 class="alert-heading">No hosts found!</h4>
+        <p>You haven't added any hosts yet. Click the button below to add your first host.</p>
+        <hr>
+        <p class="mb-0">
+            <a href="{{ url_for('host.add_host') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Host
+            </a>
+        </p>
     </div>
     {% endif %}
 </div>

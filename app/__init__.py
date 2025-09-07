@@ -199,6 +199,7 @@ def create_app(config_name=None):
                 'app_version': None,
                 'update_available': False,
                 'latest_version': None,
+                'last_update_check': None,
                 'github_repo': 'ReezFX/WOL-Manager'
             }
         
@@ -223,10 +224,14 @@ def create_app(config_name=None):
                 else:
                     local_version = 'unknown'
             
+            # Debug logging
+            logger.debug(f"Context processor - local_version: {local_version}, remote_version: {settings.remote_version}, update_available: {settings.update_available}")
+            
             return {
                 'app_version': local_version or 'unknown',
                 'update_available': settings.update_available or False,
                 'latest_version': settings.remote_version,
+                'last_update_check': settings.last_update_check,
                 'github_repo': 'ReezFX/WOL-Manager'
             }
         except Exception as e:
@@ -244,6 +249,7 @@ def create_app(config_name=None):
                     'app_version': local_version,
                     'update_available': False,
                     'latest_version': None,
+                    'last_update_check': None,
                     'github_repo': 'ReezFX/WOL-Manager'
                 }
             except Exception:
@@ -251,6 +257,7 @@ def create_app(config_name=None):
                     'app_version': 'unknown',
                     'update_available': False,
                     'latest_version': None,
+                    'last_update_check': None,
                     'github_repo': 'ReezFX/WOL-Manager'
                 }
     

@@ -336,45 +336,95 @@ def edit_host(host_id):
 @login_required
 def delete_host(host_id):
     """Delete a host"""
-    host = db_session.query(Host).get(host_id)
+    # Get host name before deletion for logging
+    host_name = None
     
-    if not host:
-        flash('Host not found', 'danger')
-        return redirect(url_for('host.list_hosts'))
-    
-    # Check if user is allowed to delete this host
-    is_owner = host.created_by == current_user.id
-    has_delete_perm = current_user.has_permission('delete_hosts')
-    user_role_ids = [role.id for role in current_user.roles]
-    # Convert role IDs to strings for consistent comparison
-    if host.visible_to_roles:
-        host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
-        visible_to_user = any(str(role_id) in host_role_ids for role_id in user_role_ids)
-    else:
-        visible_to_user = False
-    
-    if not (has_delete_perm or (is_owner and visible_to_user) or current_user.is_admin):
-        access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to delete host {host.id} ({host.name}) without permission")
-        flash('You do not have permission to delete this host', 'danger')
-        return redirect(url_for('host.list_hosts'))
+    # Check if this is an AJAX request
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     try:
+        # Use filter_by instead of get to ensure we're in the right session context
+        host = db_session.query(Host).filter_by(id=host_id).first()
+        
+        if not host:
+            if is_ajax:
+                return {'error': 'Host not found'}, 404
+            flash('Host not found', 'danger')
+            return redirect(url_for('host.list_hosts'))
+        
+        # Store name for logging
+        host_name = host.name
+        
+        # Check if user is allowed to delete this host
+        is_owner = host.created_by == current_user.id
+        has_delete_perm = current_user.has_permission('delete_hosts')
+        user_role_ids = [role.id for role in current_user.roles]
+        # Convert role IDs to strings for consistent comparison
+        if host.visible_to_roles:
+            host_role_ids = [str(role_id) for role_id in host.visible_to_roles]
+            visible_to_user = any(str(role_id) in host_role_ids for role_id in user_role_ids)
+        else:
+            visible_to_user = False
+        
+        if not (has_delete_perm or (is_owner and visible_to_user) or current_user.is_admin):
+            access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to delete host {host_id} ({host_name}) without permission")
+            if is_ajax:
+                return {'error': 'You do not have permission to delete this host'}, 403
+            flash('You do not have permission to delete this host', 'danger')
+            return redirect(url_for('host.list_hosts'))
+        
+        # First, delete all associated WolLog entries to avoid foreign key constraint issues
+        from app.models import WolLog
+        wol_logs = db_session.query(WolLog).filter_by(device_id=host_id).all()
+        for log in wol_logs:
+            db_session.delete(log)
+        
+        # Now delete the host and force immediate commit
         db_session.delete(host)
+        db_session.flush()  # Force the delete to be executed
         db_session.commit()
-        access_logger.info(f"Host {host.id} '{host.name}' deleted by user: {current_user.username} (id: {current_user.id})")
-        flash(f'Host {host.name} deleted successfully', 'success')
+        
+        # Verify deletion was successful
+        verification = db_session.query(Host).filter_by(id=host_id).first()
+        if verification:
+            # If host still exists, there's a serious issue
+            db_session.rollback()
+            access_logger.error(f"Failed to delete host {host_id} '{host_name}' - still exists after commit")
+            if is_ajax:
+                return {'error': 'Database operation failed'}, 500
+            flash(f'Error deleting host: Database operation failed', 'danger')
+            return redirect(url_for('host.list_hosts'))
+        
+        access_logger.info(f"Host {host_id} '{host_name}' deleted by user: {current_user.username} (id: {current_user.id})")
+        
+        # Return success response for AJAX
+        if is_ajax:
+            return {'success': True, 'message': f'Host {host_name} deleted successfully'}, 200
+        
+        flash(f'Host {host_name} deleted successfully', 'success')
     except Exception as e:
         db_session.rollback()
+        access_logger.error(f"Exception while deleting host {host_id}: {str(e)}")
+        if is_ajax:
+            return {'error': f'Error deleting host: {str(e)}'}, 500
         flash(f'Error deleting host: {str(e)}', 'danger')
+    finally:
+        # Ensure session is properly closed to avoid stale data
+        db_session.close()
     
-    # Check request.referrer to determine where the request came from
-    referer = request.referrer or ''
-    if 'dashboard' in referer:
-        # Redirect to dashboard if deletion was initiated from there
-        return redirect(url_for('main.dashboard'))
-    else:
-        # Otherwise redirect to the hosts list page
-        return redirect(url_for('host.list_hosts'))
+    # For non-AJAX requests, handle redirects
+    if not is_ajax:
+        # Check request.referrer to determine where the request came from
+        referer = request.referrer or ''
+        if 'dashboard' in referer:
+            # Redirect to dashboard if deletion was initiated from there
+            return redirect(url_for('main.dashboard'))
+        else:
+            # Otherwise redirect to the hosts list page
+            return redirect(url_for('host.list_hosts'))
+    
+    # This should never be reached but just in case
+    return {'error': 'Unexpected error'}, 500
 
 @host.route('/view/<int:host_id>')
 @login_required
