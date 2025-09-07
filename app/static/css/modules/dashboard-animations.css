@@ -1,0 +1,151 @@
+/* =============================================
+   Dashboard Animations & Micro-interactions
+   ============================================= */
+
+/* Smooth fade-in animation for dashboard elements */
+@keyframes dashboardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dashboard header - animation removed to prevent disappearing issue */
+
+/* Removed stagger animation for host cards to prevent hover issues */
+
+/* Section separator - animation removed */
+
+/* Statistics cards - animation removed */
+
+/* Removed pulse animation for refresh button - was causing positioning issues */
+
+/* Status badge pulse animation */
+@keyframes statusPulse {
+    0%, 100% {
+        box-shadow: 0 1px 4px rgba(40, 180, 133, 0.15);
+    }
+    50% {
+        box-shadow: 0 1px 8px rgba(40, 180, 133, 0.3);
+    }
+}
+
+.status-badge.bg-success {
+    animation: statusPulse 3s ease-in-out infinite;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.statistic-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.statistic-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* Hover lift effect removed */
+
+/* Button press effect */
+.action-button:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+
+.btn-success.action-button:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Icon rotation on hover for refresh button */
+.refresh-stats-btn i {
+    display: inline-block;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.refresh-stats-btn:hover i {
+    transform: rotate(180deg);
+}
+
+/* Smooth color transitions for theme switching */
+.dashboard-header,
+.separator-line,
+.statistic-card,
+.host-column .card,
+.status-badge,
+.action-button {
+    transition: 
+        background-color 0.3s ease,
+        background 0.3s ease,
+        border-color 0.3s ease,
+        color 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(23, 162, 184, 0.2);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+}
+
+/* Remove problematic glow animation - was causing header to disappear */
+
+/* Smooth transitions for all interactive elements */
+button,
+a,
+.card,
+.badge,
+.btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
