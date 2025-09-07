@@ -1,0 +1,482 @@
+/* =============================================
+   User Management Styles - Glass Morphism Design
+   Matching Navigation Dock Aesthetic
+   ============================================= */
+
+/* CSS Variables to ensure consistency with nav dock */
+.light-theme {
+    --user-glass-bg: rgba(255, 255, 255, 0.4);
+    --user-glass-border: rgba(222, 226, 230, 0.5);
+    --user-card-bg: rgba(255, 255, 255, 0.5);
+    --user-avatar-admin-bg: linear-gradient(135deg, #ffc107, #ff7e5f);
+    --user-avatar-user-bg: linear-gradient(135deg, #17a2b8, #20c997);
+}
+
+.dark-theme, [data-bs-theme="dark"] {
+    --user-glass-bg: rgba(45, 45, 48, 0.4);
+    --user-glass-border: rgba(58, 58, 61, 0.5);
+    --user-card-bg: rgba(45, 45, 48, 0.5);
+    --user-avatar-admin-bg: linear-gradient(135deg, #ffc107, #ff7e5f);
+    --user-avatar-user-bg: linear-gradient(135deg, #17a2b8, #20c997);
+}
+
+/* Main Container */
+.user-management-container {
+    padding-top: 2rem;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Page Header - Glass Morphism Style */
+.user-management-header {
+    background: var(--user-glass-bg);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid var(--user-glass-border);
+    border-radius: 24px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Gradient overlay for header */
+.user-management-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(23, 162, 184, 0.05) 0%, 
+        rgba(32, 201, 151, 0.03) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.user-management-header > * {
+    position: relative;
+    z-index: 1;
+}
+
+.user-management-header h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--nav-text-primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.user-management-header .text-muted {
+    color: var(--nav-text-secondary) !important;
+    opacity: 0.85;
+    font-size: 1.05rem;
+}
+
+/* Back Button - Matching nav dock style */
+.user-management-header .btn-secondary {
+    background: rgba(23, 162, 184, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(23, 162, 184, 0.2);
+    color: var(--nav-indicator);
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.1);
+}
+
+.user-management-header .btn-secondary:hover {
+    background: rgba(23, 162, 184, 0.15);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.2);
+    border-color: rgba(23, 162, 184, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Glass Cards */
+.glass-card {
+    background: var(--user-glass-bg);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid var(--user-glass-border);
+    border-radius: 20px;
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 15px 40px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Card Header with gradient */
+.glass-card .card-header {
+    background: linear-gradient(135deg, 
+        rgba(23, 162, 184, 0.08) 0%, 
+        rgba(32, 201, 151, 0.05) 100%);
+    border-bottom: 1px solid var(--user-glass-border);
+    padding: 1.5rem;
+    border-radius: 20px 20px 0 0;
+}
+
+.glass-card .card-header h4 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--nav-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.glass-card .card-header h4 i {
+    color: var(--nav-indicator);
+}
+
+/* Card Body */
+.glass-card .card-body {
+    padding: 2rem;
+}
+
+/* Form Styling */
+.form-label {
+    font-weight: 500;
+    color: var(--nav-text-primary);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--user-glass-border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--nav-text-primary);
+}
+
+.dark-theme .form-control,
+[data-bs-theme="dark"] .form-control {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--nav-text-primary);
+}
+
+.form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--nav-indicator);
+    box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.1);
+    outline: none;
+}
+
+.dark-theme .form-control:focus,
+[data-bs-theme="dark"] .form-control:focus {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.form-text {
+    font-size: 0.85rem;
+    color: var(--nav-text-secondary);
+    margin-top: 0.25rem;
+}
+
+/* Submit Button */
+.btn-primary {
+    background: linear-gradient(135deg, #17a2b8, #20c997);
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+    background: linear-gradient(135deg, #20c997, #17a2b8);
+}
+
+/* User Directory Header */
+.user-directory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+}
+
+.user-count-badge {
+    background: linear-gradient(135deg, var(--nav-indicator), #20c997);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+}
+
+/* User Cards Grid */
+.user-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+/* Individual User Card */
+.user-card {
+    background: var(--user-card-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--user-glass-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.user-card.admin-card {
+    border: 2px solid rgba(255, 193, 7, 0.3);
+    background: linear-gradient(135deg, 
+        rgba(255, 193, 7, 0.05) 0%, 
+        transparent 50%);
+}
+
+.user-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* User Avatar */
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.user-avatar.admin {
+    background: var(--user-avatar-admin-bg);
+}
+
+.user-avatar.user {
+    background: var(--user-avatar-user-bg);
+}
+
+.user-avatar i {
+    color: white;
+    font-size: 1.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* User Info */
+.user-info {
+    flex-grow: 1;
+    margin-left: 1rem;
+}
+
+.user-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--nav-text-primary);
+    margin-bottom: 0.25rem;
+}
+
+/* User Badges */
+.user-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.user-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.badge-admin {
+    background: linear-gradient(135deg, #ffc107, #ff7e5f);
+}
+
+.badge-user {
+    background: linear-gradient(135deg, #17a2b8, #20c997);
+}
+
+.badge-you {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+/* User Actions */
+.user-actions {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--user-glass-border);
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.user-actions .btn {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-promote {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-demote {
+    background: linear-gradient(135deg, #ffc107, #ff7e5f);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.btn-permissions {
+    background: linear-gradient(135deg, #17a2b8, #007bff);
+    color: white;
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #e25563, #dc3545);
+    color: white;
+    box-shadow: 0 2px 8px rgba(226, 85, 99, 0.3);
+}
+
+.user-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* No Users Alert */
+.alert-info {
+    background: var(--user-glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(23, 162, 184, 0.3);
+    border-radius: 12px;
+    color: var(--nav-text-primary);
+}
+
+/* Animations */
+@keyframes cardSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-card {
+    animation: cardSlideIn 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+.user-card:nth-child(1) { animation-delay: 0.1s; }
+.user-card:nth-child(2) { animation-delay: 0.15s; }
+.user-card:nth-child(3) { animation-delay: 0.2s; }
+.user-card:nth-child(4) { animation-delay: 0.25s; }
+.user-card:nth-child(5) { animation-delay: 0.3s; }
+.user-card:nth-child(6) { animation-delay: 0.35s; }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .user-management-header {
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+    
+    .user-management-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .user-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .user-management-header .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    
+    .user-management-header .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Loading states */
+.glass-card.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    to {
+        left: 100%;
+    }
+}
