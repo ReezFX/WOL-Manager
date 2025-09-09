@@ -1,0 +1,610 @@
+/* =============================================
+   Logs Page Styles - Glass Morphism Design
+   Matching Navigation Dock & Dashboard Aesthetic
+   ============================================= */
+
+/* CSS Variables to ensure consistency with nav dock and dashboard */
+.light-theme {
+    --logs-glass-bg: rgba(255, 255, 255, 0.4);
+    --logs-glass-border: rgba(222, 226, 230, 0.5);
+    --logs-card-bg: rgba(255, 255, 255, 0.5);
+    --logs-filter-bg: rgba(248, 249, 250, 0.6);
+    --logs-content-bg: rgba(248, 249, 250, 0.4);
+    --logs-badge-bg: rgba(23, 162, 184, 0.1);
+}
+
+.dark-theme, [data-bs-theme="dark"] {
+    --logs-glass-bg: rgba(45, 45, 48, 0.4);
+    --logs-glass-border: rgba(58, 58, 61, 0.5);
+    --logs-card-bg: rgba(45, 45, 48, 0.5);
+    --logs-filter-bg: rgba(33, 37, 41, 0.6);
+    --logs-content-bg: rgba(33, 37, 41, 0.4);
+    --logs-badge-bg: rgba(23, 162, 184, 0.15);
+}
+
+/* Main Container */
+.logs-container {
+    padding-top: 2rem;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Page Header - Glass Morphism Style */
+.logs-header {
+    background: var(--logs-glass-bg);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid var(--logs-glass-border);
+    border-radius: 24px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Gradient overlay for header */
+.logs-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(23, 162, 184, 0.05) 0%, 
+        rgba(32, 201, 151, 0.03) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.logs-header > * {
+    position: relative;
+    z-index: 1;
+}
+
+.logs-header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--nav-text-primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.logs-header .text-muted {
+    color: var(--nav-text-secondary) !important;
+    opacity: 0.85;
+    font-size: 1.05rem;
+}
+
+/* Header Actions */
+.logs-header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.logs-header-actions .btn {
+    background: rgba(23, 162, 184, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(23, 162, 184, 0.2);
+    color: var(--nav-indicator);
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.1);
+}
+
+.logs-header-actions .btn:hover {
+    background: rgba(23, 162, 184, 0.15);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.2);
+    border-color: rgba(23, 162, 184, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Glass Cards for logs content */
+.logs-glass-card {
+    background: var(--logs-glass-bg);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid var(--logs-glass-border);
+    border-radius: 20px;
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 2rem;
+}
+
+.logs-glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 15px 40px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Card Header */
+.logs-glass-card .card-header {
+    background: linear-gradient(135deg, 
+        rgba(23, 162, 184, 0.08) 0%, 
+        rgba(32, 201, 151, 0.05) 100%);
+    border-bottom: 1px solid var(--logs-glass-border);
+    padding: 1.5rem;
+    border-radius: 20px 20px 0 0;
+}
+
+.logs-glass-card .card-header h4 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--nav-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logs-glass-card .card-header h4 i {
+    color: var(--nav-indicator);
+}
+
+/* Card Body */
+.logs-glass-card .card-body {
+    padding: 2rem;
+}
+
+/* Filter Form Styling */
+.logs-filter-form {
+    background: var(--logs-filter-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--logs-glass-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.logs-filter-form .form-label {
+    font-weight: 500;
+    color: var(--nav-text-primary);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.logs-filter-form .form-select,
+.logs-filter-form .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--logs-glass-border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--nav-text-primary);
+}
+
+.dark-theme .logs-filter-form .form-select,
+.dark-theme .logs-filter-form .form-control,
+[data-bs-theme="dark"] .logs-filter-form .form-select,
+[data-bs-theme="dark"] .logs-filter-form .form-control {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--nav-text-primary);
+}
+
+.logs-filter-form .form-select:focus,
+.logs-filter-form .form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--nav-indicator);
+    box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.1);
+    outline: none;
+}
+
+.dark-theme .logs-filter-form .form-select:focus,
+.dark-theme .logs-filter-form .form-control:focus,
+[data-bs-theme="dark"] .logs-filter-form .form-select:focus,
+[data-bs-theme="dark"] .logs-filter-form .form-control:focus {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+/* Apply Filter Button */
+.btn-apply-filter {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.2);
+}
+
+.btn-apply-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(23, 162, 184, 0.3);
+    filter: brightness(1.05);
+}
+
+.btn-apply-filter:active {
+    transform: translateY(0);
+}
+
+/* Action Buttons Section */
+.logs-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--logs-filter-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--logs-glass-border);
+    border-radius: 12px;
+}
+
+.logs-actions-left {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.logs-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Download Button */
+.btn-download {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(40, 167, 69, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-download:hover {
+    background: rgba(40, 167, 69, 0.15);
+    border-color: rgba(40, 167, 69, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
+/* Entries Counter Badge */
+.entries-counter {
+    background: var(--logs-badge-bg);
+    color: var(--nav-indicator);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid rgba(23, 162, 184, 0.2);
+}
+
+/* Log Content Container */
+.log-container {
+    background: var(--logs-content-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--logs-glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.log-content {
+    display: block !important;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    padding: 1.5rem !important;
+    background: transparent !important;
+    color: var(--nav-text-primary);
+    border: none !important;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+    white-space: normal !important;
+}
+
+/* Custom scrollbar for log content */
+.log-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+.log-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 5px;
+}
+
+.log-content::-webkit-scrollbar-thumb {
+    background: rgba(23, 162, 184, 0.3);
+    border-radius: 5px;
+}
+
+.log-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(23, 162, 184, 0.5);
+}
+
+/* Dark theme scrollbar */
+.dark-theme .log-content::-webkit-scrollbar-track,
+[data-bs-theme="dark"] .log-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Log level detection and colors */
+.log-entry.level-debug { 
+    color: #6c757d;
+    border-left: 3px solid #6c757d;
+    padding-left: 1rem;
+}
+
+.log-entry.level-info { 
+    color: var(--nav-text-primary);
+    border-left: 3px solid #17a2b8;
+    padding-left: 1rem;
+}
+
+.log-entry.level-warning { 
+    background: rgba(255, 193, 7, 0.05);
+    color: #856404;
+    border-left: 3px solid #ffc107;
+    padding-left: 1rem;
+}
+
+.log-entry.level-error { 
+    background: rgba(220, 53, 69, 0.05);
+    color: #721c24;
+    border-left: 3px solid #dc3545;
+    padding-left: 1rem;
+}
+
+.log-entry.level-critical { 
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    font-weight: 600;
+    border-left: 3px solid #dc3545;
+    padding-left: 1rem;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Dark theme log level adjustments */
+.dark-theme .log-entry.level-warning,
+[data-bs-theme="dark"] .log-entry.level-warning {
+    background: rgba(255, 193, 7, 0.08);
+    color: #ffc107;
+}
+
+.dark-theme .log-entry.level-error,
+[data-bs-theme="dark"] .log-entry.level-error {
+    background: rgba(220, 53, 69, 0.08);
+    color: #f86c7a;
+}
+
+.dark-theme .log-entry.level-critical,
+[data-bs-theme="dark"] .log-entry.level-critical {
+    background: rgba(220, 53, 69, 0.15);
+    color: #ff6b7a;
+}
+
+/* Individual log entries with subtle separators */
+.log-entry {
+    display: block !important;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgba(23, 162, 184, 0.08);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    transition: background-color 0.2s ease;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    min-height: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Spacer for empty lines between log sections */
+.log-entry-spacer {
+    display: block;
+    height: 0.5rem;
+    border: none;
+}
+
+.log-entry:hover {
+    background-color: rgba(23, 162, 184, 0.03);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+/* Dark theme log entry styling */
+.dark-theme .log-entry,
+[data-bs-theme="dark"] .log-entry {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .log-entry:hover,
+[data-bs-theme="dark"] .log-entry:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Log file separators for "all logs" view */
+.log-file-separator {
+    display: block !important;
+    margin: 1.5rem 0;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, rgba(23, 162, 184, 0.1), rgba(32, 201, 151, 0.05));
+    border-left: 4px solid var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Dark theme file separator */
+.dark-theme .log-file-separator,
+[data-bs-theme="dark"] .log-file-separator {
+    background: linear-gradient(135deg, rgba(23, 162, 184, 0.15), rgba(32, 201, 151, 0.08));
+}
+
+/* Pagination Styling */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.pagination {
+    background: var(--logs-filter-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--logs-glass-border);
+    border-radius: 12px;
+    padding: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.pagination .page-item {
+    margin: 0 0.25rem;
+}
+
+.pagination .page-link {
+    background: transparent;
+    color: var(--nav-text-primary);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pagination .page-link:hover {
+    background: rgba(23, 162, 184, 0.1);
+    border-color: rgba(23, 162, 184, 0.2);
+    color: var(--nav-indicator);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+}
+
+.pagination .page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Loading Overlay */
+#loading-overlay {
+    backdrop-filter: blur(3px);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.dark-theme #loading-overlay,
+[data-bs-theme="dark"] #loading-overlay {
+    background: rgba(33, 37, 41, 0.8);
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(23, 162, 184, 0.2);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .logs-header {
+        padding: 1.5rem;
+        border-radius: 20px;
+    }
+    
+    .logs-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .logs-header-content,
+    .logs-header-actions {
+        text-align: center;
+    }
+    
+    .logs-header-actions {
+        margin-top: 1rem;
+        justify-content: center;
+    }
+    
+    .logs-filter-form {
+        padding: 1rem;
+    }
+    
+    .logs-actions {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .logs-actions-left,
+    .logs-actions-right {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Animation Classes */
+.card-animate-in {
+    animation: cardFadeIn 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+@keyframes cardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hover Effects */
+.hover-elevate {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-elevate:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
