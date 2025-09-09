@@ -4,28 +4,41 @@
 {{ super() }}
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/modules/toast.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/logs.css') }}">
 {% endblock %}
 
-{% block title %}Logs{% endblock %}
+{% block title %}System Logs - WoL Manager{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="card shadow">
-        <div class="card-header bg-tertiary-theme">
-            <h4 class="mb-0">System Logs</h4>
+<div class="container logs-container">
+    <!-- Page Header with Glass Morphism -->
+    <div class="logs-header d-flex justify-content-between align-items-center mb-4 card-animate-in" style="animation-delay: 0.1s;">
+        <div class="logs-header-content">
+            <h1><i class="ph ph-activity me-2"></i>System Logs</h1>
+            <p class="text-muted mb-0">Monitor system activity, errors, and application events</p>
+        </div>
+        <div class="logs-header-actions">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                <i class="ph ph-arrow-left"></i> <span class="btn-text">Back to Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="logs-glass-card card-animate-in" style="animation-delay: 0.2s;">
+        <div class="card-header">
+            <h4><i class="ph ph-funnel me-2"></i>Filter Logs</h4>
         </div>
         <div class="card-body position-relative">
             <!-- Loading Overlay -->
             <div id="loading-overlay" class="position-absolute w-100 h-100 top-0 start-0 d-none" style="left: 0; z-index: 1000;">
-                <div class="d-flex justify-content-center align-items-center h-100 bg-white bg-opacity-75 dark-overlay">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
+                <div class="d-flex justify-content-center align-items-center h-100">
+                    <div class="loading-spinner"></div>
                 </div>
             </div>
             
             <!-- Filters -->
-            <form id="logs-filter-form" method="GET" action="{{ url_for('admin.view_logs') }}" class="mb-4">
+            <form id="logs-filter-form" method="GET" action="{{ url_for('admin.view_logs') }}" class="logs-filter-form">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label for="log_type" class="form-label">Log Type</label>
@@ -60,35 +73,112 @@
                         <input type="text" class="form-control" id="search_text" name="search_text" placeholder="Enter search terms..." value="{{ search_text }}">
                     </div>
                     <div class="col-md-3 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100" id="apply-filter-btn">
-                            <i class="fas fa-filter me-2"></i>Apply Filters
+                        <button type="submit" class="btn btn-apply-filter w-100" id="apply-filter-btn">
+                            <i class="ph ph-funnel me-2"></i>Apply Filters
                         </button>
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
 
+    <!-- Logs Content Card -->
+    <div class="logs-glass-card card-animate-in" style="animation-delay: 0.3s;">
+        <div class="card-header">
+            <h4><i class="ph ph-file-text me-2"></i>Log Output</h4>
+        </div>
+        <div class="card-body position-relative">
             <!-- Action Buttons -->
-            <div class="d-flex justify-content-between mb-3">
-                <div>
-                    <a href="{{ url_for('admin.download_log', file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}" id="download-link" class="btn btn-outline-success">
-                        <i class="fas fa-download me-1"></i> Download
+            <div class="logs-actions">
+                <div class="logs-actions-left">
+                    <a href="{{ url_for('admin.download_log', file=selected_file, level=log_level, start_date=start_date, end_date=end_date, search_text=search_text) }}" id="download-link" class="btn btn-download">
+                        <i class="ph ph-download-simple me-1"></i> Download
                     </a>
                 </div>
-                <div>
-                    <span class="text-muted" id="entries-counter">Showing {{ pagination.total_entries }} entries</span>
+                <div class="logs-actions-right">
+                    <span class="entries-counter" id="entries-counter">
+                        <i class="ph ph-list-numbers me-1"></i>
+                        {{ pagination.total_entries }} entries
+                    </span>
                 </div>
             </div>
 
             <!-- Log Display Area -->
-            <div class="log-container mb-4">
-                <pre id="log-content" class="log-content p-3 bg-light-theme border rounded" style="max-height: 600px; overflow-y: auto;">{% if log_content %}{{ log_content }}{% else %}<span class="text-muted">No logs match the current filter criteria.</span>{% endif %}</pre>
+            <div class="log-container">
+                <div id="log-content" class="log-content">
+                    {% if log_content %}
+                        {% if selected_file == 'all' and '\n' not in log_content and '[' in log_content %}
+                            {# Special handling for All Logs when it's concatenated #}
+                            {% set pattern = '(?=\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}[,.]\d+\])' %}
+                            <script>
+                                // Handle All Logs content that came concatenated
+                                (function() {
+                                    const content = {{ log_content | tojson | safe }};
+                                    const lines = content.split(/(?=\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}[,.]\d+\])/g);
+                                    const container = document.getElementById('log-content');
+                                    container.innerHTML = '';
+                                    
+                                    lines.forEach(line => {
+                                        if (line.trim()) {
+                                            const div = document.createElement('div');
+                                            div.className = 'log-entry';
+                                            
+                                            // Detect log level
+                                            const upperLine = line.toUpperCase();
+                                            if (upperLine.includes('CRITICAL')) {
+                                                div.className += ' level-critical';
+                                            } else if (upperLine.includes('ERROR')) {
+                                                div.className += ' level-error';
+                                            } else if (upperLine.includes('WARNING') || upperLine.includes('WARN')) {
+                                                div.className += ' level-warning';
+                                            } else if (upperLine.includes('INFO')) {
+                                                div.className += ' level-info';
+                                            } else if (upperLine.includes('DEBUG')) {
+                                                div.className += ' level-debug';
+                                            }
+                                            
+                                            div.textContent = line;
+                                            container.appendChild(div);
+                                        }
+                                    });
+                                })();
+                            </script>
+                        {% else %}
+                            {# Normal handling for other log types #}
+                            {% for line in log_content.split('\n') %}
+                                {% if line.strip() %}
+                                    {% if line.startswith('---') and line.endswith('---') %}
+                                        <div class="log-file-separator">{{ line }}</div>
+                                    {% else %}
+                                        {% set upper_line = line.upper() %}
+                                        {% if 'CRITICAL' in upper_line %}
+                                            <div class="log-entry level-critical">{{ line }}</div>
+                                        {% elif 'ERROR' in upper_line %}
+                                            <div class="log-entry level-error">{{ line }}</div>
+                                        {% elif 'WARNING' in upper_line or 'WARN' in upper_line %}
+                                            <div class="log-entry level-warning">{{ line }}</div>
+                                        {% elif 'INFO' in upper_line %}
+                                            <div class="log-entry level-info">{{ line }}</div>
+                                        {% elif 'DEBUG' in upper_line %}
+                                            <div class="log-entry level-debug">{{ line }}</div>
+                                        {% else %}
+                                            <div class="log-entry">{{ line }}</div>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">No logs match the current filter criteria.</span>
+                    {% endif %}
+                </div>
             </div>
 
             <!-- Pagination -->
-            <div id="pagination-container">
+            <div id="pagination-container" class="pagination-container">
                 {% if pagination.total_pages > 1 %}
                 <nav aria-label="Log pagination">
-                    <ul class="pagination justify-content-center">
+                    <ul class="pagination">
                         <li class="page-item {% if pagination.current_page == 1 %}disabled{% endif %}">
                             <a class="page-link" href="#" data-page="{{ pagination.prev_page }}" aria-label="Previous">
                                 <span aria-hidden="true">&laquo;</span>
@@ -120,55 +210,21 @@
     </div>
 </div>
 
-<style>
-    .log-content {
-        font-family: 'Courier New', monospace;
-        font-size: 0.9rem;
-        line-height: 1.5;
-        white-space: pre-wrap;
-    }
-    
-    .log-content-pre {
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        font-family: monospace;
-        margin: 0;
-        padding: 10px;
-        background: #f8f9fa;
-        border-radius: 4px;
-        overflow-x: auto;
-    }
-    
-    /* Dark theme compatibility */
-    [data-bs-theme="dark"] .bg-light-theme {
-        background-color: var(--bs-dark) !important;
-        color: var(--bs-light);
-    }
-    
-    [data-bs-theme="light"] .bg-light-theme {
-        background-color: var(--bs-light) !important;
-        color: var(--bs-dark);
-    }
-    
-    [data-bs-theme="dark"] .text-info {
-        color: #8be0ff !important;
-    }
-    
-    [data-bs-theme="dark"] .text-warning {
-        color: #ffe066 !important;
-    }
-    
-    #loading-overlay {
-        backdrop-filter: blur(1px);
-    }
-    
-    [data-bs-theme="dark"] .dark-overlay {
-        background-color: rgba(33, 37, 41, 0.75) !important;
-    }
-</style>
 
 <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
 <script>
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
         // Get DOM elements
         const filterForm = document.getElementById('logs-filter-form');
@@ -214,12 +270,75 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Update log content
-                logContent.innerHTML = data.log_content || 
-                    '<span class="text-muted">No logs match the current filter criteria.</span>';
+                // Update log content - properly handle line breaks and escaping
+                if (data.log_content) {
+                    // The content comes HTML-escaped from backend
+                    let content = data.log_content;
+                    
+                    // Debug logging for All Logs issue
+                    if (data.selected_file === 'all') {
+                        console.log('All Logs - Raw content sample:', content.substring(0, 500));
+                        console.log('All Logs - Has newlines:', content.includes('\n'));
+                    }
+                    
+                    // Try splitting by newlines - checking different possibilities
+                    let lines = [];
+                    if (content.includes('\n')) {
+                        lines = content.split('\n');
+                    } else if (content.includes('\r\n')) {
+                        lines = content.split('\r\n');
+                    } else {
+                        // Content might be one long line, try to detect log entries by timestamp pattern
+                        // Most log entries start with [YYYY-MM-DD HH:MM:SS,mmm]
+                        lines = content.split(/(?=\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}[,.]\d+\])/g);
+                        console.log('All Logs - Split by timestamp pattern, found', lines.length, 'entries');
+                    }
+                    
+                    let formattedContent = '';
+                    
+                    lines.forEach((line, index) => {
+                        // Process each line, even empty ones for spacing
+                        const trimmedLine = line.trim();
+                        
+                        if (trimmedLine) {
+                            // Check if this is a log file separator (for "all logs" view)
+                            if (trimmedLine.startsWith('---') && trimmedLine.endsWith('---')) {
+                                formattedContent += `<div class="log-file-separator">${trimmedLine}</div>`;
+                            } else if (trimmedLine.includes('... Log output truncated')) {
+                                // Special handling for truncation message
+                                formattedContent += `<div class="log-entry level-warning">${trimmedLine}</div>`;
+                            } else {
+                                // Regular log entry - detect log level
+                                let levelClass = '';
+                                const upperLine = trimmedLine.toUpperCase();
+                                
+                                if (upperLine.includes('CRITICAL')) {
+                                    levelClass = 'level-critical';
+                                } else if (upperLine.includes('ERROR')) {
+                                    levelClass = 'level-error';
+                                } else if (upperLine.includes('WARNING') || upperLine.includes('WARN')) {
+                                    levelClass = 'level-warning';
+                                } else if (upperLine.includes('INFO')) {
+                                    levelClass = 'level-info';
+                                } else if (upperLine.includes('DEBUG')) {
+                                    levelClass = 'level-debug';
+                                }
+                                
+                                formattedContent += `<div class="log-entry ${levelClass}">${trimmedLine}</div>`;
+                            }
+                        } else if (index > 0 && index < lines.length - 1) {
+                            // Add empty line for spacing between sections
+                            formattedContent += `<div class="log-entry-spacer"></div>`;
+                        }
+                    });
+                    
+                    logContent.innerHTML = formattedContent || '<span class="text-muted">No logs match the current filter criteria.</span>';
+                } else {
+                    logContent.innerHTML = '<span class="text-muted">No logs match the current filter criteria.</span>';
+                }
                 
-                // Update entry count
-                entriesCounter.textContent = `Showing ${data.pagination.total_entries} entries`;
+                // Update entry count with icon
+                entriesCounter.innerHTML = `<i class="ph ph-list-numbers me-1"></i>${data.pagination.total_entries} entries`;
                 
                 // Update pagination
                 updatePagination(data.pagination);
