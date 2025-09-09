@@ -1,0 +1,391 @@
+/* =============================================
+   Host Form Styles - Modern Glass Morphism Design
+   Matching Dashboard and Navigation Dock Aesthetic
+   ============================================= */
+
+/* Host Form Card - Glass Morphism */
+.host-form-card {
+    background: var(--nav-glass-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--nav-glass-border);
+    border-radius: 24px;
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.host-form-body {
+    padding: 2.5rem;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.form-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-section-title i {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+/* Modern Input Styling */
+.modern-input {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-primary);
+}
+
+.modern-input:focus {
+    background: var(--input-bg);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.1);
+    outline: none;
+}
+
+.modern-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+/* Modern Input Group */
+.modern-input-group {
+    position: relative;
+}
+
+.modern-input-group .input-group-text {
+    background: rgba(23, 162, 184, 0.1);
+    border: 1px solid var(--input-border);
+    border-right: none;
+    border-radius: 12px 0 0 12px;
+    color: var(--primary-color);
+    padding: 0 1rem;
+}
+
+.modern-input-group .form-control {
+    border-radius: 0 12px 12px 0;
+    border-left: none;
+}
+
+.modern-input-group .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.1);
+}
+
+.modern-input-group .input-group-text i {
+    font-size: 0.9rem;
+}
+
+/* Modern Role Selector */
+.modern-role-selector {
+    background: var(--bg-secondary);
+    border: 1px solid var(--input-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-role-selector:hover {
+    border-color: rgba(23, 162, 184, 0.3);
+}
+
+.modern-role-selector.is-invalid {
+    border-color: var(--danger-color);
+}
+
+/* Role Cards Grid */
+.host-form-card .role-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* Modern Role Card */
+.role-card-modern {
+    background: var(--card-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.role-card-modern:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.15);
+}
+
+.role-card-modern.selected {
+    background: linear-gradient(135deg, 
+        rgba(23, 162, 184, 0.1) 0%, 
+        rgba(255, 126, 95, 0.05) 100%);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.2);
+}
+
+.role-card-modern .role-card-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.role-icon-modern {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.role-card-modern .role-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.role-card-modern .role-name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.role-card-modern .role-description {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
+.role-checkbox-modern {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--input-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--input-bg);
+}
+
+.role-checkbox-modern i {
+    font-size: 0.8rem;
+    color: transparent;
+    transition: all 0.3s ease;
+}
+
+.role-card-modern.selected .role-checkbox-modern {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.role-card-modern.selected .role-checkbox-modern i {
+    color: white;
+}
+
+/* Modern Checkbox */
+.modern-checkbox-wrapper {
+    background: var(--bg-secondary);
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.modern-checkbox-wrapper:hover {
+    border-color: rgba(23, 162, 184, 0.3);
+    background: var(--bg-tertiary);
+}
+
+.modern-form-check {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.modern-checkbox {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 6px;
+    border: 2px solid var(--input-border);
+    margin-right: 0.75rem;
+    cursor: pointer;
+}
+
+.modern-checkbox:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Modern Buttons */
+.btn-modern {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary.btn-modern {
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    color: white;
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.btn-primary.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+}
+
+.btn-outline-secondary.btn-modern {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--input-border);
+}
+
+.btn-outline-secondary.btn-modern:hover {
+    background: var(--bg-secondary);
+    border-color: var(--text-secondary);
+    transform: translateY(-1px);
+}
+
+/* Form Actions */
+.form-actions {
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Enhanced Form Labels */
+.host-form-card .form-label {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.host-form-card .form-label i {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+/* Form Text */
+.host-form-card .form-text {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    opacity: 0.8;
+}
+
+/* Invalid Feedback */
+.host-form-card .invalid-feedback {
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+/* Animation delays for staggered entrance */
+.host-form-header-animate {
+    animation-delay: 0.1s;
+}
+
+.host-form-separator-animate {
+    animation-delay: 0.3s;
+}
+
+.host-form-card-animate {
+    animation-delay: 0.4s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .host-form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+    }
+    
+    .host-form-card .role-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions .d-flex {
+        flex-direction: column-reverse;
+    }
+    
+    .btn-modern {
+        width: 100%;
+    }
+    
+    .dashboard-header {
+        padding: 1.5rem;
+    }
+    
+    .dashboard-title {
+        font-size: 1.75rem;
+    }
+}
+
+/* Dark theme adjustments */
+.dark-theme .host-form-card,
+[data-bs-theme="dark"] .host-form-card {
+    background: var(--nav-glass-bg);
+    border-color: var(--nav-glass-border);
+}
+
+.dark-theme .modern-input,
+[data-bs-theme="dark"] .modern-input {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+
+.dark-theme .modern-role-selector,
+[data-bs-theme="dark"] .modern-role-selector {
+    background: var(--bg-tertiary);
+}
+
+.dark-theme .role-card-modern,
+[data-bs-theme="dark"] .role-card-modern {
+    background: var(--card-bg);
+}
+
+.dark-theme .modern-checkbox-wrapper,
+[data-bs-theme="dark"] .modern-checkbox-wrapper {
+    background: var(--bg-tertiary);
+}
