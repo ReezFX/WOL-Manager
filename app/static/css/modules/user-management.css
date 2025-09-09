@@ -225,6 +225,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .user-count-badge {
@@ -240,7 +242,7 @@
 /* User Cards Grid */
 .user-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.5rem;
     padding: 1.5rem;
 }
@@ -301,6 +303,7 @@
 .user-info {
     flex-grow: 1;
     margin-left: 1rem;
+    min-width: 0; /* Prevent overflow */
 }
 
 .user-name {
@@ -308,6 +311,9 @@
     font-weight: 600;
     color: var(--nav-text-primary);
     margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* User Badges */
@@ -350,6 +356,7 @@
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
 .user-actions .btn {
@@ -450,6 +457,291 @@
     }
     
     .user-management-header .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* User card mobile adjustments */
+    .user-card {
+        padding: 1rem;
+    }
+    
+    .user-card .d-flex {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+    
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        flex-shrink: 0;
+    }
+    
+    .user-avatar i {
+        font-size: 1.25rem;
+    }
+    
+    .user-info {
+        margin-left: 0.75rem;
+    }
+    
+    .user-name {
+        font-size: 1.1rem;
+    }
+    
+    .user-badges {
+        margin-top: 0.25rem;
+    }
+    
+    .user-badge {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .user-actions {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        justify-content: space-between;
+    }
+    
+    .user-actions .btn {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+        flex: 1;
+        max-width: calc(50% - 0.25rem);
+        justify-content: center;
+    }
+    
+    .user-actions .btn i {
+        font-size: 0.9rem;
+    }
+    
+    /* Form row adjustments */
+    .glass-card .card-body .row {
+        margin: 0;
+    }
+    
+    .glass-card .card-body .col-md-4 {
+        padding: 0;
+    }
+}
+
+/* Extra Small Mobile Devices (max-width: 480px) */
+@media (max-width: 480px) {
+    .user-management-header {
+        padding: 1rem;
+    }
+    
+    .user-management-header h2 {
+        font-size: 1.25rem;
+    }
+    
+    .user-management-header .text-muted {
+        font-size: 0.9rem;
+    }
+    
+    .user-cards-grid {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .user-card {
+        padding: 0.875rem;
+        border-radius: 12px;
+    }
+    
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .user-avatar i {
+        font-size: 1.1rem;
+    }
+    
+    .user-name {
+        font-size: 1rem;
+        max-width: 200px;
+    }
+    
+    .user-badge {
+        padding: 0.15rem 0.4rem;
+        font-size: 0.7rem;
+    }
+    
+    .user-badge i {
+        font-size: 0.65rem;
+    }
+    
+    /* Stack action buttons vertically on very small screens */
+    .user-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .user-actions .btn {
+        width: 100%;
+        max-width: none;
+        padding: 0.5rem;
+    }
+    
+    /* Form improvements for mobile */
+    .glass-card .card-header {
+        padding: 1rem;
+    }
+    
+    .glass-card .card-header h4 {
+        font-size: 1.1rem;
+    }
+    
+    .glass-card .card-body {
+        padding: 1rem;
+    }
+    
+    .form-control {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 0.625rem 0.875rem;
+    }
+    
+    .btn-primary {
+        width: 100%;
+        padding: 0.625rem;
+    }
+    
+    /* User directory header adjustments */
+    .user-directory-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+    
+    .user-count-badge {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+/* Landscape orientation for mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .user-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .user-management-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .user-card {
+        padding: 0.875rem;
+    }
+    
+    .user-actions .btn {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.6rem;
+    }
+}
+
+/* Small tablets (481px - 600px) */
+@media (min-width: 481px) and (max-width: 600px) {
+    .user-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .user-actions {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+    
+    .user-actions .btn {
+        flex: 0 0 calc(50% - 0.2rem);
+        max-width: calc(50% - 0.2rem);
+    }
+}
+
+/* Medium tablets (601px - 768px) */
+@media (min-width: 601px) and (max-width: 768px) {
+    .user-cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+/* User card header for better mobile layout */
+.user-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+/* Button text visibility control */
+.btn-text {
+    display: inline;
+}
+
+/* Hide button text on very small screens to save space */
+@media (max-width: 380px) {
+    .user-actions .btn-text {
+        display: none;
+    }
+    
+    .user-actions .btn i {
+        margin: 0;
+    }
+    
+    .badge-text {
+        display: none;
+    }
+    
+    .user-badge i {
+        margin: 0;
+    }
+}
+
+/* Improved button layout for 381px - 480px screens */
+@media (min-width: 381px) and (max-width: 480px) {
+    .user-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .user-actions form,
+    .user-actions a {
+        display: block;
+    }
+    
+    .user-actions .btn {
+        width: 100%;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.5rem;
+    }
+    
+    .user-actions .btn-text {
+        font-size: 0.7rem;
+    }
+}
+
+/* Header improvements for mobile */
+.header-content {
+    flex: 1;
+}
+
+.header-actions {
+    flex-shrink: 0;
+}
+
+@media (max-width: 576px) {
+    .user-management-header {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    
+    .header-actions {
+        width: 100%;
+    }
+    
+    .header-actions .btn {
         width: 100%;
         justify-content: center;
     }

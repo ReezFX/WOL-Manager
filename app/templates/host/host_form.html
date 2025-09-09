@@ -5,116 +5,192 @@
 {% endblock %}
 
 {% block content %}
-<div class="container host-form-container">
+<div class="container mt-4">
+    <!-- Dashboard-style Header -->
+    <div class="dashboard-header card-animate-in host-form-header-animate">
+        <div class="dashboard-header-content">
+            {% if form.id is defined %}
+            <h1 class="dashboard-title">Edit Host</h1>
+            <p class="dashboard-subtitle">Modify host configuration and access permissions</p>
+            {% else %}
+            <h1 class="dashboard-title">Add New Host</h1>
+            <p class="dashboard-subtitle">Register a new device for Wake-on-LAN management</p>
+            {% endif %}
+        </div>
+        <div class="dashboard-header-actions">
+            <a href="{{ url_for('host.list_hosts') }}" class="btn btn-secondary btn-apple">
+                <i class="fas fa-arrow-left me-1"></i> Back to Hosts
+            </a>
+        </div>
+    </div>
+    
+    <!-- Form Section Separator -->
+    <div class="section-separator simple-line card-animate-in host-form-separator-animate">
+        <div class="separator-line">
+            <div class="separator-content">
+                <i class="fas fa-edit separator-icon"></i>
+                <h3 class="separator-title">Host Configuration</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modern Form Card -->
     <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header">
-                    {% if form.id is defined %}
-                    <h2>Edit Host</h2>
-                    {% else %}
-                    <h2>Add New Host</h2>
-                    {% endif %}
-                </div>
-                <div class="card-body">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="host-form-card card-animate-in hover-elevate host-form-card-animate">
+                <div class="host-form-body">
                     <form method="POST" action="" novalidate>
                         {{ form.hidden_tag() }}
-                        <div class="form-group mb-3">
-                            {{ form.name.label(class="form-label") }}
-                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
-                            {% for error in form.name.errors %}
-                            <div class="invalid-feedback">
-                                {{ error }}
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div class="form-group mb-3">
-                            {{ form.mac_address.label(class="form-label") }}
-                            {{ form.mac_address(class="form-control" + (" is-invalid" if form.mac_address.errors else "")) }}
-                            {% for error in form.mac_address.errors %}
-                            <div class="invalid-feedback">
-                                {{ error }}
-                            </div>
-                            {% endfor %}
-                            <small class="form-text text-muted">Format: 01:23:45:67:89:AB</small>
-                        </div>
-                        <div class="form-group mb-3">
-                            {{ form.ip_address.label(class="form-label") }}
-                            {{ form.ip_address(class="form-control" + (" is-invalid" if form.ip_address.errors else "")) }}
-                            {% for error in form.ip_address.errors %}
-                            <div class="invalid-feedback">
-                                {{ error }}
-                            </div>
-                            {% endfor %}
-                            <small class="form-text text-muted">Example: 192.168.1.100</small>
-                        </div>
-                        <div class="form-group mb-3">
-                            {{ form.description.label(class="form-label") }}
-                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3) }}
-                            {% for error in form.description.errors %}
-                            <div class="invalid-feedback">
-                                {{ error }}
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="visible_to_roles">Visible to Roles</label>
-                            <div class="role-selector-container{% if form.visible_to_roles.errors %} is-invalid{% endif %}">
-                                <div class="role-cards-grid">
-                                    {% for role_id, role_name in form.visible_to_roles.choices %}
-                                    <div class="role-card {% if role_id in form.visible_to_roles.data %}selected{% endif %}" 
-                                         data-role-id="{{ role_id }}">
-                                        <div class="role-card-content">
-                                            <div class="role-icon">
-                                                <i class="fas fa-users"></i>
-                                            </div>
-                                            <div class="role-info">
-                                                <span class="role-name">{{ role_name }}</span>
-                                                <span class="role-description">Access Level</span>
-                                            </div>
-                                            <div class="role-checkbox">
-                                                <i class="fas fa-check"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
+                        
+                        <!-- Basic Information Section -->
+                        <div class="form-section">
+                            <h4 class="form-section-title">
+                                <i class="fas fa-info-circle me-2"></i>Basic Information
+                            </h4>
+                            
+                            <div class="form-group mb-4">
+                                {{ form.name.label(class="form-label fw-bold") }}
+                                {{ form.name(class="form-control modern-input" + (" is-invalid" if form.name.errors else ""), placeholder="Enter host name (e.g., Office PC)") }}
+                                {% for error in form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
                                 </div>
-                                <!-- Hidden inputs to maintain form compatibility -->
-                                {% for role_id, role_name in form.visible_to_roles.choices %}
-                                <input type="checkbox" 
-                                       name="visible_to_roles" 
-                                       value="{{ role_id }}" 
-                                       id="role_{{ role_id }}"
-                                       {% if role_id in form.visible_to_roles.data %}checked{% endif %}
-                                       style="display: none;">
                                 {% endfor %}
                             </div>
-                            {% for error in form.visible_to_roles.errors %}
-                            <div class="invalid-feedback">
-                                {{ error }}
+                            
+                            <div class="form-group mb-4">
+                                {{ form.description.label(class="form-label fw-bold") }}
+                                {{ form.description(class="form-control modern-input" + (" is-invalid" if form.description.errors else ""), rows=3, placeholder="Optional description or notes about this host") }}
+                                {% for error in form.description.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
-                            <small class="form-text text-muted">Select the roles that should have access to this host. Multiple roles can be selected.</small>
                         </div>
-                        {% if form.public_access is defined %}
-                        <div class="form-group mb-3">
-                            <div class="form-check">
-                                {{ form.public_access(class="form-check-input") }}
-                                {{ form.public_access.label(class="form-check-label") }}
-                                {% if form.public_access.description %}
-                                <small class="form-text text-warning">{{ form.public_access.description }}</small>
-                                {% endif %}
+                        
+                        <!-- Network Configuration Section -->
+                        <div class="form-section">
+                            <h4 class="form-section-title">
+                                <i class="fas fa-network-wired me-2"></i>Network Configuration
+                            </h4>
+                            
+                            <div class="form-group mb-4">
+                                {{ form.mac_address.label(class="form-label fw-bold") }}
+                                <div class="input-group modern-input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-ethernet"></i>
+                                    </span>
+                                    {{ form.mac_address(class="form-control modern-input" + (" is-invalid" if form.mac_address.errors else ""), placeholder="01:23:45:67:89:AB") }}
+                                </div>
+                                {% for error in form.mac_address.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Format: XX:XX:XX:XX:XX:XX (hexadecimal)
+                                </small>
                             </div>
-                            {% for error in form.public_access.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ error }}
+                            
+                            <div class="form-group mb-4">
+                                {{ form.ip_address.label(class="form-label fw-bold") }}
+                                <div class="input-group modern-input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-globe"></i>
+                                    </span>
+                                    {{ form.ip_address(class="form-control modern-input" + (" is-invalid" if form.ip_address.errors else ""), placeholder="192.168.1.100") }}
+                                </div>
+                                {% for error in form.ip_address.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>IPv4 address for host identification
+                                </small>
                             </div>
-                            {% endfor %}
                         </div>
-                        {% endif %}
-                        <div class="form-group mt-4">
-                            {{ form.submit(class="btn btn-primary") }}
-                            <a href="{{ url_for('host.list_hosts') }}" class="btn btn-secondary">Cancel</a>
+                        
+                        <!-- Access Control Section -->
+                        <div class="form-section">
+                            <h4 class="form-section-title">
+                                <i class="fas fa-shield-alt me-2"></i>Access Control
+                            </h4>
+                            
+                            <div class="form-group mb-4">
+                                <label class="form-label fw-bold" for="visible_to_roles">
+                                    <i class="fas fa-user-lock me-1"></i>Visible to Roles
+                                </label>
+                                <div class="modern-role-selector{% if form.visible_to_roles.errors %} is-invalid{% endif %}">
+                                    <div class="role-cards-grid">
+                                        {% for role_id, role_name in form.visible_to_roles.choices %}
+                                        <div class="role-card-modern {% if role_id in form.visible_to_roles.data %}selected{% endif %}" 
+                                             data-role-id="{{ role_id }}">
+                                            <div class="role-card-content">
+                                                <div class="role-icon-modern">
+                                                    <i class="fas fa-users"></i>
+                                                </div>
+                                                <div class="role-info">
+                                                    <span class="role-name">{{ role_name }}</span>
+                                                    <span class="role-description">Can view and wake this host</span>
+                                                </div>
+                                                <div class="role-checkbox-modern">
+                                                    <i class="fas fa-check"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <!-- Hidden inputs to maintain form compatibility -->
+                                    {% for role_id, role_name in form.visible_to_roles.choices %}
+                                    <input type="checkbox" 
+                                           name="visible_to_roles" 
+                                           value="{{ role_id }}" 
+                                           id="role_{{ role_id }}"
+                                           {% if role_id in form.visible_to_roles.data %}checked{% endif %}
+                                           style="display: none;">
+                                    {% endfor %}
+                                </div>
+                                {% for error in form.visible_to_roles.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Select which user roles can access this host. Leave empty for all users.
+                                </small>
+                            </div>
+                            {% if form.public_access is defined %}
+                            <div class="form-group mb-4">
+                                <div class="modern-checkbox-wrapper">
+                                    <div class="form-check modern-form-check">
+                                        {{ form.public_access(class="form-check-input modern-checkbox") }}
+                                        {{ form.public_access.label(class="form-check-label fw-bold") }}
+                                    </div>
+                                    {% if form.public_access.description %}
+                                    <small class="form-text text-warning d-block mt-2">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>{{ form.public_access.description }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                                {% for error in form.public_access.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ error }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="form-actions mt-5">
+                            <div class="d-flex gap-3 justify-content-end">
+                                <a href="{{ url_for('host.list_hosts') }}" class="btn btn-outline-secondary btn-modern">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                                {{ form.submit(class="btn btn-primary btn-modern") }}
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -125,10 +201,11 @@
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Role card selector functionality
-    const roleCards = document.querySelectorAll('.role-card');
+    const roleCards = document.querySelectorAll('.role-card-modern');
     const hiddenInputs = document.querySelectorAll('input[name="visible_to_roles"]');
     
     roleCards.forEach(card => {
@@ -214,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Form validation enhancement
     const form = document.querySelector('form');
-    const roleSelector = document.querySelector('.role-selector-container');
+    const roleSelector = document.querySelector('.modern-role-selector');
     
     if (form && roleSelector) {
         form.addEventListener('submit', function(event) {
