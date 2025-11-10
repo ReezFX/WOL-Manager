@@ -6,6 +6,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +18,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -468,4 +472,230 @@ fun SectionSeparator(
             letterSpacing = 0.8.sp
         )
     }
+}
+
+/**
+ * Wake Animation Dialog matching webapp's wake-animation-overlay
+ * Shows animated pulse effect during Wake-on-LAN process
+ */
+@Composable
+fun WakeAnimationDialog(
+    isVisible: Boolean,
+    hostName: String,
+    onDismiss: () -> Unit
+) {
+    var displayedDuration by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(isVisible) {
+        if (isVisible) {
+            displayedDuration = 0
+            // Update duration counter every 500ms
+            while (true) {
+                delay(500)
+                displayedDuration += 500
+            }
+        }
+    }
+    
+    if (isVisible) {
+        AlertDialog(
+            onDismissRequest = { /* Prevent dismissal by clicking outside */ },
+            confirmButton = {
+                if (displayedDuration >= 2000) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Close")
+                    }
+                }
+            },
+            title = {
+                Text(
+                    text = when {
+                        displayedDuration < 1000 -> "Sending Wake Packet"
+                        displayedDuration < 2500 -> "Magic Packet Sent"
+                        else -> "Wake Process Complete"
+                    },
+                    fontWeight = FontWeight.Bold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Animated Pulse Circle
+                    WakePulseAnimation()
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Text(
+                        text = "Waking up $hostName",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Status messages based on time
+                    when {
+                        displayedDuration < 1000 -> {
+                            Text(
+                                text = "Preparing magic packet...",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                        displayedDuration < 2500 -> {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = SuccessColor,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Magic packet sent successfully!",
+                                    fontSize = 14.sp,
+                                    color = SuccessColor,
+                                    fontWeight = FontWeight.Medium,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                        else -> {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = SuccessColor,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "The host should be waking up now.",
+                                    fontSize = 14.sp,
+                                    color = SuccessColor,
+                                    fontWeight = FontWeight.Medium,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "It may take a minute to boot up.",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
+}
+
+/**
+ * Animated pulse circle matching webapp's wake animation
+ */
+@Composable
+fun WakePulseAnimation() {
+    val infiniteTransition = rememberInfiniteTransition(label = "wake")
+    
+    // Pulse animation
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse"
+    )
+    
+    // Rotation animation
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotation"
+    )
+    
+    Box(
+        modifier = Modifier
+            .size(120.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Outer pulsing ring
+        Box(
+            modifier = Modifier
+                .size(100.dp * scale)
+                .clip(CircleShape)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            PrimaryColor.copy(alpha = 0.3f),
+                            AccentColor.copy(alpha = 0.1f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+        
+        // Middle rotating ring
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .clip(CircleShape)
+                .border(
+                    width = 2.dp,
+                    brush = Brush.sweepGradient(
+                        colors = listOf(
+                            PrimaryColor,
+                            AccentColor,
+                            PrimaryColor
+                        )
+                    ),
+                    shape = CircleShape
+                )
+                .rotate(rotation)
+        )
+        
+        // Center gradient circle
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .shadow(
+                    elevation = 12.dp,
+                    shape = CircleShape,
+                    spotColor = PrimaryColor.copy(alpha = 0.5f)
+                )
+                .clip(CircleShape)
+                .background(AppGradients.WakePulseCircle),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.PowerSettingsNew,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+fun Modifier.rotate(degrees: Float): Modifier = this.graphicsLayer {
+    rotationZ = degrees
 }

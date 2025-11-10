@@ -44,6 +44,9 @@ fun HostListScreen(
     val sessionExpired by viewModel.sessionExpired.collectAsState()
     
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showWakeAnimation by remember { mutableStateOf(false) }
+    var wakingHostName by remember { mutableStateOf("") }
+    var wakeAnimationStartTime by remember { mutableStateOf(0L) }
     
     // Handle session expiration
     LaunchedEffect(sessionExpired) {
@@ -55,6 +58,15 @@ fun HostListScreen(
     
     LaunchedEffect(Unit) {
         viewModel.loadHosts()
+    }
+    
+    // Show wake animation when waking host
+    LaunchedEffect(wakeInProgress) {
+        if (wakeInProgress != null) {
+            showWakeAnimation = true
+            wakeAnimationStartTime = System.currentTimeMillis()
+        }
+        // Animation stays open until user manually closes it
     }
     
     // Show snackbar for wake success
@@ -154,7 +166,10 @@ fun HostListScreen(
                                 ModernHostCard(
                                     host = host,
                                     isWaking = wakeInProgress == host.hostId,
-                                    onWake = { viewModel.wakeHost(host.hostId, host.name) }
+                                    onWake = { 
+                                        wakingHostName = host.name
+                                        viewModel.wakeHost(host.hostId, host.name)
+                                    }
                                 )
                             }
                         }
@@ -163,6 +178,13 @@ fun HostListScreen(
             }
         }
     }
+    
+    // Wake Animation Dialog
+    WakeAnimationDialog(
+        isVisible = showWakeAnimation,
+        hostName = wakingHostName,
+        onDismiss = { showWakeAnimation = false }
+    )
     
     // Logout confirmation dialog
     if (showLogoutDialog) {
