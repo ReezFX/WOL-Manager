@@ -12,11 +12,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.shadow
+import com.wolmanager.ui.components.*
 import com.wolmanager.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,37 +142,34 @@ fun ProfileScreen(
 
 @Composable
 fun ProfileHeader(username: String) {
-    Card(
+    GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        contentPadding = PaddingValues(24.dp),
+        elevation = 6.dp
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Avatar
-            Surface(
-                modifier = Modifier.size(80.dp),
-                shape = CircleShape,
-                color = PrimaryColor.copy(alpha = 0.1f)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = PrimaryColor,
-                        modifier = Modifier.size(40.dp)
+            // Avatar with Gradient
+            Box(
+                modifier = Modifier
+                    .size(88.dp)
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = CircleShape,
+                        spotColor = PrimaryColor.copy(alpha = 0.3f)
                     )
-                }
+                    .clip(CircleShape)
+                    .background(AppGradients.CardHeader),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(44.dp)
+                )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -180,20 +181,13 @@ fun ProfileHeader(username: String) {
                 color = MaterialTheme.colorScheme.onSurface
             )
             
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = SuccessColor.copy(alpha = 0.1f)
-            ) {
-                Text(
-                    text = "Active",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = SuccessColor,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                )
-            }
+            // Status Badge
+            StatusBadge(
+                status = "Online",
+                showIcon = true
+            )
         }
     }
 }
@@ -218,52 +212,69 @@ fun ProfileMenuItem(
     iconTint: Color = PrimaryColor,
     onClick: () -> Unit
 ) {
-    Card(
-        onClick = onClick,
+    GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        contentPadding = PaddingValues(0.dp),
+        elevation = 3.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Transparent
         ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = iconTint.copy(alpha = 0.1f),
-                modifier = Modifier.size(48.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .shadow(
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(12.dp),
+                            spotColor = iconTint.copy(alpha = 0.25f)
+                        )
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    iconTint.copy(alpha = 0.15f),
+                                    iconTint.copy(alpha = 0.08f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = description,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
+                    )
+                }
                 Icon(
-                    imageVector = icon,
+                    imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.padding(12.dp)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = description,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

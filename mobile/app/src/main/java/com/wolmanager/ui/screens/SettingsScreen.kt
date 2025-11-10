@@ -11,12 +11,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wolmanager.ui.components.*
 import com.wolmanager.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -189,9 +192,9 @@ fun SettingsScreen(
                 )
             }
             
-            // Save Button
+            // Save Button with Gradient
             item {
-                Button(
+                GradientButton(
                     onClick = {
                         // TODO: Implement save via ViewModel
                         isSaving = true
@@ -199,35 +202,15 @@ fun SettingsScreen(
                         showSuccessMessage = true
                         isSaving = false
                     },
+                    text = if (isSaving) "Saving..." else "Save Settings",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     enabled = !isSaving,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryColor
-                    )
-                ) {
-                    if (isSaving) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Save,
-                            contentDescription = null
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                    }
-                    Text(
-                        text = if (isSaving) "Saving..." else "Save Settings",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                    gradient = AppGradients.SuccessButton,
+                    icon = if (isSaving) null else Icons.Default.Save,
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
+                )
             }
             
             // About Section
@@ -244,13 +227,10 @@ fun SettingsScreen(
 
 @Composable
 fun ServerInfoCard(serverUrl: String) {
-    Card(
+    GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        contentPadding = PaddingValues(0.dp),
+        elevation = 4.dp
     ) {
         Row(
             modifier = Modifier
@@ -258,16 +238,30 @@ fun ServerInfoCard(serverUrl: String) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = PrimaryColor.copy(alpha = 0.1f),
-                modifier = Modifier.size(48.dp)
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(12.dp),
+                        spotColor = PrimaryColor.copy(alpha = 0.25f)
+                    )
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                PrimaryColor.copy(alpha = 0.15f),
+                                PrimaryColor.copy(alpha = 0.08f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Cloud,
                     contentDescription = null,
                     tint = PrimaryColor,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.size(26.dp)
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))

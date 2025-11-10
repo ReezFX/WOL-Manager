@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -21,8 +22,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wolmanager.ui.theme.PrimaryColor
-import com.wolmanager.ui.theme.SecondaryColor
+import com.wolmanager.ui.components.*
+import com.wolmanager.ui.theme.*
 import com.wolmanager.viewmodel.AuthViewModel
 
 @Composable
@@ -78,38 +79,34 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Login Card
-            Card(
+            // Login Card with Glass Effect
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                contentPadding = PaddingValues(32.dp),
+                elevation = 12.dp
             ) {
-                Column(
+                // Logo/Icon with Gradient
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Logo/Icon
-                    Surface(
-                        modifier = Modifier.size(80.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        color = PrimaryColor.copy(alpha = 0.1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = "Login",
-                            modifier = Modifier
-                                .padding(20.dp)
-                                .fillMaxSize(),
-                            tint = PrimaryColor
+                        .size(88.dp)
+                        .shadow(
+                            elevation = 12.dp,
+                            shape = RoundedCornerShape(22.dp),
+                            spotColor = PrimaryColor.copy(alpha = 0.35f)
                         )
-                    }
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(AppGradients.CardHeader),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Login",
+                        modifier = Modifier.size(44.dp),
+                        tint = Color.White
+                    )
+                }
                     
                     Spacer(modifier = Modifier.height(24.dp))
                     
@@ -203,37 +200,21 @@ fun LoginScreen(
                     
                     Spacer(modifier = Modifier.height(24.dp))
                     
-                    Button(
+                    GradientButton(
                         onClick = { viewModel.login(serverUrl) },
+                        text = when {
+                            isCheckingSession -> "Checking session..."
+                            isLoading -> "Logging in..."
+                            else -> "Login"
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
+                        gradient = AppGradients.PrimaryButton,
                         enabled = !isLoading && !isCheckingSession && username.isNotEmpty() && password.isNotEmpty(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryColor,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        if (isLoading || isCheckingSession) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                        }
-                        Text(
-                            text = when {
-                                isCheckingSession -> "Checking session..."
-                                isLoading -> "Logging in..."
-                                else -> "Login"
-                            },
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
+                        icon = if (isLoading || isCheckingSession) null else Icons.Default.Lock,
+                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
+                    )
             }
         }
     }

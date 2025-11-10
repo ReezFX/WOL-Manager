@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.wolmanager.data.models.HostStatus
+import com.wolmanager.ui.components.*
 import com.wolmanager.ui.theme.*
 import com.wolmanager.viewmodel.HostListViewModel
 
@@ -307,7 +308,7 @@ fun SectionSeparator(title: String) {
     }
 }
 
-// WebApp-Style Modern Host Card
+// WebApp-Style Modern Host Card with Glass Effect
 @Composable
 fun ModernHostCard(
     host: HostStatus,
@@ -315,47 +316,46 @@ fun ModernHostCard(
     onWake: () -> Unit
 ) {
     val animatedElevation by animateDpAsState(
-        targetValue = if (isWaking) 8.dp else 4.dp,
+        targetValue = if (isWaking) 8.dp else 6.dp,
         animationSpec = tween(durationMillis = 300)
     )
     
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(
-                elevation = animatedElevation,
-                shape = RoundedCornerShape(16.dp)
-            ),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+    GlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(0.dp),
+        elevation = animatedElevation
     ) {
-        Column(
+        // Gradient Header
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(AppGradients.DashboardHeaderOverlay)
                 .padding(16.dp)
         ) {
-            // Card Header with Status Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Status Badge
-                StatusBadge(status = host.status)
-                
-                // Optional: Public Access Indicator
-                // If you have this info in HostStatus model
+                // Status Badge with new component
+                StatusBadge(
+                    status = host.status,
+                    showIcon = true
+                )
             }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
+        }
+        
+        // Card Content
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             // Host Name
             Text(
                 text = host.name,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -412,10 +412,10 @@ fun ModernHostCard(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Action Buttons
+            // Action Buttons with Gradients
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // View Button
                 OutlinedButton(
@@ -423,7 +423,11 @@ fun ModernHostCard(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface
+                        contentColor = PrimaryColor
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = 1.5.dp,
+                        color = PrimaryColor.copy(alpha = 0.3f)
                     )
                 ) {
                     Icon(
@@ -432,71 +436,58 @@ fun ModernHostCard(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("View")
+                    Text("View", fontWeight = FontWeight.Medium)
                 }
                 
-                // Wake Button
+                // Wake Button with Gradient
                 Button(
                     onClick = onWake,
                     enabled = !isWaking,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = SuccessColor,
-                        contentColor = Color.White
-                    )
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
+                    ),
+                    contentPadding = PaddingValues(0.dp)
                 ) {
-                    if (isWaking) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = Color.White
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.PowerSettingsNew,
-                            contentDescription = "Wake",
-                            modifier = Modifier.size(18.dp)
-                        )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(AppGradients.SuccessButton)
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isWaking) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color.White
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.PowerSettingsNew,
+                                    contentDescription = "Wake",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isWaking) "Waking..." else "Wake",
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(if (isWaking) "Waking..." else "Wake")
                 }
             }
         }
     }
 }
 
-// WebApp-Style Status Badge
-@Composable
-fun StatusBadge(status: String) {
-    val (backgroundColor, textColor, icon) = when (status.lowercase()) {
-        "online" -> Triple(SuccessColor, Color.White, Icons.Default.CheckCircle)
-        "offline" -> Triple(DangerColor, Color.White, Icons.Default.Cancel)
-        else -> Triple(Color(0xFF868e96), Color.White, Icons.Default.Help)
-    }
-    
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = backgroundColor
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = textColor,
-                modifier = Modifier.size(14.dp)
-            )
-            Text(
-                text = status.lowercase(),
-                color = textColor,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
+// StatusBadge is now imported from AppComponents.kt with gradient background
