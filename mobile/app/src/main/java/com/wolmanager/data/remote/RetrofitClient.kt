@@ -11,28 +11,35 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
     
-    private val cookieJar = object : CookieJar {
-        private val cookieStore = mutableMapOf<String, List<Cookie>>()
-        
-        override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-            cookieStore[url.host] = cookies
-        }
-        
-        override fun loadForRequest(url: HttpUrl): List<Cookie> {
-            return cookieStore[url.host] ?: emptyList()
-        }
-        
-        fun clear() {
-            cookieStore.clear()
+    // Create a new cookie jar instance each time to ensure clean state
+    private var cookieJar = createCookieJar()
+    private var cachedClient: OkHttpClient? = null
+    
+    private fun createCookieJar(): CookieJar {
+        return object : CookieJar {
+            private val cookieStore = mutableMapOf<String, List<Cookie>>()
+            
+            override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
+                cookieStore[url.host] = cookies
+            }
+            
+            override fun loadForRequest(url: HttpUrl): List<Cookie> {
+                return cookieStore[url.host] ?: emptyList()
+            }
         }
     }
     
     private fun createOkHttpClient(): OkHttpClient {
+        // Return cached client if available, otherwise create new one
+        if (cachedClient != null) {
+            return cachedClient!!
+        }
+        
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
         
-        return OkHttpClient.Builder()
+        val client = OkHttpClient.Builder()
             .cookieJar(cookieJar)
             .addInterceptor(loggingInterceptor)
             .followRedirects(false)  // Don't follow redirects - we want to see 302
@@ -41,6 +48,9 @@ object RetrofitClient {
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
+        
+        cachedClient = client
+        return client
     }
     
     fun getApiService(baseUrl: String): WolManagerApiService {
@@ -54,6 +64,9 @@ object RetrofitClient {
     }
     
     fun clearCookies() {
-        cookieJar.clear()
+        // Create a completely new cookie jar to ensure all cookies are cleared
+        cookieJar = createCookieJar()
+        // Invalidate cached client so a new one will be created with the new cookieJar
+        cachedClient = null
     }
 }

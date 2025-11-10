@@ -17,6 +17,9 @@ data class HostStatus(
     @SerializedName("ip")
     val ip: String?,
     
+    @SerializedName("mac_address")
+    val macAddress: String?,
+    
     @SerializedName("status")
     val status: String,
     

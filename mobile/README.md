@@ -12,11 +12,55 @@ Native Android App für den WOL-Manager Server.
 - ✅ Persistente Speicherung der Server-Konfiguration
 - ✅ Material Design 3 UI
 - ✅ Dark Mode Support
+- ✅ **WebApp-konformes Design** - Farben, Layouts und UI-Komponenten entsprechen der WebApp
+
+## Design-Philosophie
+
+Die Android App wurde entwickelt, um das Design der WebApp so getreu wie möglich nachzubilden:
+
+### Farbschema (aus WebApp übernommen)
+
+#### Brand Colors
+- **Primary (Türkis)**: `#17a2b8` - Hauptfarbe für Buttons und Akzente  
+- **Secondary (Dunkelblau-Teal)**: `#0d6e8c` - Für sekundäre Elemente
+- **Success (Grün)**: `#28b485` - Erfolgreiche Aktionen, Online-Status  
+- **Danger (Rot)**: `#e25563` - Fehler, Offline-Status  
+- **Warning (Amber)**: `#f9ae56` - Warnungen
+
+#### Theme Support
+- **Light Theme**: Weiße Hintergründe, dunkler Text
+- **Dark Theme**: Dunkle Hintergründe (#1a1a1c), heller Text
+
+### Design-Elemente
+
+- **Rundungen**: 16dp Standard (entspricht 1rem in WebApp)
+- **Cards**: Erhöhte Elevation, abgerundete Ecken
+- **Status Badges**: Farbcodiert mit Icons (Online/Offline/Unknown)
+- **Buttons**: Abgerundete Ecken (12dp), Primary Color
+- **Animationen**: Smooth transitions, animierte Elevation
+
+### UI-Komponenten
+
+#### ModernHostCard
+- Repliziert das WebApp Host-Card Design
+- Status Badge mit Icon oben links
+- MAC-Adresse in monospaced Box
+- Action Buttons: View & Wake
+
+#### DashboardHeader  
+- Große, bold Typografie wie in WebApp
+- Card-basiertes Layout
+
+#### LoginScreen
+- Zentrierte Card mit Gradient-Hintergrund
+- Großes Logo in colored Container  
+- Primary Color für Input-Focus
 
 ## Tech Stack
 
 - **Kotlin** - Moderne Programmiersprache für Android
 - **Jetpack Compose** - Deklaratives UI Framework
+- **Material Design 3** - Mit custom WebApp-Theme
 - **MVVM Architektur** - Model-View-ViewModel Pattern
 - **Retrofit** - HTTP Client für API-Kommunikation
 - **Room** - Lokale Datenspeicherung

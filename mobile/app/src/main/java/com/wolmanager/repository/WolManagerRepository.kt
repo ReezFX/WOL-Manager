@@ -38,6 +38,15 @@ class WolManagerRepository(
         currentServerUrl = null
     }
     
+    suspend fun clearSession() {
+        // Clear cookies to end session
+        RetrofitClient.clearCookies()
+        // Reinitialize API service to ensure cookies are cleared
+        currentServerUrl?.let { url ->
+            apiService = RetrofitClient.getApiService(url)
+        }
+    }
+    
     // Initialize API service with server URL
     fun initializeApiService(serverUrl: String) {
         if (currentServerUrl != serverUrl) {

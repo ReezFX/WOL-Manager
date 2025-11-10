@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Colors - from WebApp -->
+    <color name="primary_color">#17a2b8</color>
+    <color name="secondary_color">#0d6e8c</color>
+    <color name="accent_color">#ff7e5f</color>
+    <color name="success_color">#28b485</color>
+    <color name="info_color">#5bc0de</color>
+    <color name="warning_color">#f9ae56</color>
+    <color name="danger_color">#e25563</color>
+    
+    <!-- Light Theme Colors -->
+    <color name="light_bg_primary">#ffffff</color>
+    <color name="light_bg_secondary">#f8f9fa</color>
+    <color name="light_bg_tertiary">#e9ecef</color>
+    <color name="light_card_bg">#ffffff</color>
+    <color name="light_text_primary">#212529</color>
+    <color name="light_text_secondary">#6c757d</color>
+    <color name="light_text_muted">#868e96</color>
+    <color name="light_border">#dee2e6</color>
+    
+    <!-- Dark Theme Colors -->
+    <color name="dark_bg_primary">#1a1a1c</color>
+    <color name="dark_bg_secondary">#242426</color>
+    <color name="dark_bg_tertiary">#2d2d30</color>
+    <color name="dark_card_bg">#2d2d30</color>
+    <color name="dark_text_primary">#f8f9fa</color>
+    <color name="dark_text_secondary">#ced4da</color>
+    <color name="dark_text_muted">#adb5bd</color>
+    <color name="dark_border">#3a3a3d</color>
+    
+    <!-- Status Colors -->
+    <color name="status_online">#28b485</color>
+    <color name="status_offline">#e25563</color>
+    <color name="status_unknown">#868e96</color>
+    
+    <!-- Transparent Colors for Glassmorphism -->
+    <color name="glass_overlay_light">#F0FFFFFF</color>
+    <color name="glass_overlay_dark">#E02d2d30</color>
+</resources>

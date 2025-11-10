@@ -126,7 +126,8 @@ class HostListViewModel(
         viewModelScope.launch {
             try {
                 repository.logout()
-                repository.clearServerConfig()
+                // Only clear cookies/session, keep server config
+                repository.clearSession()
             } catch (e: Exception) {
                 // Handle error silently
             }
