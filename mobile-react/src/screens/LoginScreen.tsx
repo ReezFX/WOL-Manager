@@ -12,8 +12,12 @@ import { Colors, Spacing, Typography } from '../constants/theme';
 import { GlassCard, InputField, GradientButton, ErrorMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 
-export const LoginScreen: React.FC = () => {
-  const { login, isLoading, error, clearError, serverConfig } = useAuth();
+interface LoginScreenProps {
+  serverUrl: string;
+}
+
+export const LoginScreen: React.FC<LoginScreenProps> = ({ serverUrl }) => {
+  const { login, isLoading, error, clearError } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -22,8 +26,12 @@ export const LoginScreen: React.FC = () => {
       return;
     }
 
+    if (!serverUrl) {
+      return;
+    }
+
     try {
-      await login(username, password, serverConfig?.serverUrl || '');
+      await login(username, password, serverUrl);
     } catch (err) {
       // Error is handled by context
     }
@@ -98,9 +106,9 @@ export const LoginScreen: React.FC = () => {
               />
             </View>
 
-            {serverConfig?.serverUrl && (
+            {serverUrl && (
               <Text style={styles.serverInfo}>
-                Server: {serverConfig.serverUrl}
+                Server: {serverUrl}
               </Text>
             )}
           </GlassCard>

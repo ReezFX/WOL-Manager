@@ -25,24 +25,35 @@ class ApiClient {
    * Supports both HTTP and HTTPS
    */
   initialize(serverUrl: string) {
+    console.log('[API] Initializing with raw URL:', serverUrl);
+    
+    // Trim whitespace
+    serverUrl = serverUrl.trim();
+    
+    if (!serverUrl) {
+      throw new Error('Server URL is required');
+    }
+
     // Ensure URL has protocol
     if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://')) {
       serverUrl = `http://${serverUrl}`;
     }
 
-    // Ensure URL ends with /
-    if (!serverUrl.endsWith('/')) {
-      serverUrl = `${serverUrl}/`;
+    // Remove trailing slash for consistency
+    if (serverUrl.endsWith('/')) {
+      serverUrl = serverUrl.slice(0, -1);
     }
 
     this.baseURL = serverUrl;
+    console.log('[API] BaseURL set to:', this.baseURL);
 
-    // Create axios instance with proper configuration
+    // Create axios instance with proper configuration for React Native
     this.axiosInstance = axios.create({
       baseURL: serverUrl,
       timeout: 30000,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'text/html,application/json',
       },
       // Don't follow redirects - we want to detect them
       maxRedirects: 0,
@@ -50,6 +61,8 @@ class ApiClient {
         // Accept all status codes to handle them manually
         return status >= 200 && status < 500;
       },
+      // React Native specific
+      withCredentials: false, // We handle cookies manually
     });
 
     // Request interceptor - add cookies and CSRF token
@@ -70,11 +83,24 @@ class ApiClient {
     this.axiosInstance.interceptors.response.use(
       async (response) => {
         // Extract and save cookies from response
-        const setCookie = response.headers['set-cookie'];
-        if (setCookie) {
-          this.cookies = Array.isArray(setCookie) ? setCookie.join('; ') : setCookie;
-          await AsyncStorage.setItem(COOKIES_KEY, this.cookies);
-          console.log('[API] Cookies saved');
+        // In React Native, set-cookie might be in different formats
+        const setCookieHeader = response.headers['set-cookie'] || response.headers['Set-Cookie'];
+        if (setCookieHeader) {
+          // Parse cookies and extract session cookie
+          const cookieArray = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+          const sessionCookies = cookieArray
+            .map(cookie => {
+              // Extract cookie name=value pair (before first semicolon)
+              const match = cookie.match(/^([^=]+=[^;]+)/);
+              return match ? match[1] : null;
+            })
+            .filter(Boolean);
+          
+          if (sessionCookies.length > 0) {
+            this.cookies = sessionCookies.join('; ');
+            await AsyncStorage.setItem(COOKIES_KEY, this.cookies);
+            console.log('[API] Cookies saved:', this.cookies.substring(0, 50) + '...');
+          }
         }
 
         console.log(`[API] Response: ${response.status} ${response.config.url}`);
@@ -82,6 +108,11 @@ class ApiClient {
       },
       async (error: AxiosError) => {
         console.error('[API] Error:', error.message);
+        if (error.response) {
+          console.error('[API] Error Response:', error.response.status, error.response.statusText);
+        } else if (error.request) {
+          console.error('[API] No response received. Request:', error.request._url || 'unknown');
+        }
         return Promise.reject(error);
       }
     );
@@ -135,24 +166,45 @@ class ApiClient {
     }
 
     try {
-      const response = await this.axiosInstance.get('auth/login');
+      console.log('[API] Fetching CSRF token from:', `${this.baseURL}/auth/login`);
+      const response = await this.axiosInstance.get('/auth/login');
+
+      console.log('[API] CSRF response status:', response.status);
+      console.log('[API] CSRF response headers:', JSON.stringify(response.headers));
 
       if (response.status === 200 && response.data) {
         // Extract CSRF token from HTML
-        const html = response.data;
-        const match = html.match(/name="csrf_token"[^>]*value="([^"]+)"/);
+        const html = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+        console.log('[API] HTML length:', html.length);
+        
+        // Try multiple regex patterns
+        const patterns = [
+          /name="csrf_token"[^>]*value="([^"]+)"/,
+          /id="csrf_token"[^>]*value="([^"]+)"/,
+          /<input[^>]*name="csrf_token"[^>]*value="([^"]+)"/,
+          /value="([^"]+)"[^>]*name="csrf_token"/,
+        ];
 
-        if (match && match[1]) {
-          this.csrfToken = match[1];
-          await AsyncStorage.setItem(CSRF_TOKEN_KEY, this.csrfToken);
-          console.log('[API] CSRF token obtained');
-          return this.csrfToken;
+        for (const pattern of patterns) {
+          const match = html.match(pattern);
+          if (match && match[1]) {
+            this.csrfToken = match[1];
+            await AsyncStorage.setItem(CSRF_TOKEN_KEY, this.csrfToken);
+            console.log('[API] CSRF token obtained:', this.csrfToken.substring(0, 10) + '...');
+            return this.csrfToken;
+          }
         }
+
+        console.error('[API] HTML sample:', html.substring(0, 500));
       }
 
       throw new Error('Failed to extract CSRF token from login page');
     } catch (error: any) {
       console.error('[API] Get CSRF token error:', error.message);
+      if (error.response) {
+        console.error('[API] Error response status:', error.response.status);
+        console.error('[API] Error response data:', error.response.data);
+      }
       throw new Error(`Failed to get CSRF token: ${error.message}`);
     }
   }
@@ -167,12 +219,25 @@ class ApiClient {
     }
 
     try {
+      // Build form data exactly like browser does
       const formData = new URLSearchParams();
       formData.append('username', username);
       formData.append('password', password);
       formData.append('csrf_token', csrfToken);
+      formData.append('remember', 'false'); // Add remember field
 
-      const response = await this.axiosInstance.post('auth/login', formData.toString());
+      console.log('[API] Sending login request with cookies:', this.cookies?.substring(0, 50) + '...');
+
+      // IMPORTANT: Must use same URL format as GET (with leading slash)
+      // and explicitly set Content-Type header
+      const response = await this.axiosInstance.post('/auth/login', formData.toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+
+      console.log('[API] Login response status:', response.status);
+      console.log('[API] Login response content-type:', response.headers['content-type']);
 
       // Flask redirects (302/301) on successful login
       if (response.status === 302 || response.status === 301) {
@@ -180,8 +245,38 @@ class ApiClient {
         return true;
       }
 
-      // Status 200 means we're still on login page (failed)
+      // Status 200 could mean:
+      // 1. Still on login page (failed)
+      // 2. Followed redirect to dashboard (success)
       if (response.status === 200) {
+        const contentType = response.headers['content-type'] || '';
+        const html = typeof response.data === 'string' ? response.data : '';
+        
+        // Check if we got redirected to dashboard (successful login)
+        // Dashboard HTML contains specific elements that login page doesn't have
+        if (html.includes('dashboard') || html.includes('host-list') || html.includes('Hosts')) {
+          console.log('[API] Login successful (redirected to dashboard)');
+          return true;
+        }
+        
+        // Check if we're still on login page (has login form)
+        if (html.includes('name="csrf_token"') && html.includes('name="password"')) {
+          console.log('[API] Login failed - still on login page');
+          throw new Error('Invalid username or password');
+        }
+        
+        // Fallback: Try to verify session is valid
+        console.log('[API] Unclear login result, checking session...');
+        try {
+          const sessionValid = await this.checkSession();
+          if (sessionValid) {
+            console.log('[API] Login successful (session verified)');
+            return true;
+          }
+        } catch (e) {
+          console.log('[API] Session check failed');
+        }
+        
         throw new Error('Invalid username or password');
       }
 

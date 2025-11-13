@@ -20,6 +20,9 @@ export const AppNavigator: React.FC = () => {
 
   // If no server config and no serverUrl set, show setup
   const needsSetup = !serverConfig && !serverUrl;
+  
+  // Get the server URL from either serverConfig or local state
+  const currentServerUrl = serverConfig?.serverUrl || serverUrl || '';
 
   return (
     <NavigationContainer>
@@ -34,7 +37,9 @@ export const AppNavigator: React.FC = () => {
             {() => <SetupScreen onComplete={setServerUrl} />}
           </Stack.Screen>
         ) : !isAuthenticated ? (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Login">
+            {() => <LoginScreen serverUrl={currentServerUrl} />}
+          </Stack.Screen>
         ) : (
           <Stack.Screen name="HostList" component={HostListScreen} />
         )}

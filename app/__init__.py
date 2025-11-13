@@ -131,7 +131,6 @@ def create_app(config_name=None):
     login_manager.refresh_view = "auth.login"
     login_manager.needs_refresh_message = "Please login again to confirm your identity"
     login_manager.needs_refresh_message_category = "info"
-    
     # Enable CSRF protection
     csrf = CSRFProtect(app)
     

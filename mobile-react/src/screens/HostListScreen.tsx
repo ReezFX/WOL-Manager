@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import { Colors, Spacing, Typography, BorderRadius } from '../constants/theme';
+import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../constants/theme';
 import { HostCard, LoadingScreen, StatisticCard, GlassCard } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { apiClient, SessionExpiredError } from '../api/client';
@@ -84,15 +84,21 @@ export const HostListScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>WOL Manager</Text>
-          <Text style={styles.headerSubtitle}>Manage your hosts</Text>
+      {/* Dashboard Header */}
+      <View style={styles.dashboardHeader}>
+        <View style={styles.dashboardHeaderContent}>
+          <Text style={styles.dashboardTitle}>Dashboard</Text>
+          <Text style={styles.dashboardSubtitle}>Monitor and control your devices</Text>
         </View>
-        <TouchableOpacity onPress={logout}>
-          <View style={styles.logoutButton}>
+        <TouchableOpacity onPress={logout} style={styles.logoutButton}>
+          <LinearGradient
+            colors={[Colors.gradientStart.dangerButton, Colors.gradientEnd.dangerButton]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.logoutGradient}
+          >
             <Text style={styles.logoutText}>Logout</Text>
-          </View>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
@@ -110,19 +116,13 @@ export const HostListScreen: React.FC = () => {
         }
         ListHeaderComponent={
           <View>
-            {/* Welcome Card */}
-            <GlassCard style={styles.welcomeCard}>
-              <LinearGradient
-                colors={[Colors.gradientStart.cardHeader, Colors.gradientEnd.cardHeader]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.welcomeGradient}
-              >
-                <Text style={styles.welcomeEmoji}>🖥️</Text>
-                <Text style={styles.welcomeTitle}>Dashboard</Text>
-                <Text style={styles.welcomeSubtitle}>Monitor and control your devices</Text>
-              </LinearGradient>
-            </GlassCard>
+            {/* Statistics Overview Section */}
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIconContainer}>
+                <Text style={styles.sectionIcon}>📊</Text>
+              </View>
+              <Text style={styles.sectionTitle}>Statistics Overview</Text>
+            </View>
 
             {/* Statistics */}
             <View style={styles.statisticsContainer}>
@@ -146,7 +146,13 @@ export const HostListScreen: React.FC = () => {
               />
             </View>
 
-            <Text style={styles.sectionTitle}>Hosts ({totalHosts})</Text>
+            {/* Hosts Section */}
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIconContainer}>
+                <Text style={styles.sectionIcon}>🖥️</Text>
+              </View>
+              <Text style={styles.sectionTitle}>Hosts ({totalHosts})</Text>
+            </View>
           </View>
         }
         ListEmptyComponent={
@@ -180,60 +186,62 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background.light,
   },
-  header: {
+  dashboardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.lg,
     backgroundColor: Colors.surface.light,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.text.secondary + '20',
+    ...Shadows.sm,
   },
-  headerTitle: {
+  dashboardHeaderContent: {
+    flex: 1,
+  },
+  dashboardTitle: {
     ...Typography.h2,
     color: Colors.text.primary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs / 2,
   },
-  headerSubtitle: {
+  dashboardSubtitle: {
     ...Typography.caption,
     color: Colors.text.secondary,
   },
   logoutButton: {
+    borderRadius: BorderRadius.md,
+    ...Shadows.sm,
+  },
+  logoutGradient: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.danger,
   },
   logoutText: {
     ...Typography.bodyBold,
-    color: Colors.danger,
+    color: Colors.text.light,
   },
   listContent: {
     padding: Spacing.lg,
   },
-  welcomeCard: {
-    marginBottom: Spacing.lg,
-    padding: 0,
-    overflow: 'hidden',
-  },
-  welcomeGradient: {
-    padding: Spacing.xl,
+  sectionHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: Spacing.md,
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.primary + '30',
   },
-  welcomeEmoji: {
-    fontSize: 48,
-    marginBottom: Spacing.sm,
+  sectionIconContainer: {
+    marginRight: Spacing.sm,
   },
-  welcomeTitle: {
-    ...Typography.h2,
-    color: Colors.text.light,
-    fontWeight: '700',
+  sectionIcon: {
+    fontSize: 20,
   },
-  welcomeSubtitle: {
-    ...Typography.body,
-    color: Colors.text.light,
-    opacity: 0.9,
+  sectionTitle: {
+    ...Typography.h3,
+    color: Colors.text.primary,
+    fontWeight: '600',
   },
   statisticsContainer: {
     flexDirection: 'row',
@@ -242,11 +250,6 @@ const styles = StyleSheet.create({
   },
   statisticCard: {
     flex: 1,
-  },
-  sectionTitle: {
-    ...Typography.h3,
-    color: Colors.text.primary,
-    marginBottom: Spacing.md,
   },
   emptyContainer: {
     alignItems: 'center',

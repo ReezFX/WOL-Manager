@@ -119,14 +119,14 @@ interface StatusBadgeProps {
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
   const normalizedStatus = status.toLowerCase();
   
-  const getStatusColor = () => {
+  const getStatusIcon = () => {
     switch (normalizedStatus) {
       case 'online':
-        return Colors.status.online;
+        return '✓'; // Check icon
       case 'offline':
-        return Colors.status.offline;
+        return '✕'; // X icon
       default:
-        return Colors.status.unknown;
+        return '?'; // Question icon
     }
   };
 
@@ -148,7 +148,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
       end={{ x: 1, y: 1 }}
       style={[styles.statusBadge, style]}
     >
-      <View style={[styles.statusDot, { backgroundColor: Colors.text.light }]} />
+      <Text style={styles.statusIcon}>{getStatusIcon()}</Text>
       <Text style={styles.statusText}>{normalizedStatus}</Text>
     </LinearGradient>
   );
@@ -223,7 +223,10 @@ export const HostCard: React.FC<HostCardProps> = ({
             {waking ? (
               <ActivityIndicator color={Colors.text.light} size="small" />
             ) : (
-              <Text style={styles.wakeButtonText}>Wake</Text>
+              <View style={styles.wakeButtonContent}>
+                <Text style={styles.wakeButtonIcon}>⚡</Text>
+                <Text style={styles.wakeButtonText}>Wake</Text>
+              </View>
             )}
           </LinearGradient>
         </TouchableOpacity>
@@ -344,10 +347,10 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.round,
     gap: Spacing.xs,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  statusIcon: {
+    color: Colors.text.light,
+    fontSize: 12,
+    fontWeight: '700',
   },
   statusText: {
     color: Colors.text.light,
@@ -419,6 +422,15 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  wakeButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  wakeButtonIcon: {
+    fontSize: 18,
+    color: Colors.text.light,
   },
   wakeButtonText: {
     color: Colors.text.light,
