@@ -1,41 +1,52 @@
+// API Types
+export interface ServerConfig {
+  serverUrl: string;
+  username?: string;
+  isLoggedIn: boolean;
+  lastLoginTimestamp?: number;
+}
+
 export interface Host {
   id: number;
   name: string;
   mac_address: string;
-  ip: string | null;
-  description: string | null;
-  created_by: number;
-  created_at: string | null;
-  public_access: boolean;
-  public_access_token: string | null;
-  visible_to_roles: string[] | null;
-  status?: string;
+  ip_address?: string;
+  description?: string;
+  public_access_enabled: boolean;
+  public_access_hash?: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface HostStatus {
   host_id: number;
-  name: string;
-  ip: string | null;
-  mac_address: string | null;
-  status: string;
-  last_check: string | null;
-}
-
-export interface ServerConfig {
-  serverUrl: string;
-  username: string;
-  isLoggedIn: boolean;
-  lastLoginTimestamp: number;
+  status: 'online' | 'offline' | 'unknown';
+  last_seen?: string;
 }
 
 export interface User {
   id: number;
   username: string;
   email?: string;
-  role?: string;
+  is_admin: boolean;
 }
 
-export interface ApiError {
-  message: string;
-  statusCode?: number;
-}
+// Navigation Types
+export type RootStackParamList = {
+  Setup: undefined;
+  Login: { serverUrl: string };
+  Main: undefined;
+};
+
+export type MainTabParamList = {
+  Hosts: undefined;
+  Profile: undefined;
+  Settings: undefined;
+};
+
+export type HostStackParamList = {
+  HostList: undefined;
+  HostDetail: { hostId: number };
+  HostEdit: { hostId?: number };
+};

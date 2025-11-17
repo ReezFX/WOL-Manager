@@ -74,6 +74,7 @@ class ApiClient {
         }
 
         console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
+        console.log('[API] Request headers:', JSON.stringify(config.headers));
         return config;
       },
       (error) => Promise.reject(error)
@@ -425,6 +426,238 @@ class ApiClient {
       }
       // Other errors might just be network issues
       return false;
+    }
+  }
+
+  /**
+   * Get all hosts with full data
+   * Uses getHostStatuses which returns complete host information
+   */
+  async getHosts(): Promise<any[]> {
+    if (!this.axiosInstance) {
+      throw new Error('API client not initialized');
+    }
+
+    try {
+      // Use the status API endpoint which returns full host data
+      const statuses = await this.getHostStatuses();
+      
+      // Map to a consistent format
+      return statuses.map(host => ({
+        id: host.host_id,
+        host_id: host.host_id,
+        name: host.name || `Host ${host.host_id}`,
+        mac_address: host.mac_address || '',
+        ip: host.ip || '',
+        ip_address: host.ip || '',
+        description: host.description || '',
+        status: host.status,
+        last_check: host.last_check,
+      }));
+    } catch (error: any) {
+      if (error instanceof SessionExpiredError) {
+        throw error;
+      }
+      console.error('[API] Get hosts error:', error.message);
+      throw new Error(`Failed to get hosts: ${error.message}`);
+    }
+  }
+
+  /**
+   * Delete a host
+   * Uses X-Requested-With header to get JSON response instead of HTML
+   */
+  async deleteHost(hostId: number): Promise<boolean> {
+    if (!this.axiosInstance) {
+      throw new Error('API client not initialized');
+    }
+
+    // Get fresh CSRF token if needed
+    if (!this.csrfToken) {
+      await this.refreshCsrfToken();
+    }
+
+    try {
+      const formData = new URLSearchParams();
+      formData.append('csrf_token', this.csrfToken!);
+
+      console.log('[API] Deleting host with CSRF token:', this.csrfToken?.substring(0, 20) + '...');
+
+      const response = await this.axiosInstance.post(
+        `hosts/delete/${hostId}`,
+        formData.toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          maxRedirects: 0, // Don't follow redirects
+          validateStatus: (status) => {
+            // Accept all status codes including redirects
+            return status >= 200 && status < 500;
+          },
+        }
+      );
+
+      // Check for redirect (session expired)
+      if (response.status === 302 || response.status === 301) {
+        throw new SessionExpiredError();
+      }
+
+      // Handle content type explicitly
+      const contentType = (response.headers['content-type'] || '').toLowerCase();
+
+      if (response.status === 200) {
+        if (contentType.includes('application/json')) {
+          console.log('[API] Delete response (json):', JSON.stringify(response.data));
+          if (response.data && response.data.success === true) {
+            console.log(`[API] Host ${hostId} deleted successfully`);
+            return true;
+          }
+          if (response.data && response.data.error) {
+            throw new Error(response.data.error);
+          }
+          // Unknown JSON shape but 200 -> success
+          return true;
+        }
+
+        if (contentType.includes('text/html')) {
+          // Server returned HTML (likely redirect page) -> deletion probably failed (permission) or succeeded with redirect
+          const html: string = typeof response.data === 'string' ? response.data : '';
+          if (html.includes('permission') || html.toLowerCase().includes('do not have permission')) {
+            throw new Error('You do not have permission to delete this host');
+          }
+          if (html.toLowerCase().includes('host') && html.toLowerCase().includes('deleted')) {
+            return true;
+          }
+          // Unclear HTML -> assume success but recommend refresh
+          console.warn('[API] HTML response on delete, proceeding as success');
+          return true;
+        }
+
+        // Default: treat 200 as success
+        return true;
+      }
+
+      throw new Error(`Failed to delete host: ${response.status}`);
+    } catch (error: any) {
+      if (error instanceof SessionExpiredError) {
+        throw error;
+      }
+      console.error('[API] Delete host error:', error.message);
+      throw new Error(`Failed to delete host: ${error.message}`);
+    }
+  }
+
+  /**
+   * Add a new host
+   */
+  async addHost(hostData: {
+    name: string;
+    macAddress: string;
+    ipAddress?: string;
+    description?: string;
+    visibleToRoles?: number[];
+    publicAccess?: boolean;
+  }): Promise<boolean> {
+    if (!this.axiosInstance) {
+      throw new Error('API client not initialized');
+    }
+
+    // Get fresh CSRF token if needed
+    if (!this.csrfToken) {
+      await this.refreshCsrfToken();
+    }
+
+    try {
+      const formData = new URLSearchParams();
+      formData.append('csrf_token', this.csrfToken!);
+      formData.append('name', hostData.name);
+      formData.append('mac_address', hostData.macAddress);
+      
+      if (hostData.ipAddress) {
+        formData.append('ip_address', hostData.ipAddress);
+      }
+      
+      if (hostData.description) {
+        formData.append('description', hostData.description);
+      }
+      
+      if (hostData.visibleToRoles && hostData.visibleToRoles.length > 0) {
+        hostData.visibleToRoles.forEach(roleId => {
+          formData.append('visible_to_roles', roleId.toString());
+        });
+      }
+      
+      if (hostData.publicAccess) {
+        formData.append('public_access', 'true');
+      }
+
+      const response = await this.axiosInstance.post(
+        'hosts/add',
+        formData.toString()
+      );
+
+      // Check for redirect (session expired)
+      if (response.status === 302 || response.status === 301) {
+        throw new SessionExpiredError();
+      }
+
+      if (response.status === 200) {
+        console.log('[API] Host added successfully');
+        return true;
+      }
+
+      throw new Error(`Failed to add host: ${response.status}`);
+    } catch (error: any) {
+      if (error instanceof SessionExpiredError) {
+        throw error;
+      }
+      console.error('[API] Add host error:', error.message);
+      throw new Error(`Failed to add host: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get available roles
+   */
+  async getRoles(): Promise<Array<{ id: number; name: string }>> {
+    if (!this.axiosInstance) {
+      throw new Error('API client not initialized');
+    }
+
+    try {
+      const response = await this.axiosInstance.get('hosts/api/roles');
+
+      // Check for redirect (session expired)
+      if (response.status === 302 || response.status === 301) {
+        throw new SessionExpiredError();
+      }
+
+      if (response.status === 200 && response.data?.roles) {
+        console.log('[API] Roles retrieved successfully:', response.data.roles);
+        return response.data.roles;
+      }
+
+      // Fallback to default roles if API doesn't exist
+      console.log('[API] Roles API not available, using defaults');
+      return [
+        { id: 1, name: 'Admin' },
+        { id: 2, name: 'User' },
+        { id: 3, name: 'Guest' },
+      ];
+    } catch (error: any) {
+      if (error instanceof SessionExpiredError) {
+        throw error;
+      }
+      console.error('[API] Get roles error:', error.message);
+      // Return default roles on error
+      return [
+        { id: 1, name: 'Admin' },
+        { id: 2, name: 'User' },
+        { id: 3, name: 'Guest' },
+      ];
     }
   }
 }

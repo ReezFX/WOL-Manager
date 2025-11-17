@@ -10,7 +10,7 @@ const App: React.FC = () => {
     <SafeAreaProvider>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor={Colors.background.light}
+        backgroundColor={Colors.background.primary}
       />
       <AuthProvider>
         <AppNavigator />

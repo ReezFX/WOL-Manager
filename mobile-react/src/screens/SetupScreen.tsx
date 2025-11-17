@@ -6,10 +6,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { Colors, Spacing, Typography, BorderRadius } from '../constants/theme';
-import { GlassCard, InputField, GradientButton, ErrorMessage } from '../components/UI';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button, Input } from '../components/UI';
+import {
+  Colors,
+  Typography,
+  Spacing,
+  BorderRadius,
+} from '../constants/theme';
 
 interface SetupScreenProps {
   onComplete: (serverUrl: string) => void;
@@ -17,103 +24,139 @@ interface SetupScreenProps {
 
 export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
   const [serverUrl, setServerUrl] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = () => {
-    // Validate server URL
+  const validateAndSubmit = async () => {
+    setError('');
+
     if (!serverUrl.trim()) {
       setError('Please enter a server URL');
       return;
     }
 
     // Basic URL validation
-    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)(:\d{1,5})?(\/.*)?$/i;
-    if (!urlPattern.test(serverUrl.trim())) {
-      setError('Please enter a valid server URL (e.g., 192.168.1.100:8008 or wol.example.com)');
+    let url = serverUrl.trim();
+    
+    // Add protocol if missing
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `http://${url}`;
+    }
+
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch (e) {
+      setError('Please enter a valid URL (e.g., 192.168.1.100:8008)');
       return;
     }
 
-    onComplete(serverUrl.trim());
+    setIsLoading(true);
+
+    // Simple connectivity check
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(url, {
+        method: 'HEAD',
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok || response.status === 404 || response.status === 302) {
+        // Server is reachable
+        onComplete(url);
+      } else {
+        setError('Server not reachable. Please check the URL.');
+      }
+    } catch (e: any) {
+      if (e.name === 'AbortError') {
+        setError('Connection timeout. Please check the URL and try again.');
+      } else {
+        setError('Cannot connect to server. Please check the URL.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <KeyboardAvoidingView
+    <LinearGradient
+      colors={Colors.primary.gradient}
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <LinearGradient
-        colors={[Colors.gradientStart.cardHeader, Colors.gradientEnd.cardHeader]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
         >
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <LinearGradient
-                colors={[Colors.gradientStart.primaryButton, Colors.gradientEnd.primaryButton]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.logo}
-              >
-                <Text style={styles.logoText}>WOL</Text>
-              </LinearGradient>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.title}>Welcome to</Text>
+              <Text style={styles.titleBold}>WOL Manager</Text>
+              <Text style={styles.subtitle}>
+                Wake-on-LAN management made simple
+              </Text>
             </View>
-            <Text style={styles.title}>WOL Manager</Text>
-            <Text style={styles.subtitle}>Setup your server connection</Text>
-          </View>
 
-          <GlassCard style={styles.card}>
-            <Text style={styles.cardTitle}>Server Configuration</Text>
-            <Text style={styles.instructions}>
-              Enter your WOL-Manager server URL below. You can use either HTTP or HTTPS.
-            </Text>
+            {/* Setup Card */}
+            <View style={styles.setupCard}>
+              <Text style={styles.cardTitle}>Setup Connection</Text>
+              <Text style={styles.cardDescription}>
+                Enter your WOL Manager server URL to get started
+              </Text>
 
-            {error && (
-              <ErrorMessage
-                message={error}
-                onDismiss={() => setError(null)}
-              />
-            )}
+              <View style={styles.form}>
+                <Input
+                  label="Server URL"
+                  placeholder="e.g., 192.168.1.100:8008"
+                  value={serverUrl}
+                  onChangeText={(text) => {
+                    setServerUrl(text);
+                    setError('');
+                  }}
+                  error={error}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                  returnKeyType="go"
+                  onSubmitEditing={validateAndSubmit}
+                />
 
-            <View style={styles.form}>
-              <Text style={styles.label}>Server URL</Text>
-              <InputField
-                placeholder="192.168.1.100:8008 or wol.example.com"
-                value={serverUrl}
-                onChangeText={(text) => {
-                  setServerUrl(text);
-                  setError(null);
-                }}
-                autoCapitalize="none"
-                keyboardType="url"
-              />
-
-              <View style={styles.examples}>
-                <Text style={styles.examplesTitle}>Examples:</Text>
-                <Text style={styles.exampleText}>• 192.168.1.100:8008</Text>
-                <Text style={styles.exampleText}>• http://192.168.1.100:8008</Text>
-                <Text style={styles.exampleText}>• https://wol.example.com</Text>
+                <Button
+                  title="Continue"
+                  onPress={validateAndSubmit}
+                  loading={isLoading}
+                  fullWidth
+                  size="large"
+                  style={styles.submitButton}
+                />
               </View>
 
-              <GradientButton
-                title="Continue"
-                onPress={handleContinue}
-                variant="primary"
-                style={styles.button}
-              />
+              {/* Helper Text */}
+              <View style={styles.helpSection}>
+                <Text style={styles.helpTitle}>Quick Setup Tips:</Text>
+                <Text style={styles.helpText}>
+                  • Make sure your device is on the same network
+                </Text>
+                <Text style={styles.helpText}>
+                  • Use IP address and port (e.g., 192.168.1.100:8008)
+                </Text>
+                <Text style={styles.helpText}>
+                  • The server must be running and accessible
+                </Text>
+              </View>
             </View>
-          </GlassCard>
-
-          <Text style={styles.footer}>
-            Make sure your WOL-Manager server is running and accessible from this device.
-          </Text>
-        </ScrollView>
-      </LinearGradient>
-    </KeyboardAvoidingView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
@@ -121,7 +164,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  gradient: {
+  safeArea: {
+    flex: 1,
+  },
+  keyboardView: {
     flex: 1,
   },
   scrollContent: {
@@ -129,80 +175,80 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     justifyContent: 'center',
   },
+
+  // Header
   header: {
     alignItems: 'center',
     marginBottom: Spacing.xl,
   },
-  logoContainer: {
-    marginBottom: Spacing.lg,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoText: {
-    ...Typography.h1,
-    color: Colors.text.light,
-    fontWeight: '700',
-  },
   title: {
-    ...Typography.h1,
-    color: Colors.text.light,
+    fontSize: Typography.fontSize['3xl'],
+    color: Colors.text.inverse,
+    fontFamily: Typography.fontFamily.regular,
     marginBottom: Spacing.xs,
+  },
+  titleBold: {
+    fontSize: Typography.fontSize['4xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.text.inverse,
+    fontFamily: Typography.fontFamily.bold,
+    marginBottom: Spacing.md,
   },
   subtitle: {
-    ...Typography.body,
-    color: Colors.text.light,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.inverse,
     opacity: 0.9,
+    fontFamily: Typography.fontFamily.regular,
+    textAlign: 'center',
   },
-  card: {
-    marginBottom: Spacing.lg,
+
+  // Setup Card
+  setupCard: {
+    backgroundColor: Colors.background.secondary,
+    borderRadius: BorderRadius['2xl'],
+    padding: Spacing.xl,
   },
   cardTitle: {
-    ...Typography.h2,
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
     color: Colors.text.primary,
-    marginBottom: Spacing.sm,
-  },
-  instructions: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-    marginBottom: Spacing.lg,
-  },
-  form: {
-    gap: Spacing.md,
-  },
-  label: {
-    ...Typography.bodyBold,
-    color: Colors.text.primary,
-    marginBottom: -Spacing.xs,
-  },
-  examples: {
-    backgroundColor: Colors.background.light,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.xs,
-  },
-  examplesTitle: {
-    ...Typography.caption,
-    color: Colors.text.primary,
-    fontWeight: '600',
+    fontFamily: Typography.fontFamily.bold,
     marginBottom: Spacing.xs,
   },
-  exampleText: {
-    ...Typography.caption,
+  cardDescription: {
+    fontSize: Typography.fontSize.base,
     color: Colors.text.secondary,
-    fontFamily: 'monospace',
+    fontFamily: Typography.fontFamily.regular,
+    marginBottom: Spacing.lg,
+    lineHeight: Typography.fontSize.base * Typography.lineHeight.normal,
   },
-  button: {
+
+  // Form
+  form: {
+    marginBottom: Spacing.lg,
+  },
+  submitButton: {
     marginTop: Spacing.md,
   },
-  footer: {
-    ...Typography.caption,
-    color: Colors.text.light,
-    textAlign: 'center',
-    opacity: 0.8,
+
+  // Help Section
+  helpSection: {
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  helpTitle: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text.primary,
+    fontFamily: Typography.fontFamily.medium,
+    marginBottom: Spacing.sm,
+  },
+  helpText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    fontFamily: Typography.fontFamily.regular,
+    marginBottom: Spacing.xs,
+    lineHeight: Typography.fontSize.sm * Typography.lineHeight.normal,
   },
 });

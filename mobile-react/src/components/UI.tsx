@@ -2,500 +2,487 @@ import React from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
   TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
   ViewStyle,
   TextStyle,
+  TextInputProps,
+  TouchableOpacityProps,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { Colors, Spacing, BorderRadius, Shadows, Typography } from '../constants/theme';
+import {
+  Colors,
+  Typography,
+  Spacing,
+  BorderRadius,
+  Shadows,
+  GlassEffect,
+  Layout,
+} from '../constants/theme';
 
-// ===== GRADIENT BUTTON =====
-interface GradientButtonProps {
-  title: string;
-  onPress: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  variant?: 'primary' | 'success' | 'danger';
-  style?: ViewStyle;
-}
-
-export const GradientButton: React.FC<GradientButtonProps> = ({
-  title,
-  onPress,
-  disabled = false,
-  loading = false,
-  variant = 'primary',
-  style,
-}) => {
-  const gradientColors = {
-    primary: [Colors.gradientStart.primaryButton, Colors.gradientEnd.primaryButton],
-    success: [Colors.gradientStart.successButton, Colors.gradientEnd.successButton],
-    danger: [Colors.gradientStart.dangerButton, Colors.gradientEnd.dangerButton],
-  };
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.8}
-      style={[styles.buttonContainer, style]}
-    >
-      <LinearGradient
-        colors={gradientColors[variant]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[
-          styles.gradientButton,
-          disabled && styles.buttonDisabled,
-        ]}
-      >
-        {loading ? (
-          <ActivityIndicator color={Colors.text.light} />
-        ) : (
-          <Text style={styles.buttonText}>{title}</Text>
-        )}
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-};
-
-// ===== GLASS CARD =====
-interface GlassCardProps {
-  children: React.ReactNode;
-  style?: ViewStyle;
-}
-
-export const GlassCard: React.FC<GlassCardProps> = ({ children, style }) => {
-  return (
-    <View style={[styles.glassCard, style]}>
-      {children}
-    </View>
-  );
-};
-
-// ===== INPUT FIELD =====
-interface InputFieldProps {
-  placeholder: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  secureTextEntry?: boolean;
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
-  style?: ViewStyle;
-}
-
-export const InputField: React.FC<InputFieldProps> = ({
-  placeholder,
-  value,
-  onChangeText,
-  secureTextEntry = false,
-  autoCapitalize = 'none',
-  keyboardType = 'default',
-  style,
-}) => {
-  return (
-    <TextInput
-      style={[styles.input, style]}
-      placeholder={placeholder}
-      placeholderTextColor={Colors.text.secondary}
-      value={value}
-      onChangeText={onChangeText}
-      secureTextEntry={secureTextEntry}
-      autoCapitalize={autoCapitalize}
-      keyboardType={keyboardType}
-    />
-  );
-};
-
-// ===== STATUS BADGE =====
-interface StatusBadgeProps {
-  status: string;
-  style?: ViewStyle;
-}
-
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
-  const normalizedStatus = status.toLowerCase();
-  
-  const getStatusIcon = () => {
-    switch (normalizedStatus) {
-      case 'online':
-        return '✓'; // Check icon
-      case 'offline':
-        return '✕'; // X icon
-      default:
-        return '?'; // Question icon
-    }
-  };
-
-  const getStatusGradient = () => {
-    switch (normalizedStatus) {
-      case 'online':
-        return [Colors.gradientStart.successButton, Colors.gradientEnd.successButton];
-      case 'offline':
-        return [Colors.gradientStart.dangerButton, Colors.gradientEnd.dangerButton];
-      default:
-        return ['#888', '#666'];
-    }
-  };
-
-  return (
-    <LinearGradient
-      colors={getStatusGradient()}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.statusBadge, style]}
-    >
-      <Text style={styles.statusIcon}>{getStatusIcon()}</Text>
-      <Text style={styles.statusText}>{normalizedStatus}</Text>
-    </LinearGradient>
-  );
-};
-
-// ===== HOST CARD =====
-interface HostCardProps {
-  host: {
-    id: number;
-    name: string;
-    mac_address: string;
-    ip: string | null;
-    status?: string;
-  };
-  onWake: (hostId: number) => void;
-  onView?: (hostId: number) => void;
-  waking?: boolean;
-}
-
-export const HostCard: React.FC<HostCardProps> = ({
-  host,
-  onWake,
-  onView,
-  waking = false,
-}) => {
-  return (
-    <GlassCard style={styles.hostCard}>
-      <View style={styles.hostCardHeader}>
-        <View style={styles.hostCardTitleRow}>
-          <Text style={styles.hostCardTitle}>{host.name}</Text>
-          {host.status && <StatusBadge status={host.status} />}
-        </View>
-      </View>
-
-      <View style={styles.hostCardContent}>
-        <View style={styles.hostInfoRow}>
-          <Text style={styles.hostInfoLabel}>MAC Address:</Text>
-          <View style={styles.macAddressBox}>
-            <Text style={styles.hostInfoValue}>{host.mac_address}</Text>
-          </View>
-        </View>
-
-        {host.ip && (
-          <View style={styles.hostInfoRow}>
-            <Text style={styles.hostInfoLabel}>IP Address:</Text>
-            <Text style={styles.hostInfoValue}>{host.ip}</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.hostCardActions}>
-        {onView && (
-          <TouchableOpacity
-            onPress={() => onView(host.id)}
-            style={styles.outlineButton}
-          >
-            <Text style={styles.outlineButtonText}>View</Text>
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          onPress={() => onWake(host.id)}
-          disabled={waking}
-          style={{ flex: 1 }}
-        >
-          <LinearGradient
-            colors={[Colors.gradientStart.successButton, Colors.gradientEnd.successButton]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.wakeButton}
-          >
-            {waking ? (
-              <ActivityIndicator color={Colors.text.light} size="small" />
-            ) : (
-              <View style={styles.wakeButtonContent}>
-                <Text style={styles.wakeButtonIcon}>⚡</Text>
-                <Text style={styles.wakeButtonText}>Wake</Text>
-              </View>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </GlassCard>
-  );
-};
-
-// ===== STATISTIC CARD =====
-interface StatisticCardProps {
-  title: string;
-  value: string;
-  iconGradient: string[];
-  style?: ViewStyle;
-}
-
-export const StatisticCard: React.FC<StatisticCardProps> = ({
-  title,
-  value,
-  iconGradient,
-  style,
-}) => {
-  return (
-    <GlassCard style={[styles.statisticCard, style]}>
-      <LinearGradient
-        colors={iconGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.statisticIconContainer}
-      >
-        <Text style={styles.statisticValue}>{value}</Text>
-      </LinearGradient>
-      <Text style={styles.statisticTitle}>{title}</Text>
-    </GlassCard>
-  );
-};
-
-// ===== ERROR MESSAGE =====
-interface ErrorMessageProps {
-  message: string;
-  onDismiss?: () => void;
-}
-
-export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, onDismiss }) => {
-  return (
-    <View style={styles.errorContainer}>
-      <Text style={styles.errorText}>{message}</Text>
-      {onDismiss && (
-        <TouchableOpacity onPress={onDismiss}>
-          <Text style={styles.errorDismiss}>✕</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-};
-
-// ===== LOADING SCREEN =====
+// Loading Screen
 export const LoadingScreen: React.FC = () => {
   return (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={Colors.primary} />
+      <ActivityIndicator size="large" color={Colors.primary.main} />
       <Text style={styles.loadingText}>Loading...</Text>
     </View>
   );
 };
 
-// ===== STYLES =====
+// Custom Button
+interface ButtonProps extends TouchableOpacityProps {
+  title: string;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'small' | 'medium' | 'large';
+  loading?: boolean;
+  icon?: React.ReactNode;
+  fullWidth?: boolean;
+}
+
+export const Button: React.FC<ButtonProps> = ({
+  title,
+  variant = 'primary',
+  size = 'medium',
+  loading = false,
+  icon,
+  fullWidth = false,
+  disabled,
+  style,
+  ...props
+}) => {
+  const buttonStyle = [
+    styles.button,
+    styles[`button_${variant}`],
+    styles[`button_${size}`],
+    fullWidth && styles.buttonFullWidth,
+    disabled && styles.buttonDisabled,
+    style,
+  ];
+
+  const textStyle = [
+    styles.buttonText,
+    styles[`buttonText_${variant}`],
+    styles[`buttonText_${size}`],
+  ];
+
+  if (variant === 'primary') {
+    return (
+      <TouchableOpacity disabled={disabled || loading} {...props}>
+        <LinearGradient
+          colors={Colors.primary.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={buttonStyle}
+        >
+          {loading ? (
+            <ActivityIndicator color={Colors.text.inverse} />
+          ) : (
+            <>
+              {icon && <View style={styles.buttonIcon}>{icon}</View>}
+              <Text style={textStyle}>{title}</Text>
+            </>
+          )}
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <TouchableOpacity
+      style={buttonStyle}
+      disabled={disabled || loading}
+      {...props}
+    >
+      {loading ? (
+        <ActivityIndicator
+          color={
+            variant === 'secondary'
+              ? Colors.text.inverse
+              : Colors.primary.main
+          }
+        />
+      ) : (
+        <>
+          {icon && <View style={styles.buttonIcon}>{icon}</View>}
+          <Text style={textStyle}>{title}</Text>
+        </>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+// Custom Input
+interface InputProps extends TextInputProps {
+  label?: string;
+  error?: string;
+  icon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+}
+
+export const Input: React.FC<InputProps> = ({
+  label,
+  error,
+  icon,
+  rightIcon,
+  style,
+  ...props
+}) => {
+  return (
+    <View style={styles.inputContainer}>
+      {label && <Text style={styles.inputLabel}>{label}</Text>}
+      <View style={[styles.inputWrapper, error && styles.inputWrapperError]}>
+        {icon && <View style={styles.inputIcon}>{icon}</View>}
+        <TextInput
+          style={[
+            styles.input,
+            icon && styles.inputWithIcon,
+            rightIcon && styles.inputWithRightIcon,
+            style,
+          ]}
+          placeholderTextColor={Colors.text.tertiary}
+          {...props}
+        />
+        {rightIcon && <View style={styles.inputRightIcon}>{rightIcon}</View>}
+      </View>
+      {error && <Text style={styles.inputError}>{error}</Text>}
+    </View>
+  );
+};
+
+// Card Component
+interface CardProps {
+  children: React.ReactNode;
+  style?: ViewStyle;
+  onPress?: () => void;
+}
+
+export const Card: React.FC<CardProps> = ({ children, style, onPress }) => {
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        style={[styles.card, style]}
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
+        {children}
+      </TouchableOpacity>
+    );
+  }
+
+  return <View style={[styles.card, style]}>{children}</View>;
+};
+
+// Glass Card (with blur effect simulation)
+export const GlassCard: React.FC<CardProps> = ({
+  children,
+  style,
+  onPress,
+}) => {
+  const content = (
+    <View style={[styles.glassCard, style]}>{children}</View>
+  );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return content;
+};
+
+// Status Badge
+interface StatusBadgeProps {
+  status: 'online' | 'offline' | 'unknown';
+  label?: string;
+}
+
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label }) => {
+  const statusColor = Colors.status[status];
+  const statusLabel = label || status.charAt(0).toUpperCase() + status.slice(1);
+
+  return (
+    <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+      <View style={styles.statusDot} />
+      <Text style={styles.statusText}>{statusLabel}</Text>
+    </View>
+  );
+};
+
+// Divider
+interface DividerProps {
+  style?: ViewStyle;
+  color?: string;
+}
+
+export const Divider: React.FC<DividerProps> = ({ style, color }) => {
+  return (
+    <View
+      style={[
+        styles.divider,
+        { backgroundColor: color || Colors.border.light },
+        style,
+      ]}
+    />
+  );
+};
+
+// Empty State
+interface EmptyStateProps {
+  title: string;
+  description?: string;
+  icon?: React.ReactNode;
+  action?: {
+    label: string;
+    onPress: () => void;
+  };
+}
+
+export const EmptyState: React.FC<EmptyStateProps> = ({
+  title,
+  description,
+  icon,
+  action,
+}) => {
+  return (
+    <View style={styles.emptyState}>
+      {icon && <View style={styles.emptyStateIcon}>{icon}</View>}
+      <Text style={styles.emptyStateTitle}>{title}</Text>
+      {description && (
+        <Text style={styles.emptyStateDescription}>{description}</Text>
+      )}
+      {action && (
+        <Button
+          title={action.label}
+          onPress={action.onPress}
+          variant="primary"
+          style={styles.emptyStateButton}
+        />
+      )}
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
-  // Button styles
-  buttonContainer: {
-    borderRadius: BorderRadius.md,
-    ...Shadows.md,
+  // Loading Screen
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background.primary,
   },
-  gradientButton: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
+    fontFamily: Typography.fontFamily.regular,
+  },
+
+  // Button
+  button: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.lg,
+    ...Shadows.md,
+  },
+  button_primary: {
+    // Gradient background applied via LinearGradient
+  },
+  button_secondary: {
+    backgroundColor: Colors.text.secondary,
+  },
+  button_outline: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: Colors.primary.main,
+  },
+  button_ghost: {
+    backgroundColor: 'transparent',
+  },
+  button_small: {
+    height: 36,
+    paddingHorizontal: Spacing.md,
+  },
+  button_medium: {
+    height: Layout.buttonHeight,
+  },
+  button_large: {
+    height: 56,
+    paddingHorizontal: Spacing.xl,
+  },
+  buttonFullWidth: {
+    width: '100%',
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   buttonText: {
-    color: Colors.text.light,
-    ...Typography.bodyBold,
+    fontFamily: Typography.fontFamily.medium,
+    textAlign: 'center',
+  },
+  buttonText_primary: {
+    color: Colors.text.inverse,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+  },
+  buttonText_secondary: {
+    color: Colors.text.inverse,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+  },
+  buttonText_outline: {
+    color: Colors.primary.main,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+  },
+  buttonText_ghost: {
+    color: Colors.primary.main,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  buttonText_small: {
+    fontSize: Typography.fontSize.sm,
+  },
+  buttonText_medium: {
+    fontSize: Typography.fontSize.base,
+  },
+  buttonText_large: {
+    fontSize: Typography.fontSize.lg,
+  },
+  buttonIcon: {
+    marginRight: Spacing.sm,
   },
 
-  // Glass card styles
-  glassCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  // Input
+  inputContainer: {
+    marginBottom: Spacing.md,
+  },
+  inputLabel: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.text.primary,
+    marginBottom: Spacing.xs,
+    fontFamily: Typography.fontFamily.medium,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background.secondary,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    height: Layout.inputHeight,
+    ...Shadows.sm,
+  },
+  inputWrapperError: {
+    borderColor: Colors.error.main,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
+    fontFamily: Typography.fontFamily.regular,
+  },
+  inputWithIcon: {
+    paddingLeft: 0,
+  },
+  inputWithRightIcon: {
+    paddingRight: 0,
+  },
+  inputIcon: {
+    paddingLeft: Spacing.md,
+    paddingRight: Spacing.xs,
+  },
+  inputRightIcon: {
+    paddingRight: Spacing.md,
+    paddingLeft: Spacing.xs,
+  },
+  inputError: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.error.main,
+    marginTop: Spacing.xs,
+    fontFamily: Typography.fontFamily.regular,
+  },
+
+  // Card
+  card: {
+    backgroundColor: Colors.background.secondary,
     borderRadius: BorderRadius.xl,
     padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
     ...Shadows.md,
   },
 
-  // Input styles
-  input: {
-    backgroundColor: Colors.surface.light,
-    borderWidth: 1,
-    borderColor: Colors.text.secondary + '40',
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    ...Typography.body,
-    color: Colors.text.primary,
+  // Glass Card
+  glassCard: {
+    ...GlassEffect,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
   },
 
-  // Status badge styles
+  // Status Badge
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.round,
-    gap: Spacing.xs,
-  },
-  statusIcon: {
-    color: Colors.text.light,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  statusText: {
-    color: Colors.text.light,
-    ...Typography.small,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-
-  // Host card styles
-  hostCard: {
-    marginBottom: Spacing.md,
-  },
-  hostCardHeader: {
-    marginBottom: Spacing.md,
-  },
-  hostCardTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  hostCardTitle: {
-    ...Typography.h3,
-    color: Colors.text.primary,
-  },
-  hostCardContent: {
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  hostInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  hostInfoLabel: {
-    ...Typography.caption,
-    color: Colors.text.secondary,
-    fontWeight: '600',
-  },
-  hostInfoValue: {
-    ...Typography.caption,
-    color: Colors.text.primary,
-  },
-  macAddressBox: {
-    backgroundColor: Colors.background.light,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-    fontFamily: 'monospace',
+    borderRadius: BorderRadius.full,
   },
-  hostCardActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.text.inverse,
+    marginRight: Spacing.xs,
   },
-  outlineButton: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  outlineButtonText: {
-    color: Colors.primary,
-    ...Typography.bodyBold,
-  },
-  wakeButton: {
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wakeButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  wakeButtonIcon: {
-    fontSize: 18,
-    color: Colors.text.light,
-  },
-  wakeButtonText: {
-    color: Colors.text.light,
-    ...Typography.bodyBold,
+  statusText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text.inverse,
+    fontWeight: Typography.fontWeight.medium,
+    fontFamily: Typography.fontFamily.medium,
   },
 
-  // Statistic card styles
-  statisticCard: {
-    alignItems: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.lg,
+  // Divider
+  divider: {
+    height: 1,
+    width: '100%',
   },
-  statisticIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
+
+  // Empty State
+  emptyState: {
+    flex: 1,
     justifyContent: 'center',
-    ...Shadows.sm,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
   },
-  statisticValue: {
-    ...Typography.h2,
-    color: Colors.text.light,
-    fontWeight: '700',
+  emptyStateIcon: {
+    marginBottom: Spacing.lg,
   },
-  statisticTitle: {
-    ...Typography.caption,
+  emptyStateTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+    fontFamily: Typography.fontFamily.bold,
+  },
+  emptyStateDescription: {
+    fontSize: Typography.fontSize.base,
     color: Colors.text.secondary,
-    textTransform: 'uppercase',
-    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: Spacing.lg,
+    fontFamily: Typography.fontFamily.regular,
+    lineHeight: Typography.fontSize.base * Typography.lineHeight.relaxed,
   },
-
-  // Error message styles
-  errorContainer: {
-    backgroundColor: Colors.danger + '20',
-    borderColor: Colors.danger,
-    borderWidth: 1,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  errorText: {
-    ...Typography.body,
-    color: Colors.danger,
-    flex: 1,
-  },
-  errorDismiss: {
-    ...Typography.h3,
-    color: Colors.danger,
-    fontWeight: '700',
-    paddingLeft: Spacing.sm,
-  },
-
-  // Loading screen styles
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background.light,
-  },
-  loadingText: {
+  emptyStateButton: {
     marginTop: Spacing.md,
-    ...Typography.body,
-    color: Colors.text.secondary,
   },
 });

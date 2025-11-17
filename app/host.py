@@ -342,13 +342,17 @@ def delete_host(host_id):
     # Check if this is an AJAX request
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
+    # Debug logging
+    logger.info(f"Delete request for host {host_id}: is_ajax={is_ajax}, user={current_user.username}, admin={current_user.is_admin}")
+    logger.info(f"Request headers: X-Requested-With={request.headers.get('X-Requested-With')}")
+    
     try:
         # Use filter_by instead of get to ensure we're in the right session context
         host = db_session.query(Host).filter_by(id=host_id).first()
         
         if not host:
             if is_ajax:
-                return {'error': 'Host not found'}, 404
+                return jsonify({'error': 'Host not found'}), 404
             flash('Host not found', 'danger')
             return redirect(url_for('host.list_hosts'))
         
@@ -369,7 +373,7 @@ def delete_host(host_id):
         if not (has_delete_perm or (is_owner and visible_to_user) or current_user.is_admin):
             access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to delete host {host_id} ({host_name}) without permission")
             if is_ajax:
-                return {'error': 'You do not have permission to delete this host'}, 403
+                return jsonify({'error': 'You do not have permission to delete this host'}), 403
             flash('You do not have permission to delete this host', 'danger')
             return redirect(url_for('host.list_hosts'))
         
@@ -391,7 +395,7 @@ def delete_host(host_id):
             db_session.rollback()
             access_logger.error(f"Failed to delete host {host_id} '{host_name}' - still exists after commit")
             if is_ajax:
-                return {'error': 'Database operation failed'}, 500
+                return jsonify({'error': 'Database operation failed'}), 500
             flash(f'Error deleting host: Database operation failed', 'danger')
             return redirect(url_for('host.list_hosts'))
         
@@ -399,14 +403,14 @@ def delete_host(host_id):
         
         # Return success response for AJAX
         if is_ajax:
-            return {'success': True, 'message': f'Host {host_name} deleted successfully'}, 200
+            return jsonify({'success': True, 'message': f'Host {host_name} deleted successfully'}), 200
         
         flash(f'Host {host_name} deleted successfully', 'success')
     except Exception as e:
         db_session.rollback()
         access_logger.error(f"Exception while deleting host {host_id}: {str(e)}")
         if is_ajax:
-            return {'error': f'Error deleting host: {str(e)}'}, 500
+            return jsonify({'error': f'Error deleting host: {str(e)}'}), 500
         flash(f'Error deleting host: {str(e)}', 'danger')
     finally:
         # Ensure session is properly closed to avoid stale data
@@ -424,7 +428,7 @@ def delete_host(host_id):
             return redirect(url_for('host.list_hosts'))
     
     # This should never be reached but just in case
-    return {'error': 'Unexpected error'}, 500
+    return jsonify({'error': 'Unexpected error'}), 500
 
 @host.route('/view/<int:host_id>')
 @login_required
@@ -489,6 +493,33 @@ def utility_processor():
         'get_role_names': get_role_names
     }
 
+@host.route('/api/roles')
+@login_required
+def get_roles():
+    """API endpoint to get all roles for mobile app"""
+    try:
+        # Get all roles from database
+        roles = db_session.query(Role).all()
+        
+        # Build response
+        response_data = {
+            "roles": [
+                {
+                    "id": role.id,
+                    "name": role.name,
+                    "description": getattr(role, 'description', role.name)
+                }
+                for role in roles
+            ]
+        }
+        
+        access_logger.info(f"Roles retrieved by user: {current_user.username} (id: {current_user.id})")
+        return jsonify(response_data)
+        
+    except Exception as e:
+        logger.error(f"Error getting roles: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 @host.route('/api/status')
 @login_required
 def get_host_statuses():
@@ -512,15 +543,19 @@ def get_host_statuses():
         host_ids = [host.id for host in hosts]
         statuses = get_all_host_statuses(host_ids)
         
-        # Build response
+        # Build response with complete host data
         response_data = {
             "statuses": [
                 {
                     "host_id": host.id,
                     "name": host.name,
+                    "mac_address": host.mac_address,
                     "ip": host.ip,
+                    "description": host.description if host.description else '',
                     "status": statuses[host.id]["status"],
-                    "last_check": statuses[host.id]["last_check"]
+                    "last_check": statuses[host.id]["last_check"],
+                    "public_access": host.public_access if hasattr(host, 'public_access') else False,
+                    "created_at": host.created_at.isoformat() if hasattr(host, 'created_at') and host.created_at else None
                 }
                 for host in hosts
             ]
