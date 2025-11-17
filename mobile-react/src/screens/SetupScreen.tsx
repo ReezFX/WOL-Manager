@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -33,6 +34,19 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete, onPublicHo
   const [publicHostUrl, setPublicHostUrl] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(0);
+  
+  // Animation refs and effects
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: setupType === 'server' ? 0 : 1,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 10,
+    }).start();
+  }, [setupType, slideAnim]);
 
   const validateAndSubmit = async () => {
     setError('');
@@ -171,16 +185,33 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete, onPublicHo
             {/* Setup Card */}
             <Card style={styles.setupCard}>
               {/* Setup Type Toggle */}
-              <View style={styles.toggleContainer}>
-                <TouchableOpacity
+              <View 
+                style={styles.toggleContainer}
+                onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+              >
+                {/* Animated Slider Background */}
+                <Animated.View
                   style={[
-                    styles.toggleButton,
-                    setupType === 'server' && styles.toggleButtonActive,
+                    styles.toggleSlider,
+                    {
+                      width: containerWidth > 0 ? (containerWidth - 8) / 2 : '50%',
+                      transform: [{
+                        translateX: slideAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, (containerWidth - 8) / 2],
+                        }),
+                      }],
+                    },
                   ]}
+                />
+                
+                <TouchableOpacity
+                  style={styles.toggleButton}
                   onPress={() => {
                     setSetupType('server');
                     setError('');
                   }}
+                  activeOpacity={0.7}
                 >
                   <Text
                     style={[
@@ -192,14 +223,12 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete, onPublicHo
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.toggleButton,
-                    setupType === 'publicHost' && styles.toggleButtonActive,
-                  ]}
+                  style={styles.toggleButton}
                   onPress={() => {
                     setSetupType('publicHost');
                     setError('');
                   }}
+                  activeOpacity={0.7}
                 >
                   <Text
                     style={[
@@ -315,6 +344,16 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     padding: 4,
     marginBottom: Spacing.lg,
+    position: 'relative',
+  },
+  toggleSlider: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    bottom: 4,
+    backgroundColor: Colors.primary.main,
+    borderRadius: BorderRadius.md,
+    ...Shadows.sm,
   },
   toggleButton: {
     flex: 1,
@@ -322,10 +361,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
-  },
-  toggleButtonActive: {
-    backgroundColor: Colors.primary.main,
-    ...Shadows.sm,
+    zIndex: 1,
   },
   toggleButtonText: {
     fontSize: Typography.fontSize.sm,
