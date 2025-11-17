@@ -176,7 +176,7 @@ export const AppNavigator: React.FC = () => {
   const [publicHostConfig, setPublicHostConfig] = useState<PublicHostConfig | null>(null);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
-  // Load saved public host config on mount and check periodically
+  // Load saved public host config on mount only
   React.useEffect(() => {
     const loadSavedConfig = async () => {
       try {
@@ -184,10 +184,6 @@ export const AppNavigator: React.FC = () => {
         if (savedPublicHostConfig) {
           console.log('[AppNavigator] Loaded saved public host config');
           setPublicHostConfig(savedPublicHostConfig);
-        } else if (publicHostConfig) {
-          // Config was removed, clear state
-          console.log('[AppNavigator] Public host config removed');
-          setPublicHostConfig(null);
         }
       } catch (error) {
         console.error('[AppNavigator] Failed to load saved config:', error);
@@ -197,12 +193,7 @@ export const AppNavigator: React.FC = () => {
     };
     
     loadSavedConfig();
-    
-    // Check for config changes periodically
-    const interval = setInterval(loadSavedConfig, 2000);
-    
-    return () => clearInterval(interval);
-  }, [publicHostConfig]);
+  }, []);
 
   // Show loading screen while initializing
   if (isLoading || isLoadingConfig) {
@@ -242,7 +233,13 @@ export const AppNavigator: React.FC = () => {
         ) : publicHostConfig ? (
           // Public host mode - show public host screen directly
           <Stack.Screen name="PublicHost">
-            {() => <PublicHostScreen route={{ params: { publicHostConfig } } as any} navigation={undefined as any} />}
+            {() => (
+              <PublicHostScreen 
+                route={{ params: { publicHostConfig } } as any} 
+                navigation={undefined as any}
+                onConfigRemoved={() => setPublicHostConfig(null)}
+              />
+            )}
           </Stack.Screen>
         ) : !isAuthenticated ? (
           <Stack.Screen name="Login">

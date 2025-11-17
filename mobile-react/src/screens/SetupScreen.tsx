@@ -8,15 +8,17 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input } from '../components/UI';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Button, Input, Card } from '../components/UI';
 import {
   Colors,
   Typography,
   Spacing,
   BorderRadius,
+  Shadows,
 } from '../constants/theme';
 import { PublicHostConfig } from '../types';
 
@@ -147,37 +149,27 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete, onPublicHo
   };
 
   return (
-    <LinearGradient
-      colors={Colors.primary.gradient}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Welcome to</Text>
-              <Text style={styles.titleBold}>WOL Manager</Text>
-              <Text style={styles.subtitle}>
-                Wake-on-LAN management made simple
-              </Text>
-            </View>
+          {/* Header */}
+          <View style={styles.header}>
+            <Image
+              source={require('../assets/images/logo-full.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.subtitle}>Setup your connection</Text>
+          </View>
 
             {/* Setup Card */}
-            <View style={styles.setupCard}>
-              <Text style={styles.cardTitle}>Setup Connection</Text>
-              <Text style={styles.cardDescription}>
-                {setupType === 'server'
-                  ? 'Enter your WOL Manager server URL to get started'
-                  : 'Enter a public host link to access a single host'}
-              </Text>
-
+            <Card style={styles.setupCard}>
               {/* Setup Type Toggle */}
               <View style={styles.toggleContainer}>
                 <TouchableOpacity
@@ -264,50 +256,26 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete, onPublicHo
                   style={styles.submitButton}
                 />
               </View>
+            </Card>
 
-              {/* Helper Text */}
-              <View style={styles.helpSection}>
-                <Text style={styles.helpTitle}>Quick Setup Tips:</Text>
-                {setupType === 'server' ? (
-                  <>
-                    <Text style={styles.helpText}>
-                      • Make sure your device is on the same network
-                    </Text>
-                    <Text style={styles.helpText}>
-                      • Use IP address and port (e.g., 192.168.1.100:8008)
-                    </Text>
-                    <Text style={styles.helpText}>
-                      • The server must be running and accessible
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.helpText}>
-                      • Get the public host URL from your WOL Manager admin
-                    </Text>
-                    <Text style={styles.helpText}>
-                      • Paste the complete URL including the token
-                    </Text>
-                    <Text style={styles.helpText}>
-                      • You'll only have access to that specific host
-                    </Text>
-                  </>
-                )}
-              </View>
+            {/* Helper Text */}
+            <View style={styles.helpSection}>
+              <Text style={styles.helpText}>
+                {setupType === 'server'
+                  ? 'Enter your server IP address and port (e.g., 192.168.1.100:8008)'
+                  : 'Paste the complete public host URL including the token'}
+              </Text>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  safeArea: {
-    flex: 1,
+    backgroundColor: Colors.background.primary,
   },
   keyboardView: {
     flex: 1,
@@ -321,76 +289,52 @@ const styles = StyleSheet.create({
   // Header
   header: {
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing['2xl'],
   },
-  title: {
-    fontSize: Typography.fontSize['3xl'],
-    color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.regular,
-    marginBottom: Spacing.xs,
-  },
-  titleBold: {
-    fontSize: Typography.fontSize['4xl'],
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.md,
+  logo: {
+    width: 280,
+    height: 120,
+    marginBottom: Spacing.lg,
   },
   subtitle: {
     fontSize: Typography.fontSize.base,
-    color: Colors.text.inverse,
-    opacity: 0.9,
+    color: Colors.text.tertiary,
     fontFamily: Typography.fontFamily.regular,
     textAlign: 'center',
   },
 
   // Setup Card
   setupCard: {
-    backgroundColor: Colors.background.secondary,
-    borderRadius: BorderRadius['2xl'],
-    padding: Spacing.xl,
-  },
-  cardTitle: {
-    fontSize: Typography.fontSize['2xl'],
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.primary,
-    fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.xs,
-  },
-  cardDescription: {
-    fontSize: Typography.fontSize.base,
-    color: Colors.text.secondary,
-    fontFamily: Typography.fontFamily.regular,
-    marginBottom: Spacing.lg,
-    lineHeight: Typography.fontSize.base * Typography.lineHeight.normal,
+    marginBottom: Spacing.md,
   },
 
   // Toggle
   toggleContainer: {
     flexDirection: 'row',
-    backgroundColor: Colors.border.light,
+    backgroundColor: Colors.background.primary,
     borderRadius: BorderRadius.lg,
     padding: 4,
     marginBottom: Spacing.lg,
   },
   toggleButton: {
     flex: 1,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
   },
   toggleButtonActive: {
-    backgroundColor: Colors.primary.default,
+    backgroundColor: Colors.primary.main,
+    ...Shadows.sm,
   },
   toggleButtonText: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.secondary,
+    color: Colors.text.tertiary,
     fontFamily: Typography.fontFamily.medium,
   },
   toggleButtonTextActive: {
-    color: Colors.text.inverse,
+    color: Colors.text.primary,
     fontWeight: Typography.fontWeight.semibold,
   },
 
@@ -404,22 +348,14 @@ const styles = StyleSheet.create({
 
   // Help Section
   helpSection: {
-    paddingTop: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
-  },
-  helpTitle: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.text.primary,
-    fontFamily: Typography.fontFamily.medium,
-    marginBottom: Spacing.sm,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
   },
   helpText: {
     fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.text.tertiary,
     fontFamily: Typography.fontFamily.regular,
-    marginBottom: Spacing.xs,
     lineHeight: Typography.fontSize.sm * Typography.lineHeight.normal,
+    textAlign: 'center',
   },
 });

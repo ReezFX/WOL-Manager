@@ -37,9 +37,10 @@ type PublicHostScreenNavigationProp = NativeStackNavigationProp<
 interface Props {
   route: PublicHostScreenRouteProp;
   navigation: PublicHostScreenNavigationProp;
+  onConfigRemoved?: () => void;
 }
 
-export const PublicHostScreen: React.FC<Props> = ({ route, navigation }) => {
+export const PublicHostScreen: React.FC<Props> = ({ route, navigation, onConfigRemoved }) => {
   const { publicHostConfig } = route.params;
   const toast = useToast();
   
@@ -53,6 +54,7 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation }) => {
   
   // Animation for wake button
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const statusCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch host status
   const fetchHostStatus = useCallback(async (showLoadingIndicator = true) => {
@@ -88,6 +90,13 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation }) => {
   // Initial load
   useEffect(() => {
     fetchHostStatus();
+    
+    // Cleanup interval on unmount
+    return () => {
+      if (statusCheckIntervalRef.current) {
+        clearInterval(statusCheckIntervalRef.current);
+      }
+    };
   }, [fetchHostStatus]);
 
   // Auto-refresh every 15 seconds
@@ -142,19 +151,68 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation }) => {
       );
 
       if (success) {
-        toast.showSuccess('Magic packet sent successfully', 'Wake Sent');
+        toast.showSuccess(`Wake-on-LAN packet sent to ${host.name}`);
         
-        // Start polling for status changes
-        setTimeout(() => {
-          fetchHostStatus(false);
-        }, 2000);
+        // Clear any existing interval
+        if (statusCheckIntervalRef.current) {
+          clearInterval(statusCheckIntervalRef.current);
+        }
+        
+        // Start monitoring host status
+        const startTime = Date.now();
+        const maxDuration = 60000; // 60 seconds
+        
+        statusCheckIntervalRef.current = setInterval(async () => {
+          const elapsed = Date.now() - startTime;
+          
+          // Stop after 60 seconds
+          if (elapsed >= maxDuration) {
+            if (statusCheckIntervalRef.current) {
+              clearInterval(statusCheckIntervalRef.current);
+              statusCheckIntervalRef.current = null;
+            }
+            setIsWaking(false);
+            toast.showInfo(`Wake timeout for ${host.name}`);
+            return;
+          }
+          
+          // Check host status
+          try {
+            const statusData = await apiClient.getPublicHostStatus(
+              publicHostConfig.serverBaseUrl,
+              publicHostConfig.token
+            );
+            
+            if (statusData.status === 'online') {
+              if (statusCheckIntervalRef.current) {
+                clearInterval(statusCheckIntervalRef.current);
+                statusCheckIntervalRef.current = null;
+              }
+              setIsWaking(false);
+              
+              // Update host state
+              setHost({
+                id: statusData.host_id,
+                name: statusData.name,
+                mac_address: '',
+                description: undefined,
+                status: statusData.status,
+                last_check: statusData.last_check,
+              });
+              
+              toast.showSuccess(`${host.name} is now online!`);
+            }
+          } catch (error) {
+            // Continue checking even if one request fails
+            console.log('[PublicHost] Status check failed, continuing...');
+          }
+        }, 3000) as unknown as NodeJS.Timeout; // Check every 3 seconds
       }
     } catch (err: any) {
       toast.showError(err.message || 'Failed to wake host', 'Wake Failed');
-    } finally {
       setIsWaking(false);
     }
-  }, [host, publicHostConfig, toast, fetchHostStatus]);
+  }, [host, publicHostConfig, toast]);
 
   // Handle wake with confirmation
   const handleWakeHost = useCallback(() => {
@@ -189,12 +247,14 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       await storage.clearPublicHostConfig();
       toast.showSuccess('Public host removed successfully');
-      // Force app restart by clearing config - navigation will handle showing setup
-      // The AppNavigator will detect no config and show setup screen
+      // Notify parent to update navigation state
+      if (onConfigRemoved) {
+        onConfigRemoved();
+      }
     } catch (error: any) {
       toast.showError('Failed to remove public host', 'Error');
     }
-  }, [toast]);
+  }, [toast, onConfigRemoved]);
 
   // Format last check time
   const formatLastCheck = (lastCheck?: string) => {

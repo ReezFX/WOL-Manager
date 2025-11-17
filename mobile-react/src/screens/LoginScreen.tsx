@@ -8,16 +8,18 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input } from '../components/UI';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Button, Input, Card } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import {
   Colors,
   Typography,
   Spacing,
   BorderRadius,
+  Shadows,
 } from '../constants/theme';
 
 interface LoginScreenProps {
@@ -81,31 +83,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ serverUrl }) => {
   const serverDisplay = serverUrl.replace(/^https?:\/\//, '');
 
   return (
-    <LinearGradient
-      colors={Colors.primary.gradient}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Sign In</Text>
-              <Text style={styles.subtitle}>to WOL Manager</Text>
-              <View style={styles.serverBadge}>
-                <Text style={styles.serverLabel}>Server:</Text>
-                <Text style={styles.serverValue}>{serverDisplay}</Text>
-              </View>
-            </View>
+          {/* Header */}
+          <View style={styles.header}>
+            <Image
+              source={require('../assets/images/logo-full.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.subtitle}>Sign in to continue</Text>
+          </View>
 
             {/* Login Card */}
-            <View style={styles.loginCard}>
+            <Card style={styles.loginCard}>
               <View style={styles.form}>
                 <Input
                   label="Username"
@@ -163,29 +161,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ serverUrl }) => {
                 />
               </View>
 
-              {/* Default Credentials Info */}
-              <View style={styles.infoSection}>
-                <Text style={styles.infoTitle}>Default Credentials:</Text>
-                <Text style={styles.infoText}>Username: WOLadmin</Text>
-                <Text style={styles.infoText}>Password: Manager</Text>
-                <Text style={styles.infoNote}>
-                  Please change these after first login
-                </Text>
-              </View>
+            </Card>
+
+            {/* Server Info */}
+            <View style={styles.serverInfo}>
+              <Ionicons name="server-outline" size={16} color={Colors.text.tertiary} />
+              <Text style={styles.serverText}>{serverDisplay}</Text>
+            </View>
+
+            {/* Default Credentials */}
+            <View style={styles.credentialsHint}>
+              <Text style={styles.hintText}>
+                Default: <Text style={styles.hintBold}>WOLadmin</Text> / <Text style={styles.hintBold}>Manager</Text>
+              </Text>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  safeArea: {
-    flex: 1,
+    backgroundColor: Colors.background.primary,
   },
   keyboardView: {
     flex: 1,
@@ -199,49 +198,22 @@ const styles = StyleSheet.create({
   // Header
   header: {
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing['2xl'],
   },
-  title: {
-    fontSize: Typography.fontSize['4xl'],
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.bold,
+  logo: {
+    width: 280,
+    height: 120,
+    marginBottom: Spacing.lg,
   },
   subtitle: {
-    fontSize: Typography.fontSize.xl,
-    color: Colors.text.inverse,
-    opacity: 0.9,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.tertiary,
     fontFamily: Typography.fontFamily.regular,
-    marginBottom: Spacing.md,
-  },
-  serverBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    marginTop: Spacing.sm,
-  },
-  serverLabel: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.medium,
-    marginRight: Spacing.xs,
-    opacity: 0.8,
-  },
-  serverValue: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.inverse,
-    fontWeight: Typography.fontWeight.semibold,
-    fontFamily: Typography.fontFamily.medium,
   },
 
   // Login Card
   loginCard: {
-    backgroundColor: Colors.background.secondary,
-    borderRadius: BorderRadius['2xl'],
-    padding: Spacing.xl,
+    marginBottom: Spacing.md,
   },
 
   // Form
@@ -272,30 +244,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Info Section
-  infoSection: {
-    paddingTop: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
+  // Server Info
+  serverInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
   },
-  infoTitle: {
+  serverText: {
     fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.text.primary,
-    fontFamily: Typography.fontFamily.medium,
-    marginBottom: Spacing.sm,
-  },
-  infoText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-    fontFamily: Typography.fontFamily.regular,
-    marginBottom: Spacing.xs,
-  },
-  infoNote: {
-    fontSize: Typography.fontSize.xs,
     color: Colors.text.tertiary,
     fontFamily: Typography.fontFamily.regular,
-    fontStyle: 'italic',
-    marginTop: Spacing.xs,
+    marginLeft: Spacing.xs,
+  },
+
+  // Credentials Hint
+  credentialsHint: {
+    alignItems: 'center',
+  },
+  hintText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
+    fontFamily: Typography.fontFamily.regular,
+  },
+  hintBold: {
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text.secondary,
+    fontFamily: Typography.fontFamily.medium,
   },
 });
