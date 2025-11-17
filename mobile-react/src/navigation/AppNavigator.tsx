@@ -30,17 +30,17 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   return (
     <SafeAreaView edges={['bottom']} style={styles.tabBarSafeArea}>
       <View style={styles.tabBarContainer}>
-        <View style={styles.tabBarBlurWrapper}>
-          {Platform.OS === 'ios' ? (
-            <BlurView
-              style={styles.tabBarBlurLayer}
-              blurType="dark"
-              blurAmount={20}
-              reducedTransparencyFallbackColor={Colors.glass.background}
-            />
-          ) : (
-            <View style={styles.tabBarBlurFallback} />
-          )}
+        <View style={styles.tabBarWrapper}>
+          {/* Blur as background layer */}
+          <BlurView
+            style={styles.tabBarBlurLayer}
+            blurType="dark"
+            blurAmount={Platform.OS === 'ios' ? 20 : 10}
+            blurRadius={Platform.OS === 'android' ? 10 : undefined}
+            overlayColor={Platform.OS === 'android' ? 'transparent' : undefined}
+            reducedTransparencyFallbackColor={Colors.glass.background}
+          />
+          {/* Navigation content on top */}
           <View style={styles.tabBar}>
           {state.routes.map((route: any, index: number) => {
             const { options } = descriptors[route.key];
@@ -235,7 +235,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 16,
   },
-  tabBarBlurWrapper: {
+  tabBarWrapper: {
+    position: 'relative',
     borderRadius: 24,
     overflow: 'visible',
     ...Shadows.xl,
@@ -243,14 +244,11 @@ const styles = StyleSheet.create({
   tabBarBlurLayer: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 24,
-  },
-  tabBarBlurFallback: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.glass.background,
-    opacity: 0.9,
-    borderRadius: 24,
+    zIndex: -1,
+    overflow: 'hidden',
   },
   tabBar: {
+    position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
     height: 60,
@@ -259,6 +257,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.glass.border,
     borderRadius: 24,
+    zIndex: 1,
   },
   tabItem: {
     flex: 1,
