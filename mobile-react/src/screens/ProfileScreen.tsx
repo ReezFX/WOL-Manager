@@ -136,12 +136,13 @@ export const ProfileScreen: React.FC = () => {
         </Card>
 
         {/* Logout Button */}
-        <Button
-          title="Logout"
-          onPress={handleLogout}
-          variant="outline"
+        <TouchableOpacity
           style={styles.logoutButton}
-        />
+          onPress={handleLogout}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
 
         {/* Footer */}
         <Text style={styles.footer}>
@@ -270,6 +271,20 @@ const styles = StyleSheet.create({
   logoutButton: {
     marginTop: Spacing.lg,
     marginBottom: Spacing.md,
+    backgroundColor: Colors.background.secondary,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.error.main,
+    ...Shadows.sm,
+  },
+  logoutButtonText: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.error.main,
+    fontFamily: Typography.fontFamily.medium,
   },
 
   // Footer
