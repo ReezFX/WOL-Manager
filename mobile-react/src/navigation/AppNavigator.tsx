@@ -31,15 +31,17 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     <SafeAreaView edges={['bottom']} style={styles.tabBarSafeArea}>
       <View style={styles.tabBarContainer}>
         <View style={styles.tabBarWrapper}>
-          {/* Blur as background layer */}
-          <BlurView
-            style={styles.tabBarBlurLayer}
-            blurType="dark"
-            blurAmount={Platform.OS === 'ios' ? 20 : 10}
-            blurRadius={Platform.OS === 'android' ? 10 : undefined}
-            overlayColor={Platform.OS === 'android' ? 'transparent' : undefined}
-            reducedTransparencyFallbackColor={Colors.glass.background}
-          />
+          {/* Blur as background layer with clipping container */}
+          <View style={styles.tabBarBlurContainer}>
+            <BlurView
+              style={styles.tabBarBlurLayer}
+              blurType="dark"
+              blurAmount={Platform.OS === 'ios' ? 20 : 10}
+              blurRadius={Platform.OS === 'android' ? 10 : undefined}
+              overlayColor={Platform.OS === 'android' ? 'transparent' : undefined}
+              reducedTransparencyFallbackColor={Colors.glass.background}
+            />
+          </View>
           {/* Navigation content on top */}
           <View style={styles.tabBar}>
           {state.routes.map((route: any, index: number) => {
@@ -241,11 +243,14 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     ...Shadows.xl,
   },
-  tabBarBlurLayer: {
+  tabBarBlurContainer: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 24,
-    zIndex: -1,
     overflow: 'hidden',
+    zIndex: -1,
+  },
+  tabBarBlurLayer: {
+    ...StyleSheet.absoluteFillObject,
   },
   tabBar: {
     position: 'relative',
