@@ -42,6 +42,8 @@ interface HostListScreenProps {
 export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
   const { logout } = useAuth();
   const toast = useToast();
+  
+  // All state declarations
   const [hosts, setHosts] = useState<HostWithStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -57,8 +59,11 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
     hostName?: string;
   }>({ visible: false });
   const [wakingHost, setWakingHost] = useState<number | null>(null);
+  
+  // All refs
+  const statusCheckIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  const fetchHosts = async (showLoading = true) => {
+  const fetchHosts = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setIsLoading(true);
       setError('');
@@ -101,11 +106,18 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [logout]);
 
   useEffect(() => {
     fetchHosts();
-  }, []);
+    
+    // Cleanup interval on unmount
+    return () => {
+      if (statusCheckIntervalRef.current) {
+        clearInterval(statusCheckIntervalRef.current);
+      }
+    };
+  }, [fetchHosts]);
 
   // Refresh when navigating back with refresh parameter
   useEffect(() => {
@@ -142,11 +154,49 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
         `Wake-on-LAN packet sent to ${hostName || `Host ${hostId}`}`
       );
 
-      // Keep animation for 2 seconds then refresh
-      setTimeout(() => {
-        setWakingHost(null);
-        fetchHosts(false);
-      }, 2000);
+      // Clear any existing interval
+      if (statusCheckIntervalRef.current) {
+        clearInterval(statusCheckIntervalRef.current);
+      }
+      
+      // Start monitoring host status
+      const startTime = Date.now();
+      const maxDuration = 60000; // 60 seconds
+      
+      statusCheckIntervalRef.current = setInterval(async () => {
+        const elapsed = Date.now() - startTime;
+        
+        // Stop after 60 seconds
+        if (elapsed >= maxDuration) {
+          if (statusCheckIntervalRef.current) {
+            clearInterval(statusCheckIntervalRef.current);
+            statusCheckIntervalRef.current = null;
+          }
+          setWakingHost(null);
+          toast.showInfo(`Wake timeout for ${hostName || `Host ${hostId}`}`);
+          return;
+        }
+        
+        // Check host status
+        try {
+          const hosts = await apiClient.getHosts();
+          const host = hosts.find(h => h.host_id === hostId);
+          
+          if (host?.status === 'online') {
+            if (statusCheckIntervalRef.current) {
+              clearInterval(statusCheckIntervalRef.current);
+              statusCheckIntervalRef.current = null;
+            }
+            setWakingHost(null);
+            fetchHosts(false);
+            toast.showSuccess(`${hostName || `Host ${hostId}`} is now online!`);
+          }
+        } catch (error) {
+          // Continue checking even if one request fails
+          console.log('[HostList] Status check failed, continuing...');
+        }
+      }, 3000) as unknown as NodeJS.Timeout; // Check every 3 seconds
+      
     } catch (error: any) {
       console.error('[HostList] Error waking host:', error);
       setWakingHost(null);
