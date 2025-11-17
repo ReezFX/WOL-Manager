@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  Platform,
 } from 'react-native';
+import { BlurView } from '@react-native-community/blur';
 import {
   Colors,
   Typography,
@@ -103,32 +105,46 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <TouchableOpacity
             activeOpacity={1}
             onPress={(e) => e.stopPropagation()}
-            style={styles.dialog}
           >
-            <View style={styles.dialogContent}>
-              <Text style={styles.dialogTitle}>{title}</Text>
-              <Text style={styles.dialogMessage}>{message}</Text>
+            <View style={styles.dialogWrapper}>
+              {/* Blur background */}
+              <View style={styles.dialogBlurContainer}>
+                <BlurView
+                  style={styles.dialogBlurLayer}
+                  blurType="dark"
+                  blurAmount={Platform.OS === 'ios' ? 10 : 5}
+                  blurRadius={Platform.OS === 'android' ? 5 : undefined}
+                  overlayColor={Platform.OS === 'android' ? 'rgba(45, 45, 48, 0.50)' : undefined}
+                  reducedTransparencyFallbackColor={Colors.glass.background}
+                />
+              </View>
+              
+              {/* Content on top */}
+              <View style={styles.dialogContent}>
+                <Text style={styles.dialogTitle}>{title}</Text>
+                <Text style={styles.dialogMessage}>{message}</Text>
 
-              <View style={styles.dialogButtons}>
-                <TouchableOpacity
-                  style={[styles.dialogButton, styles.cancelButton]}
-                  onPress={onCancel}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.cancelButtonText}>{cancelText}</Text>
-                </TouchableOpacity>
+                <View style={styles.dialogButtons}>
+                  <TouchableOpacity
+                    style={[styles.dialogButton, styles.cancelButton]}
+                    onPress={onCancel}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.cancelButtonText}>{cancelText}</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[
-                    styles.dialogButton,
-                    styles.confirmButton,
-                    { backgroundColor: confirmColor },
-                  ]}
-                  onPress={onConfirm}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.confirmButtonText}>{confirmText}</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.dialogButton,
+                      styles.confirmButton,
+                      { backgroundColor: confirmColor },
+                    ]}
+                    onPress={onConfirm}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.confirmButtonText}>{confirmText}</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </TouchableOpacity>
@@ -154,14 +170,28 @@ const styles = StyleSheet.create({
   dialogContainer: {
     width: dialogWidth,
   },
-  dialog: {
-    backgroundColor: Colors.background.secondary,
+  dialogWrapper: {
+    position: 'relative',
     borderRadius: BorderRadius.xl,
-    ...Shadows.xl,
     overflow: 'hidden',
+    ...Shadows.xl,
+    borderWidth: 1,
+    borderColor: Colors.glass.border,
+  },
+  dialogBlurContainer: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    zIndex: -1,
+  },
+  dialogBlurLayer: {
+    ...StyleSheet.absoluteFillObject,
   },
   dialogContent: {
     padding: Spacing.lg,
+    position: 'relative',
+    zIndex: 1,
+    backgroundColor: 'transparent',
   },
   dialogTitle: {
     fontSize: Typography.fontSize.xl,

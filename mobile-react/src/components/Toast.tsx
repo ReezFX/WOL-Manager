@@ -8,6 +8,7 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Colors,
   Typography,
@@ -180,10 +181,18 @@ const ToastItem: React.FC<{
 };
 
 export const Toast: React.FC<ToastProps> = ({ toasts, onRemove }) => {
+  const insets = useSafeAreaInsets();
+  
   if (toasts.length === 0) return null;
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
+    <View 
+      style={[
+        styles.container,
+        { top: insets.top + 10 } // 10px zusätzlicher Abstand
+      ]} 
+      pointerEvents="box-none"
+    >
       {toasts.map((toast, index) => (
         <ToastItem
           key={toast.id}
@@ -202,7 +211,6 @@ const toastWidth = Math.min(width - 32, 400);
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
     right: 16,
     left: 16,
     zIndex: 9999,
