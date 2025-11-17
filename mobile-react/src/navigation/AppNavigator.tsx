@@ -11,6 +11,7 @@ import { SetupScreen } from '../screens/SetupScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { HostListScreen } from '../screens/HostListScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { AdminScreen } from '../screens/AdminScreen';
 import { AddHostScreen } from '../screens/AddHostScreen';
 import { LoadingScreen } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
@@ -84,7 +85,6 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
             }
 
             const Icon = options.tabBarIcon;
-            const label = options.tabBarLabel;
 
             return (
               <TouchableOpacity
@@ -95,18 +95,10 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
                 {Icon && (
                   <Icon
                     color={isFocused ? Colors.primary.main : Colors.text.tertiary}
-                    size={24}
+                    size={28}
                     focused={isFocused}
                   />
                 )}
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    isFocused && styles.tabLabelFocused,
-                  ]}
-                >
-                  {label}
-                </Text>
               </TouchableOpacity>
             );
           })}
@@ -158,13 +150,13 @@ const MainTabs = () => {
         })}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="Admin"
+        component={AdminScreen}
         options={{
-          tabBarLabel: 'Profile',
+          tabBarLabel: 'Admin',
           tabBarIcon: ({ color, size, focused }: any) => (
             <Ionicons
-              name={focused ? 'person' : 'person-outline'}
+              name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'}
               size={size}
               color={color}
             />
@@ -215,6 +207,14 @@ export const AppNavigator: React.FC = () => {
               options={{
                 presentation: 'modal',
                 animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen 
+              name="Profile" 
+              component={ProfileScreen}
+              options={{
+                presentation: 'card',
+                animation: 'slide_from_right',
               }}
             />
           </>
@@ -268,18 +268,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  tabLabel: {
-    fontSize: 11,
-    color: Colors.text.secondary,
-    fontFamily: Typography.fontFamily.medium,
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  tabLabelFocused: {
-    color: Colors.primary.light,
-    fontWeight: '600',
+    paddingVertical: 12,
   },
   
   // Add Button (Center)

@@ -41,7 +41,7 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Hosts: undefined;
-  Profile: undefined;
+  Admin: undefined;
   Settings: undefined;
 };
 
