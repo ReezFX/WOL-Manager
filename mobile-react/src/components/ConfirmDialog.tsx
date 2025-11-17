@@ -112,9 +112,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 <BlurView
                   style={styles.dialogBlurLayer}
                   blurType="dark"
-                  blurAmount={Platform.OS === 'ios' ? 10 : 5}
-                  blurRadius={Platform.OS === 'android' ? 5 : undefined}
-                  overlayColor={Platform.OS === 'android' ? 'rgba(45, 45, 48, 0.50)' : undefined}
+                  blurAmount={Platform.OS === 'ios' ? 30 : 15}
+                  blurRadius={Platform.OS === 'android' ? 15 : undefined}
+                  overlayColor={Platform.OS === 'android' ? 'rgba(28, 28, 28, 0.90)' : undefined}
                   reducedTransparencyFallbackColor={Colors.glass.background}
                 />
               </View>
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   overlayBackground: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
   },
   dialogContainer: {
     width: dialogWidth,

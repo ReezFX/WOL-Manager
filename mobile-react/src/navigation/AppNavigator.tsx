@@ -40,11 +40,12 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
             <BlurView
               style={styles.tabBarBlurLayer}
               blurType="dark"
-              blurAmount={Platform.OS === 'ios' ? 20 : 10}
-              blurRadius={Platform.OS === 'android' ? 10 : undefined}
-              overlayColor={Platform.OS === 'android' ? 'transparent' : undefined}
+              blurAmount={Platform.OS === 'ios' ? 5 : 15}
+              blurRadius={Platform.OS === 'android' ? 15 : undefined}
+              overlayColor={Platform.OS === 'android' ? 'rgba(36, 36, 38, 0.80)' : undefined}
               reducedTransparencyFallbackColor={Colors.glass.background}
             />
+            <View style={styles.tabBarOverlay} />
           </View>
           {/* Navigation content on top */}
           <View style={styles.tabBar}>
@@ -74,14 +75,9 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
                     onPress={onPress}
                     style={styles.addButtonTouch}
                   >
-                    <LinearGradient
-                      colors={Colors.primary.gradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.addButton}
-                    >
-                      <Ionicons name="add" size={28} color="white" />
-                    </LinearGradient>
+                    <View style={styles.addButton}>
+                      <Ionicons name="add" size={32} color="white" />
+                    </View>
                   </TouchableOpacity>
                 </View>
               );
@@ -132,7 +128,7 @@ const MainTabs = () => {
           tabBarIcon: ({ color, size, focused }: any) => (
             <Ionicons
               name={focused ? 'home' : 'home-outline'}
-              size={size}
+              size={32}
               color={color}
             />
           ),
@@ -160,7 +156,7 @@ const MainTabs = () => {
           tabBarIcon: ({ color, size, focused }: any) => (
             <Ionicons
               name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'}
-              size={size}
+              size={32}
               color={color}
             />
           ),
@@ -281,14 +277,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   tabBarContainer: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+    marginHorizontal: 8,
+    marginBottom: 8,
   },
   tabBarWrapper: {
     position: 'relative',
     borderRadius: 24,
     overflow: 'visible',
-    ...Shadows.xl,
   },
   tabBarBlurContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -299,11 +294,15 @@ const styles = StyleSheet.create({
   tabBarBlurLayer: {
     ...StyleSheet.absoluteFillObject,
   },
+  tabBarOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(36, 36, 38, 0)',
+  },
   tabBar: {
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
-    height: 60,
+    height: 70,
     backgroundColor: 'transparent',
     paddingHorizontal: 8,
     borderWidth: 1,
@@ -326,14 +325,14 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   addButtonTouch: {
-    marginTop: -28,
+    marginTop: 0,
   },
   addButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 66,
+    height: 66,
+    borderRadius: 33,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.xl,
+    backgroundColor: Colors.primary.main,
   },
 });
