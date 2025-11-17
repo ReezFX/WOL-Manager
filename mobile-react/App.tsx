@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
+import { ToastProvider } from './src/context/ToastContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { Colors } from './src/constants/theme';
 
@@ -12,9 +13,11 @@ const App: React.FC = () => {
         barStyle="dark-content"
         backgroundColor={Colors.background.primary}
       />
-      <AuthProvider>
-        <AppNavigator />
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <AppNavigator />
+        </AuthProvider>
+      </ToastProvider>
     </SafeAreaProvider>
   );
 };

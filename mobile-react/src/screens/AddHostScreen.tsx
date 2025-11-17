@@ -15,6 +15,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button, Input, Card } from '../components/UI';
 import { apiClient, SessionExpiredError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import {
   Colors,
   Typography,
@@ -29,6 +30,7 @@ interface AddHostScreenProps {
 
 export const AddHostScreen: React.FC<AddHostScreenProps> = ({ navigation }) => {
   const { logout } = useAuth();
+  const toast = useToast();
   const [name, setName] = useState('');
   const [macAddress, setMacAddress] = useState('');
   const [ipAddress, setIpAddress] = useState('');
@@ -146,31 +148,23 @@ export const AddHostScreen: React.FC<AddHostScreenProps> = ({ navigation }) => {
         publicAccess,
       });
       
-      // Navigate back to Main (closes modal) and trigger refresh on Hosts tab
-      navigation.navigate('Main', {
-        screen: 'Hosts',
-        params: { refresh: Date.now() },
-      });
+      // Show success message
+      toast.showSuccess('Host added successfully!');
       
-      // Show success message after navigation
+      // Navigate back to Main (closes modal) and trigger refresh on Hosts tab
       setTimeout(() => {
-        Alert.alert('Success', 'Host added successfully!');
-      }, 300);
+        navigation.navigate('Main', {
+          screen: 'Hosts',
+          params: { refresh: Date.now() },
+        });
+      }, 500);
     } catch (error: any) {
       if (error instanceof SessionExpiredError) {
-        Alert.alert(
-          'Session Expired',
-          'Your session has expired. Please login again.',
-          [
-            {
-              text: 'OK',
-              onPress: () => logout(),
-            },
-          ]
-        );
+        toast.showError('Your session has expired. Please login again.');
+        setTimeout(() => logout(), 1500);
         return;
       }
-      Alert.alert('Error', error.message || 'Failed to add host');
+      toast.showError(error.message || 'Failed to add host');
     } finally {
       setIsSubmitting(false);
     }

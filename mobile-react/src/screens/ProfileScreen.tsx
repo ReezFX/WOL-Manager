@@ -5,12 +5,13 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { Card, Divider, Button } from '../components/UI';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import {
   Colors,
   Typography,
@@ -21,29 +22,34 @@ import {
 
 export const ProfileScreen: React.FC = () => {
   const { serverConfig, logout } = useAuth();
+  const toast = useToast();
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: logout,
-        },
-      ]
-    );
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
+    logout();
   };
 
   const serverDisplay = serverConfig?.serverUrl.replace(/^https?:\/\//, '') || 'Unknown';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        visible={showLogoutConfirm}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        confirmColor={Colors.error.main}
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -71,7 +77,7 @@ export const ProfileScreen: React.FC = () => {
         <Card style={styles.card}>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Alert.alert('Info', 'Change password coming soon!')}
+            onPress={() => toast.showInfo('Change password coming soon!')}
           >
             <Text style={styles.menuItemText}>Change Password</Text>
             <Text style={styles.menuItemChevron}>›</Text>
@@ -81,7 +87,7 @@ export const ProfileScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Alert.alert('Info', 'Edit profile coming soon!')}
+            onPress={() => toast.showInfo('Edit profile coming soon!')}
           >
             <Text style={styles.menuItemText}>Edit Profile</Text>
             <Text style={styles.menuItemChevron}>›</Text>
@@ -93,7 +99,7 @@ export const ProfileScreen: React.FC = () => {
         <Card style={styles.card}>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Alert.alert('Info', 'Settings coming soon!')}
+            onPress={() => toast.showInfo('Settings coming soon!')}
           >
             <Text style={styles.menuItemText}>Notifications</Text>
             <Text style={styles.menuItemChevron}>›</Text>
@@ -103,7 +109,7 @@ export const ProfileScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Alert.alert('Info', 'Theme settings coming soon!')}
+            onPress={() => toast.showInfo('Theme settings coming soon!')}
           >
             <Text style={styles.menuItemText}>Appearance</Text>
             <Text style={styles.menuItemChevron}>›</Text>
@@ -122,7 +128,7 @@ export const ProfileScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Alert.alert('Help', 'For help, please contact your system administrator.')}
+            onPress={() => toast.showInfo('For help, please contact your system administrator.', 'Help')}
           >
             <Text style={styles.menuItemText}>Help & Support</Text>
             <Text style={styles.menuItemChevron}>›</Text>

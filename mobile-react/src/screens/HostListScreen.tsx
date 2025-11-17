@@ -6,14 +6,15 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
-  Alert,
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { Card, StatusBadge, EmptyState, Button } from '../components/UI';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { apiClient, SessionExpiredError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { HostStatus } from '../types';
 import {
   Colors,
@@ -39,10 +40,16 @@ interface HostListScreenProps {
 
 export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
   const { logout } = useAuth();
+  const toast = useToast();
   const [hosts, setHosts] = useState<HostWithStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    visible: boolean;
+    hostId?: number;
+    hostName?: string;
+  }>({ visible: false });
 
   const fetchHosts = async (showLoading = true) => {
     try {
@@ -110,10 +117,8 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
     try {
       await apiClient.wakeHost(hostId);
       
-      Alert.alert(
-        'Success',
-        `Wake-on-LAN packet sent to ${hostName || `Host ${hostId}`}`,
-        [{ text: 'OK' }]
+      toast.showSuccess(
+        `Wake-on-LAN packet sent to ${hostName || `Host ${hostId}`}`
       );
 
       // Refresh host list to update status
@@ -122,82 +127,56 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
       console.error('[HostList] Error waking host:', error);
       
       if (error instanceof SessionExpiredError) {
-        Alert.alert(
-          'Session Expired',
-          'Your session has expired. Please login again.',
-          [
-            {
-              text: 'OK',
-              onPress: () => logout(),
-            },
-          ]
-        );
+        toast.showError('Your session has expired. Please login again.');
+        setTimeout(() => logout(), 1500);
         return;
       }
 
-      Alert.alert(
-        'Error',
-        error.message || `Failed to wake ${hostName || `Host ${hostId}`}`,
-        [{ text: 'OK' }]
+      toast.showError(
+        error.message || `Failed to wake ${hostName || `Host ${hostId}`}`
       );
     }
   };
 
   const handleDeleteHost = (hostId: number, hostName?: string) => {
-    Alert.alert(
-      'Delete Host',
-      `Are you sure you want to delete ${hostName || `Host ${hostId}`}?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const ok = await apiClient.deleteHost(hostId);
-              if (ok) {
-                // Optimistic update: remove locally
-                setHosts(prev => prev.filter(h => h.host_id !== hostId));
-                // Also refresh from server in background
-                fetchHosts(false);
-                console.log('[HostList] Host deleted successfully');
-              }
-            } catch (error: any) {
-              console.error('[HostList] Error deleting host:', error);
-              
-              if (error instanceof SessionExpiredError) {
-                // Use setTimeout to avoid nested alert issues
-                setTimeout(() => {
-                  Alert.alert(
-                    'Session Expired',
-                    'Your session has expired. Please login again.',
-                    [
-                      {
-                        text: 'OK',
-                        onPress: () => logout(),
-                      },
-                    ]
-                  );
-                }, 100);
-                return;
-              }
-              
-              // Show error after a short delay to avoid nested alerts
-              setTimeout(() => {
-                Alert.alert(
-                  'Error',
-                  error.message || 'Failed to delete host',
-                  [{ text: 'OK' }]
-                );
-              }, 100);
-            }
-          },
-        },
-      ]
-    );
+    setDeleteConfirm({
+      visible: true,
+      hostId,
+      hostName,
+    });
+  };
+
+  const confirmDeleteHost = async () => {
+    const { hostId, hostName } = deleteConfirm;
+    if (!hostId) return;
+
+    setDeleteConfirm({ visible: false });
+
+    try {
+      const ok = await apiClient.deleteHost(hostId);
+      if (ok) {
+        // Optimistic update: remove locally
+        setHosts(prev => prev.filter(h => h.host_id !== hostId));
+        // Also refresh from server in background
+        fetchHosts(false);
+        console.log('[HostList] Host deleted successfully');
+        toast.showSuccess(
+          `${hostName || `Host ${hostId}`} deleted successfully`
+        );
+      }
+    } catch (error: any) {
+      console.error('[HostList] Error deleting host:', error);
+      
+      if (error instanceof SessionExpiredError) {
+        toast.showError('Your session has expired. Please login again.');
+        setTimeout(() => logout(), 1500);
+        return;
+      }
+      
+      toast.showError(
+        error.message || 'Failed to delete host'
+      );
+    }
   };
 
   const renderHostCard = ({ item }: { item: HostWithStatus }) => {
@@ -275,6 +254,17 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        visible={deleteConfirm.visible}
+        title="Delete Host"
+        message={`Are you sure you want to delete ${deleteConfirm.hostName || `Host ${deleteConfirm.hostId}`}?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteHost}
+        onCancel={() => setDeleteConfirm({ visible: false })}
+      />
+
       {/* Host List */}
       {error ? (
         <View style={styles.centerContainer}>
