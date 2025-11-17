@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Animated,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -50,6 +51,12 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
     hostId?: number;
     hostName?: string;
   }>({ visible: false });
+  const [wakeConfirm, setWakeConfirm] = useState<{
+    visible: boolean;
+    hostId?: number;
+    hostName?: string;
+  }>({ visible: false });
+  const [wakingHost, setWakingHost] = useState<number | null>(null);
 
   const fetchHosts = async (showLoading = true) => {
     try {
@@ -113,7 +120,21 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
     fetchHosts(false);
   };
 
-  const handleWakeHost = async (hostId: number, hostName?: string) => {
+  const showWakeConfirm = (hostId: number, hostName?: string) => {
+    setWakeConfirm({
+      visible: true,
+      hostId,
+      hostName,
+    });
+  };
+
+  const handleWakeHost = async () => {
+    const { hostId, hostName } = wakeConfirm;
+    if (!hostId) return;
+
+    setWakeConfirm({ visible: false });
+    setWakingHost(hostId);
+
     try {
       await apiClient.wakeHost(hostId);
       
@@ -121,10 +142,14 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
         `Wake-on-LAN packet sent to ${hostName || `Host ${hostId}`}`
       );
 
-      // Refresh host list to update status
-      setTimeout(() => fetchHosts(false), 2000);
+      // Keep animation for 2 seconds then refresh
+      setTimeout(() => {
+        setWakingHost(null);
+        fetchHosts(false);
+      }, 2000);
     } catch (error: any) {
       console.error('[HostList] Error waking host:', error);
+      setWakingHost(null);
       
       if (error instanceof SessionExpiredError) {
         toast.showError('Your session has expired. Please login again.');
@@ -179,7 +204,33 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
     }
   };
 
-  const renderHostCard = ({ item }: { item: HostWithStatus }) => {
+  // Component for individual host card with animation
+  const HostCard = React.memo(({ item }: { item: HostWithStatus }) => {
+    const isWaking = wakingHost === item.host_id;
+    const pulseAnim = React.useRef(new Animated.Value(1)).current;
+
+    React.useEffect(() => {
+      if (isWaking) {
+        // Start pulse animation
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(pulseAnim, {
+              toValue: 1.1,
+              duration: 600,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pulseAnim, {
+              toValue: 1,
+              duration: 600,
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      } else {
+        pulseAnim.setValue(1);
+      }
+    }, [isWaking, pulseAnim]);
+
     return (
       <Card style={styles.hostCard}>
         <View style={styles.hostHeader}>
@@ -208,30 +259,33 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
         </View>
 
         <View style={styles.hostActions}>
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              styles.wakeButton,
-              item.status === 'online' && styles.disabledButton,
-            ]}
-            onPress={() => handleWakeHost(item.host_id, item.name)}
-            disabled={item.status === 'online'}
-          >
-            <LinearGradient
-              colors={
-                item.status === 'online'
-                  ? [Colors.text.disabled, Colors.text.disabled]
-                  : Colors.primary.gradient
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.actionButtonGradient}
+          <Animated.View style={[{ transform: [{ scale: isWaking ? pulseAnim : 1 }] }, styles.actionButton]}>
+            <TouchableOpacity
+              style={[
+                styles.wakeButton,
+                (item.status === 'online' || isWaking) && styles.disabledButton,
+              ]}
+              onPress={() => showWakeConfirm(item.host_id, item.name)}
+              disabled={item.status === 'online' || isWaking}
             >
-              <Text style={styles.actionButtonText}>
-                {item.status === 'online' ? 'Online' : 'Wake'}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={
+                  item.status === 'online'
+                    ? [Colors.text.disabled, Colors.text.disabled]
+                    : isWaking
+                    ? [Colors.warning.main, Colors.warning.light]
+                    : Colors.primary.gradient
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.actionButtonGradient}
+              >
+                <Text style={styles.actionButtonText}>
+                  {item.status === 'online' ? 'Online' : isWaking ? 'Waking...' : 'Wake'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
 
           <TouchableOpacity
             style={[styles.actionButton, styles.deleteButton]}
@@ -242,6 +296,10 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
         </View>
       </Card>
     );
+  });
+
+  const renderHostCard = ({ item }: { item: HostWithStatus }) => {
+    return <HostCard item={item} />;
   };
 
   if (isLoading) {
@@ -263,6 +321,18 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
         cancelText="Cancel"
         onConfirm={confirmDeleteHost}
         onCancel={() => setDeleteConfirm({ visible: false })}
+      />
+
+      {/* Wake Confirmation Dialog */}
+      <ConfirmDialog
+        visible={wakeConfirm.visible}
+        title="Wake Host"
+        message={`Send Wake-on-LAN packet to ${wakeConfirm.hostName || `Host ${wakeConfirm.hostId}`}?`}
+        confirmText="Wake"
+        cancelText="Cancel"
+        confirmColor={Colors.primary.main}
+        onConfirm={handleWakeHost}
+        onCancel={() => setWakeConfirm({ visible: false })}
       />
 
       {/* Host List */}
@@ -392,6 +462,8 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.medium,
   },
   wakeButton: {
+    flex: 1,
+    height: '100%',
     ...Shadows.md,
   },
   disabledButton: {
