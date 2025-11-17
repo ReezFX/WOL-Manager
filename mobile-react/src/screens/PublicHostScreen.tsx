@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
+  Animated,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { RootStackParamList, PublicHost } from '../types';
 import { apiClient } from '../api/client';
 import {
@@ -20,8 +21,12 @@ import {
   Typography,
   Spacing,
   BorderRadius,
+  Shadows,
 } from '../constants/theme';
 import { useToast } from '../context/ToastContext';
+import { Card, StatusBadge } from '../components/UI';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { storage } from '../utils/storage';
 
 type PublicHostScreenRouteProp = RouteProp<RootStackParamList, 'PublicHost'>;
 type PublicHostScreenNavigationProp = NativeStackNavigationProp<
@@ -43,6 +48,11 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation }) => {
   const [isWaking, setIsWaking] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [wakeConfirm, setWakeConfirm] = useState({ visible: false, hostName: '' });
+  const [removeConfirm, setRemoveConfirm] = useState(false);
+  
+  // Animation for wake button
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   // Fetch host status
   const fetchHostStatus = useCallback(async (showLoadingIndicator = true) => {
@@ -96,6 +106,28 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation }) => {
     setIsRefreshing(true);
     fetchHostStatus(false);
   }, [fetchHostStatus]);
+  
+  // Pulse animation when waking
+  useEffect(() => {
+    if (isWaking) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isWaking, pulseAnim]);
 
   // Wake host - performWake function
   const performWake = useCallback(async () => {
@@ -125,59 +157,58 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation }) => {
   }, [host, publicHostConfig, toast, fetchHostStatus]);
 
   // Handle wake with confirmation
-  const handleWakeHost = useCallback(async () => {
+  const handleWakeHost = useCallback(() => {
     if (!host) return;
 
     // Show confirmation if host is already online
     if (host.status === 'online') {
-      Alert.alert(
-        'Host Already Online',
-        'This host appears to be already online. Do you still want to send a wake-up packet?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Wake Anyway',
-            style: 'default',
-            onPress: () => performWake(),
-          },
-        ]
-      );
+      setWakeConfirm({
+        visible: true,
+        hostName: host.name,
+      });
       return;
     }
 
     performWake();
   }, [host, performWake]);
-
-  // Get status badge color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online':
-        return Colors.success.main;
-      case 'offline':
-        return Colors.error.main;
-      default:
-        return Colors.text.secondary;
+  
+  // Confirm wake for online host
+  const confirmWakeHost = useCallback(() => {
+    setWakeConfirm({ visible: false, hostName: '' });
+    performWake();
+  }, [performWake]);
+  
+  // Handle reset configuration
+  const handleResetConfig = useCallback(() => {
+    setRemoveConfirm(true);
+  }, []);
+  
+  // Confirm reset configuration
+  const confirmResetConfig = useCallback(async () => {
+    setRemoveConfirm(false);
+    try {
+      await storage.clearPublicHostConfig();
+      toast.showSuccess('Public host removed successfully');
+      // Force app restart by clearing config - navigation will handle showing setup
+      // The AppNavigator will detect no config and show setup screen
+    } catch (error: any) {
+      toast.showError('Failed to remove public host', 'Error');
     }
-  };
-
-  // Get status icon
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'online':
-        return '●';
-      case 'offline':
-        return '●';
-      default:
-        return '●';
-    }
-  };
+  }, [toast]);
 
   // Format last check time
   const formatLastCheck = (lastCheck?: string) => {
     if (!lastCheck) return 'Never';
     try {
       const date = new Date(lastCheck);
-      return date.toLocaleString();
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffSecs = Math.floor(diffMs / 1000);
+      
+      if (diffSecs < 60) return 'Just now';
+      if (diffSecs < 3600) return `${Math.floor(diffSecs / 60)}m ago`;
+      if (diffSecs < 86400) return `${Math.floor(diffSecs / 3600)}h ago`;
+      return date.toLocaleDateString();
     } catch {
       return 'Unknown';
     }
@@ -185,334 +216,307 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (isLoading && !host) {
     return (
-      <LinearGradient colors={Colors.primary.gradient} style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.text.inverse} />
-            <Text style={styles.loadingText}>Loading host information...</Text>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={Colors.primary.main} />
+          <Text style={styles.loadingText}>Loading host information...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error && !host) {
     return (
-      <LinearGradient colors={Colors.primary.gradient} style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorIcon}>⚠️</Text>
-            <Text style={styles.errorTitle}>Connection Error</Text>
-            <Text style={styles.errorMessage}>{error}</Text>
-            <TouchableOpacity
-              style={styles.retryButton}
-              onPress={() => fetchHostStatus()}
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => fetchHostStatus()}
+          >
+            <LinearGradient
+              colors={Colors.primary.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.retryButtonGradient}
             >
               <Text style={styles.retryButtonText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <LinearGradient colors={Colors.primary.gradient} style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={onRefresh}
-              tintColor={Colors.text.inverse}
-            />
-          }
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerSubtitle}>Public Host</Text>
-            <Text style={styles.headerTitle}>{host?.name || 'Loading...'}</Text>
-          </View>
-
-          {/* Host Card */}
-          <View style={styles.card}>
-            {/* Status Badge */}
-            <View style={styles.statusContainer}>
-              <View
-                style={[
-                  styles.statusBadge,
-                  { backgroundColor: getStatusColor(host?.status || 'unknown') },
-                ]}
-              >
-                <Text style={styles.statusIcon}>
-                  {getStatusIcon(host?.status || 'unknown')}
-                </Text>
-                <Text style={styles.statusText}>
-                  {(host?.status || 'unknown').toUpperCase()}
-                </Text>
-              </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Wake Confirmation Dialog */}
+      <ConfirmDialog
+        visible={wakeConfirm.visible}
+        title="Host Already Online"
+        message={`${wakeConfirm.hostName} appears to be already online. Do you still want to send a wake-up packet?`}
+        confirmText="Wake Anyway"
+        cancelText="Cancel"
+        confirmColor={Colors.primary.main}
+        onConfirm={confirmWakeHost}
+        onCancel={() => setWakeConfirm({ visible: false, hostName: '' })}
+      />
+      
+      {/* Remove Configuration Dialog */}
+      <ConfirmDialog
+        visible={removeConfirm}
+        title="Remove Public Host"
+        message="Are you sure you want to remove this public host? You will need to scan the QR code again to access it."
+        confirmText="Remove"
+        cancelText="Cancel"
+        confirmColor={Colors.error.main}
+        onConfirm={confirmResetConfig}
+        onCancel={() => setRemoveConfirm(false)}
+      />
+      
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary.main}
+            colors={[Colors.primary.main]}
+          />
+        }
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerSubtitle}>Public Access</Text>
+              <Text style={styles.headerTitle}>{host?.name || 'Loading...'}</Text>
             </View>
+            <TouchableOpacity
+              style={styles.settingsButton}
+              onPress={handleResetConfig}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="settings-outline" size={24} color={Colors.text.secondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-            {/* Host Information */}
-            <View style={styles.infoSection}>
-              {host?.mac_address && (
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIconContainer}>
-                    <Text style={styles.infoIcon}>🔌</Text>
-                  </View>
-                  <View style={styles.infoContent}>
-                    <Text style={styles.infoLabel}>MAC Address</Text>
-                    <Text style={styles.infoValue}>{host.mac_address}</Text>
-                  </View>
-                </View>
-              )}
-
+        {/* Host Card */}
+        <Card style={styles.hostCard}>
+          <View style={styles.hostHeader}>
+            <View style={styles.hostInfo}>
+              <Text style={styles.hostName}>{host?.name || 'Host'}</Text>
               {host?.description && (
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIconContainer}>
-                    <Text style={styles.infoIcon}>ℹ️</Text>
-                  </View>
-                  <View style={styles.infoContent}>
-                    <Text style={styles.infoLabel}>Description</Text>
-                    <Text style={styles.infoValue}>{host.description}</Text>
-                  </View>
-                </View>
+                <Text style={styles.hostDescription}>{host.description}</Text>
               )}
-
-              <View style={styles.infoRow}>
-                <View style={styles.infoIconContainer}>
-                  <Text style={styles.infoIcon}>🕐</Text>
-                </View>
-                <View style={styles.infoContent}>
-                  <Text style={styles.infoLabel}>Last Check</Text>
-                  <Text style={styles.infoValue}>
-                    {formatLastCheck(host?.last_check)}
-                  </Text>
-                </View>
-              </View>
             </View>
+            <StatusBadge status={host?.status || 'unknown'} />
+          </View>
 
-            {/* Wake Button */}
-            <View style={styles.wakeButtonContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.wakeButton,
-                  host?.status === 'online' && styles.wakeButtonOnline,
-                  host?.status === 'offline' && styles.wakeButtonOffline,
-                  isWaking && styles.wakeButtonDisabled,
-                ]}
-                onPress={handleWakeHost}
-                disabled={isWaking}
-                activeOpacity={0.8}
+          {/* Host Details */}
+          {host?.mac_address && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>MAC:</Text>
+              <Text style={styles.detailValue}>{host.mac_address}</Text>
+            </View>
+          )}
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Last Check:</Text>
+            <Text style={styles.detailValue}>{formatLastCheck(host?.last_check)}</Text>
+          </View>
+
+          {/* Wake Button */}
+          <Animated.View style={[{ transform: [{ scale: isWaking ? pulseAnim : 1 }] }, styles.wakeButtonWrapper]}>
+            <TouchableOpacity
+              style={[
+                styles.wakeButton,
+                (host?.status === 'online' || isWaking) && styles.disabledButton,
+              ]}
+              onPress={handleWakeHost}
+              disabled={host?.status === 'online' || isWaking}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={
+                  host?.status === 'online'
+                    ? [Colors.text.disabled, Colors.text.disabled]
+                    : isWaking
+                    ? [Colors.warning.main, Colors.warning.light]
+                    : Colors.primary.gradient
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.wakeButtonGradient}
               >
-                {isWaking ? (
-                  <ActivityIndicator color={Colors.text.inverse} size="small" />
-                ) : (
-                  <>
-                    <Text style={styles.wakeButtonIcon}>⚡</Text>
-                    <Text style={styles.wakeButtonText}>Wake Host</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
+                <Text style={styles.wakeButtonText}>
+                  {host?.status === 'online' ? 'Online' : isWaking ? 'Waking...' : 'Wake Host'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        </Card>
 
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Powered by WOL Manager</Text>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Powered by WOL Manager</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  safeArea: {
-    flex: 1,
+    backgroundColor: Colors.background.primary,
   },
   scrollContent: {
     flexGrow: 1,
     padding: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: Spacing.md,
-    fontSize: Typography.fontSize.base,
-    color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.regular,
-  },
-  errorContainer: {
+
+  // Center states
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
   },
-  errorIcon: {
-    fontSize: 60,
-    marginBottom: Spacing.md,
-  },
-  errorTitle: {
-    fontSize: Typography.fontSize['2xl'],
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.sm,
-  },
-  errorMessage: {
+  loadingText: {
+    marginTop: Spacing.md,
     fontSize: Typography.fontSize.base,
-    color: Colors.text.inverse,
+    color: Colors.text.secondary,
     fontFamily: Typography.fontFamily.regular,
+  },
+  errorText: {
+    fontSize: Typography.fontSize.base,
+    color: Colors.error.main,
     textAlign: 'center',
-    marginBottom: Spacing.lg,
-    opacity: 0.9,
+    marginBottom: Spacing.md,
+    fontFamily: Typography.fontFamily.regular,
   },
   retryButton: {
-    backgroundColor: Colors.background.secondary,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
+    height: 44,
     borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    minWidth: 120,
+    ...Shadows.md,
+  },
+  retryButtonGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
   },
   retryButtonText: {
     fontSize: Typography.fontSize.base,
     fontWeight: Typography.fontWeight.semibold,
-    color: Colors.primary.main,
+    color: Colors.text.inverse,
     fontFamily: Typography.fontFamily.medium,
   },
 
   // Header
   header: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerTextContainer: {
+    flex: 1,
+    marginRight: Spacing.md,
   },
   headerSubtitle: {
-    fontSize: Typography.fontSize.base,
-    color: Colors.text.inverse,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
     fontFamily: Typography.fontFamily.regular,
-    opacity: 0.8,
     marginBottom: Spacing.xs,
   },
   headerTitle: {
     fontSize: Typography.fontSize['3xl'],
     fontWeight: Typography.fontWeight.bold,
-    color: Colors.text.inverse,
+    color: Colors.text.primary,
     fontFamily: Typography.fontFamily.bold,
-    textAlign: 'center',
+  },
+  settingsButton: {
+    padding: Spacing.sm,
+    marginTop: -Spacing.xs,
   },
 
-  // Card
-  card: {
-    backgroundColor: Colors.background.secondary,
-    borderRadius: BorderRadius['2xl'],
-    padding: Spacing.xl,
+  // Host Card
+  hostCard: {
     marginBottom: Spacing.lg,
   },
-
-  // Status
-  statusContainer: {
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  statusBadge: {
+  hostHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-  },
-  statusIcon: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.inverse,
-    marginRight: Spacing.xs,
-  },
-  statusText: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.medium,
-  },
-
-  // Info Section
-  infoSection: {
-    marginBottom: Spacing.lg,
-  },
-  infoRow: {
-    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: Spacing.md,
   },
-  infoIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.primary.light,
-    justifyContent: 'center',
-    alignItems: 'center',
+  hostInfo: {
+    flex: 1,
     marginRight: Spacing.md,
   },
-  infoIcon: {
-    fontSize: 20,
+  hostName: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.text.primary,
+    fontFamily: Typography.fontFamily.bold,
+    marginBottom: Spacing.xs,
   },
-  infoContent: {
-    flex: 1,
-  },
-  infoLabel: {
+  hostDescription: {
     fontSize: Typography.fontSize.sm,
     color: Colors.text.secondary,
-    fontFamily: Typography.fontFamily.medium,
-    marginBottom: Spacing.xs / 2,
+    fontFamily: Typography.fontFamily.regular,
   },
-  infoValue: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.text.primary,
+
+  // Details
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  detailLabel: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
     fontFamily: Typography.fontFamily.medium,
+    width: 90,
+  },
+  detailValue: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    fontFamily: Typography.fontFamily.regular,
+    flex: 1,
   },
 
   // Wake Button
-  wakeButtonContainer: {
-    alignItems: 'center',
+  wakeButtonWrapper: {
     marginTop: Spacing.md,
   },
   wakeButton: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: Colors.primary.main,
+    height: 50,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadows.md,
+  },
+  wakeButtonGradient: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  wakeButtonOnline: {
-    backgroundColor: Colors.success.main,
-  },
-  wakeButtonOffline: {
-    backgroundColor: Colors.error.main,
-  },
-  wakeButtonDisabled: {
-    opacity: 0.6,
-  },
-  wakeButtonIcon: {
-    fontSize: 40,
-    marginBottom: Spacing.sm,
   },
   wakeButtonText: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.bold,
+    fontFamily: Typography.fontFamily.medium,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 
   // Footer
@@ -521,9 +525,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   footerText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.inverse,
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text.tertiary,
     fontFamily: Typography.fontFamily.regular,
-    opacity: 0.7,
   },
 });

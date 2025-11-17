@@ -174,9 +174,38 @@ export const AppNavigator: React.FC = () => {
   const { isAuthenticated, isLoading, serverConfig } = useAuth();
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [publicHostConfig, setPublicHostConfig] = useState<PublicHostConfig | null>(null);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+
+  // Load saved public host config on mount and check periodically
+  React.useEffect(() => {
+    const loadSavedConfig = async () => {
+      try {
+        const savedPublicHostConfig = await storage.getPublicHostConfig();
+        if (savedPublicHostConfig) {
+          console.log('[AppNavigator] Loaded saved public host config');
+          setPublicHostConfig(savedPublicHostConfig);
+        } else if (publicHostConfig) {
+          // Config was removed, clear state
+          console.log('[AppNavigator] Public host config removed');
+          setPublicHostConfig(null);
+        }
+      } catch (error) {
+        console.error('[AppNavigator] Failed to load saved config:', error);
+      } finally {
+        setIsLoadingConfig(false);
+      }
+    };
+    
+    loadSavedConfig();
+    
+    // Check for config changes periodically
+    const interval = setInterval(loadSavedConfig, 2000);
+    
+    return () => clearInterval(interval);
+  }, [publicHostConfig]);
 
   // Show loading screen while initializing
-  if (isLoading) {
+  if (isLoading || isLoadingConfig) {
     return <LoadingScreen />;
   }
 
