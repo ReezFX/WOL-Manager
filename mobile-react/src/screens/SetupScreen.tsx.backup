@@ -174,53 +174,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete, onPublicHo
               <Text style={styles.cardTitle}>Setup Connection</Text>
               <Text style={styles.cardDescription}>
                 {setupType === 'server'
-                  ? 'Enter your WOL Manager server URL to get started'
-                  : 'Enter a public host link to access a single host'}
-              </Text>
-
-              {/* Setup Type Toggle */}
-              <View style={styles.toggleContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleButton,
-                    setupType === 'server' && styles.toggleButtonActive,
-                  ]}
-                  onPress={() => {
-                    setSetupType('server');
-                    setError('');
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.toggleButtonText,
-                      setupType === 'server' && styles.toggleButtonTextActive,
-                    ]}
-                  >
-                    Full Server
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleButton,
-                    setupType === 'publicHost' && styles.toggleButtonActive,
-                  ]}
-                  onPress={() => {
-                    setSetupType('publicHost');
-                    setError('');
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.toggleButtonText,
-                      setupType === 'publicHost' && styles.toggleButtonTextActive,
-                    ]}
-                  >
-                    Public Host Link
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.form}>
+                  ? 'Enter your WOL Manager serv              <View style={styles.form}>
                 {setupType === 'server' ? (
                   <Input
                     label="Server URL"
@@ -363,35 +317,6 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.regular,
     marginBottom: Spacing.lg,
     lineHeight: Typography.fontSize.base * Typography.lineHeight.normal,
-  },
-
-  // Toggle
-  toggleContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.border.light,
-    borderRadius: BorderRadius.lg,
-    padding: 4,
-    marginBottom: Spacing.lg,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-  },
-  toggleButtonActive: {
-    backgroundColor: Colors.primary.default,
-  },
-  toggleButtonText: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.text.secondary,
-    fontFamily: Typography.fontFamily.medium,
-  },
-  toggleButtonTextActive: {
-    color: Colors.text.inverse,
-    fontWeight: Typography.fontWeight.semibold,
   },
 
   // Form

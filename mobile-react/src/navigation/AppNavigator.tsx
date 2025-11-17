@@ -13,6 +13,7 @@ import { HostListScreen } from '../screens/HostListScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { AdminScreen } from '../screens/AdminScreen';
 import { AddHostScreen } from '../screens/AddHostScreen';
+import { PublicHostScreen } from '../screens/PublicHostScreen';
 import { LoadingScreen } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -22,6 +23,8 @@ import {
   BorderRadius,
   Shadows,
 } from '../constants/theme';
+import { PublicHostConfig } from '../types';
+import { storage } from '../utils/storage';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -170,17 +173,25 @@ const MainTabs = () => {
 export const AppNavigator: React.FC = () => {
   const { isAuthenticated, isLoading, serverConfig } = useAuth();
   const [serverUrl, setServerUrl] = useState<string | null>(null);
+  const [publicHostConfig, setPublicHostConfig] = useState<PublicHostConfig | null>(null);
 
   // Show loading screen while initializing
   if (isLoading) {
     return <LoadingScreen />;
   }
 
-  // If no server config and no serverUrl set, show setup
-  const needsSetup = !serverConfig && !serverUrl;
+  // If no server config, no serverUrl, and no publicHostConfig, show setup
+  const needsSetup = !serverConfig && !serverUrl && !publicHostConfig;
   
   // Get the server URL from either serverConfig or local state
   const currentServerUrl = serverConfig?.serverUrl || serverUrl || '';
+
+  // Handler for public host setup completion
+  const handlePublicHostComplete = async (config: PublicHostConfig) => {
+    // Save to storage
+    await storage.savePublicHostConfig(config);
+    setPublicHostConfig(config);
+  };
 
   return (
     <NavigationContainer>
@@ -192,7 +203,17 @@ export const AppNavigator: React.FC = () => {
       >
         {needsSetup ? (
           <Stack.Screen name="Setup">
-            {() => <SetupScreen onComplete={setServerUrl} />}
+            {() => (
+              <SetupScreen
+                onComplete={setServerUrl}
+                onPublicHostComplete={handlePublicHostComplete}
+              />
+            )}
+          </Stack.Screen>
+        ) : publicHostConfig ? (
+          // Public host mode - show public host screen directly
+          <Stack.Screen name="PublicHost">
+            {() => <PublicHostScreen route={{ params: { publicHostConfig } } as any} navigation={undefined as any} />}
           </Stack.Screen>
         ) : !isAuthenticated ? (
           <Stack.Screen name="Login">

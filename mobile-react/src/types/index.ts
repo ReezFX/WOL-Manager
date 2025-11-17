@@ -6,6 +6,14 @@ export interface ServerConfig {
   lastLoginTimestamp?: number;
 }
 
+export interface PublicHostConfig {
+  publicHostUrl: string; // Full URL like http://localhost:8008/public/host/token
+  token: string; // Extracted token from URL
+  serverBaseUrl: string; // Base server URL extracted from publicHostUrl
+  hostName?: string; // Cached host name
+  lastAccessTimestamp?: number;
+}
+
 export interface Host {
   id: number;
   name: string;
@@ -17,6 +25,15 @@ export interface Host {
   created_by: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface PublicHost {
+  id: number;
+  name: string;
+  mac_address: string;
+  description?: string;
+  status: 'online' | 'offline' | 'unknown';
+  last_check?: string;
 }
 
 export interface HostStatus {
@@ -37,6 +54,7 @@ export type RootStackParamList = {
   Setup: undefined;
   Login: { serverUrl: string };
   Main: undefined;
+  PublicHost: { publicHostConfig: PublicHostConfig };
 };
 
 export type MainTabParamList = {

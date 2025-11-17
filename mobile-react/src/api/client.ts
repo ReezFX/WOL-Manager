@@ -620,6 +620,159 @@ class ApiClient {
   }
 
   /**
+   * Get public host information and status
+   * Does not require authentication
+   */
+  async getPublicHostStatus(serverBaseUrl: string, token: string): Promise<{
+    host_id: number;
+    name: string;
+    status: 'online' | 'offline' | 'unknown';
+    last_check: string;
+  }> {
+    try {
+      // Create a temporary axios instance for this public request
+      const publicAxios = axios.create({
+        baseURL: serverBaseUrl,
+        timeout: 10000,
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      const response = await publicAxios.get(`/public/host/${token}/status`);
+
+      if (response.status === 200 && response.data) {
+        console.log('[API] Public host status retrieved:', response.data);
+        return response.data;
+      }
+
+      throw new Error(`Failed to get public host status: ${response.status}`);
+    } catch (error: any) {
+      console.error('[API] Get public host status error:', error.message);
+      throw new Error(`Failed to get public host status: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get public host details
+   * Does not require authentication, but we parse the HTML response
+   */
+  async getPublicHostDetails(serverBaseUrl: string, token: string): Promise<{
+    id: number;
+    name: string;
+    mac_address: string;
+    description?: string;
+  }> {
+    try {
+      // Create a temporary axios instance for this public request
+      const publicAxios = axios.create({
+        baseURL: serverBaseUrl,
+        timeout: 10000,
+      });
+
+      const response = await publicAxios.get(`/public/host/${token}`);
+
+      if (response.status === 200 && response.data) {
+        // The endpoint returns HTML, so we need to extract data from it
+        const html = typeof response.data === 'string' ? response.data : '';
+        
+        // Extract host details from HTML
+        // This is a simplified parser - in production you might want a proper HTML parser
+        const nameMatch = html.match(/<h4[^>]*class="card-title[^>]*>.*?<\/i>([^<]+)<\/h4>/i);
+        const macMatch = html.match(/class="mac-address[^>]*>([^<]+)<\/p>/i);
+        const descMatch = html.match(/Description<\/h6>\s*<p[^>]*>([^<]+)<\/p>/i);
+        const idMatch = html.match(/data-host-id="(\d+)"/i);
+        
+        if (!nameMatch || !macMatch || !idMatch) {
+          throw new Error('Failed to parse host details from response');
+        }
+
+        return {
+          id: parseInt(idMatch[1]),
+          name: nameMatch[1].trim(),
+          mac_address: macMatch[1].trim(),
+          description: descMatch ? descMatch[1].trim() : undefined,
+        };
+      }
+
+      throw new Error(`Failed to get public host details: ${response.status}`);
+    } catch (error: any) {
+      console.error('[API] Get public host details error:', error.message);
+      throw new Error(`Failed to get public host details: ${error.message}`);
+    }
+  }
+
+  /**
+   * Wake a public host
+   * Does not require user authentication, but needs CSRF token
+   */
+  async wakePublicHost(serverBaseUrl: string, token: string, hostId: number): Promise<boolean> {
+    try {
+      // First, get CSRF token from the public host page
+      const publicAxios = axios.create({
+        baseURL: serverBaseUrl,
+        timeout: 10000,
+      });
+
+      // Get the public host page to extract CSRF token
+      const pageResponse = await publicAxios.get(`/public/host/${token}`);
+      const html = typeof pageResponse.data === 'string' ? pageResponse.data : '';
+      
+      // Extract CSRF token
+      const csrfMatch = html.match(/name="csrf_token"[^>]*value="([^"]+)"/i) ||
+                        html.match(/value="([^"]+)"[^>]*name="csrf_token"/i);
+      
+      if (!csrfMatch || !csrfMatch[1]) {
+        throw new Error('Failed to extract CSRF token from public host page');
+      }
+
+      const csrfToken = csrfMatch[1];
+      console.log('[API] Public host CSRF token obtained');
+
+      // Extract cookies from the page response
+      const setCookieHeader = pageResponse.headers['set-cookie'] || pageResponse.headers['Set-Cookie'];
+      let cookies = '';
+      if (setCookieHeader) {
+        const cookieArray = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+        const sessionCookies = cookieArray
+          .map(cookie => {
+            const match = cookie.match(/^([^=]+=[^;]+)/);
+            return match ? match[1] : null;
+          })
+          .filter(Boolean);
+        cookies = sessionCookies.join('; ');
+      }
+
+      // Send wake request
+      const formData = new URLSearchParams();
+      formData.append('csrf_token', csrfToken);
+      formData.append('host_id', hostId.toString());
+
+      const wakeResponse = await publicAxios.post(
+        '/public/host/wake',
+        formData.toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Cookie': cookies,
+          },
+        }
+      );
+
+      // Check for success (redirect or 200)
+      if (wakeResponse.status === 200 || wakeResponse.status === 302 || wakeResponse.status === 301) {
+        console.log(`[API] Public host ${hostId} woken successfully`);
+        return true;
+      }
+
+      throw new Error(`Failed to wake public host: ${wakeResponse.status}`);
+    } catch (error: any) {
+      console.error('[API] Wake public host error:', error.message);
+      throw new Error(`Failed to wake public host: ${error.message}`);
+    }
+  }
+
+  /**
    * Get available roles
    */
   async getRoles(): Promise<Array<{ id: number; name: string }>> {
