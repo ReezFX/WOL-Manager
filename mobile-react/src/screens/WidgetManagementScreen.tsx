@@ -204,8 +204,13 @@ export const WidgetManagementScreen: React.FC = () => {
             name: host.name,
             mac_address: host.mac_address,
             ip_address: host.ip_address,
+            status: host.status,
           },
-          serverConfig.serverUrl
+          serverConfig.serverUrl,
+          {
+            cookies: apiClient.getCookies() || '',
+            csrfToken: apiClient.getCsrfTokenValue() || '',
+          }
         );
 
         toast.showSuccess(`Widget configured for ${host.name}`);
@@ -229,6 +234,7 @@ export const WidgetManagementScreen: React.FC = () => {
             publicHostUrl: publicConfig.publicHostUrl,
             token: publicConfig.token,
             serverBaseUrl: publicConfig.serverBaseUrl,
+            status: hostDetails.status,
           });
 
           toast.showSuccess(`Widget configured for ${hostDetails.name}`);

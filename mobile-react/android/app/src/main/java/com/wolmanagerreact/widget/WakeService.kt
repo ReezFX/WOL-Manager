@@ -9,12 +9,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
 
 /**
- * Service to send Wake-on-LAN packets in the background
+ * Service to send Wake-on-LAN packets via API
  */
 class WakeService : Service() {
     private val serviceJob = Job()
@@ -25,35 +28,73 @@ class WakeService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             val hostName = intent.getStringExtra(WOLWidgetProvider.EXTRA_HOST_NAME) ?: "Unknown Host"
-            val macAddress = intent.getStringExtra(WOLWidgetProvider.EXTRA_MAC_ADDRESS)
-            val ipAddress = intent.getStringExtra(WOLWidgetProvider.EXTRA_IP_ADDRESS)
+            val configType = intent.getStringExtra(WOLWidgetProvider.EXTRA_CONFIG_TYPE) ?: "server"
             
-            if (macAddress != null) {
-                serviceScope.launch {
-                    try {
-                        sendWakeOnLan(macAddress, ipAddress)
-                        withContext(Dispatchers.Main) {
+            serviceScope.launch {
+                try {
+                    var success = false
+                    
+                    if (configType == "server") {
+                        val serverUrl = intent.getStringExtra(WOLWidgetProvider.EXTRA_SERVER_URL)
+                        val hostId = intent.getIntExtra(WOLWidgetProvider.EXTRA_HOST_ID, -1)
+                        val cookies = intent.getStringExtra(WOLWidgetProvider.EXTRA_COOKIES)
+                        val csrfToken = intent.getStringExtra(WOLWidgetProvider.EXTRA_CSRF_TOKEN)
+                        
+                        if (serverUrl != null && hostId != -1 && cookies != null && csrfToken != null) {
+                            success = wakeServerHost(serverUrl, hostId, cookies, csrfToken)
+                        }
+                    } else if (configType == "publicHost") {
+                        val publicHostUrl = intent.getStringExtra(WOLWidgetProvider.EXTRA_PUBLIC_HOST_URL)
+                        val serverBaseUrl = intent.getStringExtra(WOLWidgetProvider.EXTRA_SERVER_BASE_URL)
+                        val token = intent.getStringExtra(WOLWidgetProvider.EXTRA_TOKEN)
+                        
+                        if (publicHostUrl != null && serverBaseUrl != null && token != null) {
+                            success = wakePublicHost(serverBaseUrl, token, publicHostUrl)
+                        }
+                    }
+                    
+                    withContext(Dispatchers.Main) {
+                        if (success) {
                             Toast.makeText(
                                 applicationContext,
                                 "Waking $hostName...",
                                 Toast.LENGTH_SHORT
                             ).show()
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        withContext(Dispatchers.Main) {
+                            
+                            // Schedule status update after a delay (e.g. 5 seconds)
+                            // For now, we just keep it as "Waking..." until the app updates it or next poll
+                        } else {
                             Toast.makeText(
                                 applicationContext,
                                 "Failed to wake $hostName",
                                 Toast.LENGTH_SHORT
                             ).show()
+                            
+                            // Revert widget status
+                            val widgetId = intent.getIntExtra(WOLWidgetProvider.EXTRA_WIDGET_ID, -1)
+                            if (widgetId != -1) {
+                                WOLWidgetProvider.updateWidget(applicationContext, widgetId)
+                            }
                         }
-                    } finally {
-                        stopSelf(startId)
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            applicationContext,
+                            "Error: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        
+                        // Revert widget status
+                        val widgetId = intent.getIntExtra(WOLWidgetProvider.EXTRA_WIDGET_ID, -1)
+                        if (widgetId != -1) {
+                            WOLWidgetProvider.updateWidget(applicationContext, widgetId)
+                        }
+                    }
+                } finally {
+                    stopSelf(startId)
                 }
-            } else {
-                stopSelf(startId)
             }
         } else {
             stopSelf(startId)
@@ -62,80 +103,111 @@ class WakeService : Service() {
         return START_NOT_STICKY
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        serviceJob.cancel()
+    private suspend fun wakeServerHost(
+        serverUrl: String,
+        hostId: Int,
+        cookies: String,
+        csrfToken: String
+    ): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Construct URL: serverUrl/wol/wake/{hostId}
+                // serverUrl might already have / at the end or not, handled in basic way here
+                val baseUrl = if (serverUrl.endsWith("/")) serverUrl.dropLast(1) else serverUrl
+                val url = URL("$baseUrl/wol/wake/$hostId")
+                
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.doOutput = true
+                conn.connectTimeout = 10000
+                conn.readTimeout = 10000
+                
+                // Set headers
+                conn.setRequestProperty("Cookie", cookies)
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                
+                // Body
+                val postData = "csrf_token=${URLEncoder.encode(csrfToken, "UTF-8")}"
+                
+                OutputStreamWriter(conn.outputStream).use { writer ->
+                    writer.write(postData)
+                    writer.flush()
+                }
+                
+                val responseCode = conn.responseCode
+                conn.disconnect()
+                
+                // Check for 200 OK or 302 Redirect (success)
+                responseCode == 200 || responseCode == 302
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+        }
     }
 
-    /**
-     * Send Wake-on-LAN magic packet
-     * @param macAddress MAC address in format XX:XX:XX:XX:XX:XX
-     * @param ipAddress Optional IP address for directed broadcast
-     */
-    private suspend fun sendWakeOnLan(macAddress: String, ipAddress: String?) {
-        withContext(Dispatchers.IO) {
-            // Parse MAC address
-            val macBytes = macAddress.split(":")
-                .map { it.toInt(16).toByte() }
-                .toByteArray()
-
-            if (macBytes.size != 6) {
-                throw IllegalArgumentException("Invalid MAC address format")
-            }
-
-            // Create magic packet
-            // Magic packet: 6 bytes of 0xFF followed by 16 repetitions of the MAC address
-            val magicPacket = ByteArray(102)
-            
-            // Fill first 6 bytes with 0xFF
-            for (i in 0..5) {
-                magicPacket[i] = 0xFF.toByte()
-            }
-            
-            // Repeat MAC address 16 times
-            for (i in 1..16) {
-                System.arraycopy(macBytes, 0, magicPacket, i * 6, 6)
-            }
-
-            // Send packet
-            DatagramSocket().use { socket ->
-                socket.broadcast = true
+    private suspend fun wakePublicHost(
+        serverBaseUrl: String,
+        token: String,
+        publicHostUrl: String
+    ): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                // 1. GET public host page to fetch CSRF token
+                val pageUrl = URL(publicHostUrl)
+                val pageConn = pageUrl.openConnection() as HttpURLConnection
+                pageConn.requestMethod = "GET"
+                pageConn.connectTimeout = 10000
+                pageConn.readTimeout = 10000
                 
-                // Determine broadcast address
-                val broadcastAddress = if (!ipAddress.isNullOrEmpty()) {
-                    // Use directed broadcast to specific subnet
-                    try {
-                        InetAddress.getByName(ipAddress)
-                    } catch (e: Exception) {
-                        InetAddress.getByName("255.255.255.255")
-                    }
-                } else {
-                    // Use limited broadcast
-                    InetAddress.getByName("255.255.255.255")
+                val pageResponseCode = pageConn.responseCode
+                if (pageResponseCode != 200) return@withContext false
+                
+                // Extract CSRF and Cookies
+                val cookiesList = pageConn.headerFields["Set-Cookie"]
+                val cookies = cookiesList?.joinToString("; ") { it.split(";")[0] } ?: ""
+                
+                val html = BufferedReader(InputStreamReader(pageConn.inputStream)).use { it.readText() }
+                pageConn.disconnect()
+                
+                // Extract CSRF token using Regex
+                val csrfPattern = "name=\"csrf_token\"[^>]*value=\"([^\"]+)\"".toRegex()
+                val matchResult = csrfPattern.find(html)
+                val csrfToken = matchResult?.groups?.get(1)?.value ?: return@withContext false
+                
+                // Extract Host ID from HTML
+                val idPattern = "data-host-id=\"(\\d+)\"".toRegex()
+                val idMatch = idPattern.find(html)
+                val hostId = idMatch?.groups?.get(1)?.value ?: return@withContext false
+                
+                // 2. POST to wake endpoint
+                val baseUrl = if (serverBaseUrl.endsWith("/")) serverBaseUrl.dropLast(1) else serverBaseUrl
+                val wakeUrl = URL("$baseUrl/public/host/wake")
+                
+                val wakeConn = wakeUrl.openConnection() as HttpURLConnection
+                wakeConn.requestMethod = "POST"
+                wakeConn.doOutput = true
+                wakeConn.connectTimeout = 10000
+                wakeConn.readTimeout = 10000
+                
+                // Set headers
+                wakeConn.setRequestProperty("Cookie", cookies)
+                wakeConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                
+                val postData = "csrf_token=${URLEncoder.encode(csrfToken, "UTF-8")}&host_id=$hostId"
+                
+                OutputStreamWriter(wakeConn.outputStream).use { writer ->
+                    writer.write(postData)
+                    writer.flush()
                 }
                 
-                // Standard WOL port
-                val port = 9
+                val wakeResponseCode = wakeConn.responseCode
+                wakeConn.disconnect()
                 
-                // Create and send packet
-                val packet = DatagramPacket(magicPacket, magicPacket.size, broadcastAddress, port)
-                socket.send(packet)
-                
-                // Send to additional common WOL ports for better compatibility
-                val additionalPorts = listOf(7, 2304)
-                for (additionalPort in additionalPorts) {
-                    try {
-                        val additionalPacket = DatagramPacket(
-                            magicPacket,
-                            magicPacket.size,
-                            broadcastAddress,
-                            additionalPort
-                        )
-                        socket.send(additionalPacket)
-                    } catch (e: Exception) {
-                        // Ignore errors for additional ports
-                    }
-                }
+                wakeResponseCode == 200 || wakeResponseCode == 302
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
             }
         }
     }

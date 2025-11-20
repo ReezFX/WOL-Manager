@@ -813,6 +813,19 @@ class ApiClient {
       ];
     }
   }
+  /**
+   * Get current session cookies
+   */
+  getCookies(): string | null {
+    return this.cookies;
+  }
+
+  /**
+   * Get current CSRF token
+   */
+  getCsrfTokenValue(): string | null {
+    return this.csrfToken;
+  }
 }
 
 // Export singleton instance

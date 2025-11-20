@@ -38,6 +38,9 @@ class WidgetModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
                 publicHostUrl = if (hostData.hasKey("publicHostUrl")) hostData.getString("publicHostUrl") else null,
                 token = if (hostData.hasKey("token")) hostData.getString("token") else null,
                 serverBaseUrl = if (hostData.hasKey("serverBaseUrl")) hostData.getString("serverBaseUrl") else null,
+                status = if (hostData.hasKey("status")) hostData.getString("status") ?: "unknown" else "unknown",
+                cookies = if (hostData.hasKey("cookies")) hostData.getString("cookies") else null,
+                csrfToken = if (hostData.hasKey("csrfToken")) hostData.getString("csrfToken") else null,
                 createdAt = System.currentTimeMillis(),
                 lastUpdated = System.currentTimeMillis()
             )
@@ -75,6 +78,7 @@ class WidgetModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
                     config.publicHostUrl?.let { putString("publicHostUrl", it) }
                     config.token?.let { putString("token", it) }
                     config.serverBaseUrl?.let { putString("serverBaseUrl", it) }
+                    putString("status", config.status)
                     putDouble("createdAt", config.createdAt.toDouble())
                     putDouble("lastUpdated", config.lastUpdated.toDouble())
                 }
@@ -109,6 +113,7 @@ class WidgetModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
                     config.publicHostUrl?.let { putString("publicHostUrl", it) }
                     config.token?.let { putString("token", it) }
                     config.serverBaseUrl?.let { putString("serverBaseUrl", it) }
+                    putString("status", config.status)
                     putDouble("createdAt", config.createdAt.toDouble())
                     putDouble("lastUpdated", config.lastUpdated.toDouble())
                 }

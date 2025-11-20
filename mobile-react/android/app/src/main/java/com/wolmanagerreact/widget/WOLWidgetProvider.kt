@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
+import android.graphics.Color
 import com.wolmanagerreact.R
 
 /**
@@ -27,6 +28,8 @@ class WOLWidgetProvider : AppWidgetProvider() {
         const val EXTRA_PUBLIC_HOST_URL = "extra_public_host_url"
         const val EXTRA_TOKEN = "extra_token"
         const val EXTRA_SERVER_BASE_URL = "extra_server_base_url"
+        const val EXTRA_COOKIES = "extra_cookies"
+        const val EXTRA_CSRF_TOKEN = "extra_csrf_token"
 
         /**
          * Force update all widgets
@@ -99,6 +102,9 @@ class WOLWidgetProvider : AppWidgetProvider() {
         val ipAddress = intent.getStringExtra(EXTRA_IP_ADDRESS)
         val configType = intent.getStringExtra(EXTRA_CONFIG_TYPE) ?: "server"
         
+        // Visual feedback: Show "Waking..." status
+        updateAppWidget(context, AppWidgetManager.getInstance(context), widgetId, "waking")
+        
         // Start WakeService to send WOL packet
         val serviceIntent = Intent(context, WakeService::class.java).apply {
             putExtra(EXTRA_WIDGET_ID, widgetId)
@@ -110,6 +116,8 @@ class WOLWidgetProvider : AppWidgetProvider() {
             if (configType == "server") {
                 putExtra(EXTRA_SERVER_URL, intent.getStringExtra(EXTRA_SERVER_URL))
                 putExtra(EXTRA_HOST_ID, intent.getIntExtra(EXTRA_HOST_ID, -1))
+                putExtra(EXTRA_COOKIES, intent.getStringExtra(EXTRA_COOKIES))
+                putExtra(EXTRA_CSRF_TOKEN, intent.getStringExtra(EXTRA_CSRF_TOKEN))
             } else if (configType == "publicHost") {
                 putExtra(EXTRA_PUBLIC_HOST_URL, intent.getStringExtra(EXTRA_PUBLIC_HOST_URL))
                 putExtra(EXTRA_TOKEN, intent.getStringExtra(EXTRA_TOKEN))
@@ -123,7 +131,8 @@ class WOLWidgetProvider : AppWidgetProvider() {
     private fun updateAppWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
-        widgetId: Int
+        widgetId: Int,
+        overrideStatus: String? = null
     ) {
         val config = WidgetConfigHelper.getWidgetConfig(context, widgetId)
         
@@ -132,7 +141,10 @@ class WOLWidgetProvider : AppWidgetProvider() {
         if (config != null) {
             // Set host name
             views.setTextViewText(R.id.widget_host_name, config.hostName)
-            views.setTextViewText(R.id.widget_mac_address, config.macAddress)
+            
+            // Set status
+            val statusToShow = overrideStatus ?: config.status
+            configureStatusViews(views, statusToShow)
             
             // Set wake button click handler
             val wakeIntent = Intent(context, WOLWidgetProvider::class.java).apply {
@@ -146,6 +158,8 @@ class WOLWidgetProvider : AppWidgetProvider() {
                 if (config.configType == "server") {
                     putExtra(EXTRA_SERVER_URL, config.serverUrl)
                     putExtra(EXTRA_HOST_ID, config.hostId)
+                    putExtra(EXTRA_COOKIES, config.cookies)
+                    putExtra(EXTRA_CSRF_TOKEN, config.csrfToken)
                 } else if (config.configType == "publicHost") {
                     putExtra(EXTRA_PUBLIC_HOST_URL, config.publicHostUrl)
                     putExtra(EXTRA_TOKEN, config.token)
@@ -164,7 +178,8 @@ class WOLWidgetProvider : AppWidgetProvider() {
         } else {
             // No configuration - show placeholder and open app on click
             views.setTextViewText(R.id.widget_host_name, "Not Configured")
-            views.setTextViewText(R.id.widget_mac_address, "Tap to configure")
+            views.setTextViewText(R.id.widget_status_text, "Tap to Setup")
+            views.setTextColor(R.id.widget_status_indicator, Color.parseColor("#adb5bd")) // Colors.status.unknown
             
             // Create intent to open the app
             val openAppIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
@@ -183,5 +198,17 @@ class WOLWidgetProvider : AppWidgetProvider() {
         }
         
         appWidgetManager.updateAppWidget(widgetId, views)
+    }
+
+    private fun configureStatusViews(views: RemoteViews, status: String) {
+        val (color, text) = when (status.lowercase()) {
+            "online" -> Pair("#28b485", "Online") // Colors.status.online
+            "offline" -> Pair("#e25563", "Offline") // Colors.status.offline
+            "waking" -> Pair("#5bc0de", "Waking...") // Colors.info.main (blue)
+            else -> Pair("#adb5bd", "Unknown") // Colors.status.unknown
+        }
+        
+        views.setTextColor(R.id.widget_status_indicator, Color.parseColor(color))
+        views.setTextViewText(R.id.widget_status_text, text)
     }
 }

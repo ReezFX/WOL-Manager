@@ -10,6 +10,9 @@ interface WidgetModuleInterface {
     hostName: string;
     macAddress: string;
     ipAddress?: string;
+    status?: string;
+    cookies?: string;
+    csrfToken?: string;
     configType: 'server' | 'publicHost';
     serverUrl?: string;
     publicHostUrl?: string;
@@ -73,14 +76,22 @@ export const configureWidgetForServerHost = async (
     name: string;
     mac_address: string;
     ip_address?: string;
+    status?: string;
   },
-  serverUrl: string
+  serverUrl: string,
+  auth: {
+    cookies: string;
+    csrfToken: string;
+  }
 ): Promise<boolean> => {
   return widgetModule.configureWidget(widgetId, {
     hostId: host.id,
     hostName: host.name,
     macAddress: host.mac_address,
     ipAddress: host.ip_address,
+    status: host.status,
+    cookies: auth.cookies,
+    csrfToken: auth.csrfToken,
     configType: 'server',
     serverUrl,
   });
@@ -97,6 +108,7 @@ export const configureWidgetForPublicHost = async (
     publicHostUrl: string;
     token: string;
     serverBaseUrl: string;
+    status?: string;
   }
 ): Promise<boolean> => {
   return widgetModule.configureWidget(widgetId, {
@@ -106,6 +118,7 @@ export const configureWidgetForPublicHost = async (
     publicHostUrl: publicHostConfig.publicHostUrl,
     token: publicHostConfig.token,
     serverBaseUrl: publicHostConfig.serverBaseUrl,
+    status: publicHostConfig.status,
   });
 };
 

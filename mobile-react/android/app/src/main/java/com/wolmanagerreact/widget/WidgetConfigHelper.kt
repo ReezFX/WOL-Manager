@@ -23,6 +23,9 @@ object WidgetConfigHelper {
         val publicHostUrl: String?,
         val token: String?,
         val serverBaseUrl: String?,
+        val status: String = "unknown", // "online", "offline", "unknown", "waking"
+        val cookies: String?,
+        val csrfToken: String?,
         val createdAt: Long,
         val lastUpdated: Long
     ) {
@@ -38,6 +41,9 @@ object WidgetConfigHelper {
                 put("publicHostUrl", publicHostUrl ?: "")
                 put("token", token ?: "")
                 put("serverBaseUrl", serverBaseUrl ?: "")
+                put("status", status)
+                put("cookies", cookies ?: "")
+                put("csrfToken", csrfToken ?: "")
                 put("createdAt", createdAt)
                 put("lastUpdated", lastUpdated)
             }.toString()
@@ -58,6 +64,9 @@ object WidgetConfigHelper {
                         publicHostUrl = obj.optString("publicHostUrl", "").takeIf { it.isNotEmpty() },
                         token = obj.optString("token", "").takeIf { it.isNotEmpty() },
                         serverBaseUrl = obj.optString("serverBaseUrl", "").takeIf { it.isNotEmpty() },
+                        status = obj.optString("status", "unknown"),
+                        cookies = obj.optString("cookies", "").takeIf { it.isNotEmpty() },
+                        csrfToken = obj.optString("csrfToken", "").takeIf { it.isNotEmpty() },
                         createdAt = obj.getLong("createdAt"),
                         lastUpdated = obj.getLong("lastUpdated")
                     )
