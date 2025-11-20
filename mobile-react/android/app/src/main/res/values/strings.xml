@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WOLManagerReact</string>
+    <string name="widget_description">Wake on LAN Widget - Quick access to wake your devices</string>
 </resources>

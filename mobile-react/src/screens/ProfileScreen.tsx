@@ -20,7 +20,11 @@ import {
   Shadows,
 } from '../constants/theme';
 
-export const ProfileScreen: React.FC = () => {
+interface ProfileScreenProps {
+  navigation?: any;
+}
+
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { serverConfig, logout } = useAuth();
   const toast = useToast();
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
@@ -97,6 +101,16 @@ export const ProfileScreen: React.FC = () => {
         {/* App Settings */}
         <Text style={styles.sectionTitle}>App</Text>
         <Card style={styles.card}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation?.navigate('WidgetManagement')}
+          >
+            <Text style={styles.menuItemText}>Widget Management</Text>
+            <Text style={styles.menuItemChevron}>›</Text>
+          </TouchableOpacity>
+
+          <Divider />
+
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => toast.showInfo('Settings coming soon!')}

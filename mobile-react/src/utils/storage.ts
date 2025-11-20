@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ServerConfig, PublicHostConfig } from '../types';
+import { ServerConfig, PublicHostConfig, WidgetConfig } from '../types';
 
 const SERVER_CONFIG_KEY = '@server_config';
 const PUBLIC_HOST_CONFIG_KEY = '@public_host_config';
+const WIDGET_CONFIGS_KEY = '@widget_configs';
 
 export const storage = {
   /**
@@ -141,6 +142,91 @@ export const storage = {
       console.log('[Storage] All configs cleared');
     } catch (error) {
       console.error('[Storage] Failed to clear all configs:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Widget Configuration Management
+   */
+
+  /**
+   * Save widget configuration
+   */
+  async saveWidgetConfig(config: WidgetConfig): Promise<void> {
+    try {
+      const configs = await this.getWidgetConfigs();
+      const existingIndex = configs.findIndex(c => c.widgetId === config.widgetId);
+      
+      if (existingIndex >= 0) {
+        configs[existingIndex] = config;
+      } else {
+        configs.push(config);
+      }
+      
+      await AsyncStorage.setItem(WIDGET_CONFIGS_KEY, JSON.stringify(configs));
+      console.log('[Storage] Widget config saved:', config.widgetId);
+    } catch (error) {
+      console.error('[Storage] Failed to save widget config:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get all widget configurations
+   */
+  async getWidgetConfigs(): Promise<WidgetConfig[]> {
+    try {
+      const configsStr = await AsyncStorage.getItem(WIDGET_CONFIGS_KEY);
+      if (configsStr) {
+        const configs = JSON.parse(configsStr);
+        console.log('[Storage] Widget configs loaded:', configs.length);
+        return configs;
+      }
+      return [];
+    } catch (error) {
+      console.error('[Storage] Failed to get widget configs:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get widget configuration by ID
+   */
+  async getWidgetConfig(widgetId: number): Promise<WidgetConfig | null> {
+    try {
+      const configs = await this.getWidgetConfigs();
+      return configs.find(c => c.widgetId === widgetId) || null;
+    } catch (error) {
+      console.error('[Storage] Failed to get widget config:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Delete widget configuration
+   */
+  async deleteWidgetConfig(widgetId: number): Promise<void> {
+    try {
+      const configs = await this.getWidgetConfigs();
+      const filtered = configs.filter(c => c.widgetId !== widgetId);
+      await AsyncStorage.setItem(WIDGET_CONFIGS_KEY, JSON.stringify(filtered));
+      console.log('[Storage] Widget config deleted:', widgetId);
+    } catch (error) {
+      console.error('[Storage] Failed to delete widget config:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Clear all widget configurations
+   */
+  async clearAllWidgetConfigs(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(WIDGET_CONFIGS_KEY);
+      console.log('[Storage] All widget configs cleared');
+    } catch (error) {
+      console.error('[Storage] Failed to clear widget configs:', error);
       throw error;
     }
   },

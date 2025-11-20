@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
       android:name=".MainApplication"
@@ -23,5 +26,24 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+
+      <!-- Widget Provider -->
+      <receiver
+        android:name=".widget.WOLWidgetProvider"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+          <action android:name="com.wolmanagerreact.widget.WAKE_HOST" />
+        </intent-filter>
+        <meta-data
+          android:name="android.appwidget.provider"
+          android:resource="@xml/widget_info" />
+      </receiver>
+
+      <!-- Wake Service -->
+      <service
+        android:name=".widget.WakeService"
+        android:exported="false" />
+
     </application>
 </manifest>

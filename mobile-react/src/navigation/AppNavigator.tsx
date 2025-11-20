@@ -14,6 +14,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { AdminScreen } from '../screens/AdminScreen';
 import { AddHostScreen } from '../screens/AddHostScreen';
 import { PublicHostScreen } from '../screens/PublicHostScreen';
+import { WidgetManagementScreen } from '../screens/WidgetManagementScreen';
 import { LoadingScreen } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -258,6 +259,15 @@ export const AppNavigator: React.FC = () => {
               options={{
                 presentation: 'card',
                 animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen 
+              name="WidgetManagement" 
+              component={WidgetManagementScreen}
+              options={{
+                presentation: 'card',
+                animation: 'slide_from_right',
+                headerShown: false,
               }}
             />
           </>

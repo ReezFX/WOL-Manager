@@ -68,3 +68,21 @@ export type HostStackParamList = {
   HostDetail: { hostId: number };
   HostEdit: { hostId?: number };
 };
+
+// Widget Types
+export interface WidgetConfig {
+  widgetId: number;
+  hostId?: number; // For server hosts
+  hostName: string;
+  macAddress: string;
+  ipAddress?: string;
+  configType: 'server' | 'publicHost';
+  // For server hosts
+  serverUrl?: string;
+  // For public hosts
+  publicHostUrl?: string;
+  token?: string;
+  serverBaseUrl?: string;
+  createdAt: number;
+  lastUpdated: number;
+}

@@ -1,0 +1,187 @@
+package com.wolmanagerreact.widget
+
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.widget.RemoteViews
+import com.wolmanagerreact.R
+
+/**
+ * WOL Widget Provider
+ * Handles widget updates and click events
+ */
+class WOLWidgetProvider : AppWidgetProvider() {
+
+    companion object {
+        const val ACTION_WAKE_HOST = "com.wolmanagerreact.widget.WAKE_HOST"
+        const val EXTRA_WIDGET_ID = "extra_widget_id"
+        const val EXTRA_HOST_NAME = "extra_host_name"
+        const val EXTRA_MAC_ADDRESS = "extra_mac_address"
+        const val EXTRA_IP_ADDRESS = "extra_ip_address"
+        const val EXTRA_CONFIG_TYPE = "extra_config_type"
+        const val EXTRA_SERVER_URL = "extra_server_url"
+        const val EXTRA_HOST_ID = "extra_host_id"
+        const val EXTRA_PUBLIC_HOST_URL = "extra_public_host_url"
+        const val EXTRA_TOKEN = "extra_token"
+        const val EXTRA_SERVER_BASE_URL = "extra_server_base_url"
+
+        /**
+         * Force update all widgets
+         */
+        fun updateAllWidgets(context: Context) {
+            val intent = Intent(context, WOLWidgetProvider::class.java).apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            }
+            
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val widgetIds = appWidgetManager.getAppWidgetIds(
+                ComponentName(context, WOLWidgetProvider::class.java)
+            )
+            
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds)
+            context.sendBroadcast(intent)
+        }
+
+        /**
+         * Update specific widget
+         */
+        fun updateWidget(context: Context, widgetId: Int) {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val intent = Intent(context, WOLWidgetProvider::class.java).apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(widgetId))
+            }
+            context.sendBroadcast(intent)
+        }
+    }
+
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        for (widgetId in appWidgetIds) {
+            updateAppWidget(context, appWidgetManager, widgetId)
+        }
+    }
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        
+        when (intent.action) {
+            ACTION_WAKE_HOST -> {
+                handleWakeHost(context, intent)
+            }
+        }
+    }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        for (widgetId in appWidgetIds) {
+            WidgetConfigHelper.deleteWidgetConfig(context, widgetId)
+        }
+    }
+
+    override fun onEnabled(context: Context) {
+        // First widget added
+    }
+
+    override fun onDisabled(context: Context) {
+        // Last widget removed
+    }
+
+    private fun handleWakeHost(context: Context, intent: Intent) {
+        val widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, -1)
+        val hostName = intent.getStringExtra(EXTRA_HOST_NAME) ?: "Unknown Host"
+        val macAddress = intent.getStringExtra(EXTRA_MAC_ADDRESS) ?: return
+        val ipAddress = intent.getStringExtra(EXTRA_IP_ADDRESS)
+        val configType = intent.getStringExtra(EXTRA_CONFIG_TYPE) ?: "server"
+        
+        // Start WakeService to send WOL packet
+        val serviceIntent = Intent(context, WakeService::class.java).apply {
+            putExtra(EXTRA_WIDGET_ID, widgetId)
+            putExtra(EXTRA_HOST_NAME, hostName)
+            putExtra(EXTRA_MAC_ADDRESS, macAddress)
+            putExtra(EXTRA_IP_ADDRESS, ipAddress)
+            putExtra(EXTRA_CONFIG_TYPE, configType)
+            
+            if (configType == "server") {
+                putExtra(EXTRA_SERVER_URL, intent.getStringExtra(EXTRA_SERVER_URL))
+                putExtra(EXTRA_HOST_ID, intent.getIntExtra(EXTRA_HOST_ID, -1))
+            } else if (configType == "publicHost") {
+                putExtra(EXTRA_PUBLIC_HOST_URL, intent.getStringExtra(EXTRA_PUBLIC_HOST_URL))
+                putExtra(EXTRA_TOKEN, intent.getStringExtra(EXTRA_TOKEN))
+                putExtra(EXTRA_SERVER_BASE_URL, intent.getStringExtra(EXTRA_SERVER_BASE_URL))
+            }
+        }
+        
+        context.startService(serviceIntent)
+    }
+
+    private fun updateAppWidget(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        widgetId: Int
+    ) {
+        val config = WidgetConfigHelper.getWidgetConfig(context, widgetId)
+        
+        val views = RemoteViews(context.packageName, R.layout.widget_wol)
+        
+        if (config != null) {
+            // Set host name
+            views.setTextViewText(R.id.widget_host_name, config.hostName)
+            views.setTextViewText(R.id.widget_mac_address, config.macAddress)
+            
+            // Set wake button click handler
+            val wakeIntent = Intent(context, WOLWidgetProvider::class.java).apply {
+                action = ACTION_WAKE_HOST
+                putExtra(EXTRA_WIDGET_ID, widgetId)
+                putExtra(EXTRA_HOST_NAME, config.hostName)
+                putExtra(EXTRA_MAC_ADDRESS, config.macAddress)
+                putExtra(EXTRA_IP_ADDRESS, config.ipAddress)
+                putExtra(EXTRA_CONFIG_TYPE, config.configType)
+                
+                if (config.configType == "server") {
+                    putExtra(EXTRA_SERVER_URL, config.serverUrl)
+                    putExtra(EXTRA_HOST_ID, config.hostId)
+                } else if (config.configType == "publicHost") {
+                    putExtra(EXTRA_PUBLIC_HOST_URL, config.publicHostUrl)
+                    putExtra(EXTRA_TOKEN, config.token)
+                    putExtra(EXTRA_SERVER_BASE_URL, config.serverBaseUrl)
+                }
+            }
+            
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                widgetId,
+                wakeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            views.setOnClickPendingIntent(R.id.widget_wake_button, pendingIntent)
+        } else {
+            // No configuration - show placeholder and open app on click
+            views.setTextViewText(R.id.widget_host_name, "Not Configured")
+            views.setTextViewText(R.id.widget_mac_address, "Tap to configure")
+            
+            // Create intent to open the app
+            val openAppIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            if (openAppIntent != null) {
+                openAppIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val pendingIntent = PendingIntent.getActivity(
+                    context,
+                    widgetId,
+                    openAppIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                
+                // Make the entire widget clickable to open the app
+                views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
+            }
+        }
+        
+        appWidgetManager.updateAppWidget(widgetId, views)
+    }
+}
