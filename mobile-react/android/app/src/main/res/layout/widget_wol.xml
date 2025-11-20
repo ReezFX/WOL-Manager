@@ -53,15 +53,38 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/widget_wake_button"
+    <!-- Wake Button Container with Loading State -->
+    <FrameLayout
         android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:text="WAKE"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:background="@drawable/widget_button_background"
-        android:gravity="center" />
+        android:layout_height="64dp">
+
+        <Button
+            android:id="@+id/widget_wake_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="WAKE"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/widget_button_background"
+            android:gravity="center" />
+
+        <ProgressBar
+            android:id="@+id/widget_loading_indicator"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="#FFFFFF"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/widget_success_indicator"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_check_circle"
+            android:visibility="gone" />
+
+    </FrameLayout>
 
 </LinearLayout>

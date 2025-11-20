@@ -16,6 +16,10 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 
+import kotlinx.coroutines.delay
+
+import org.json.JSONObject
+
 /**
  * Service to send Wake-on-LAN packets via API
  */
@@ -55,18 +59,31 @@ class WakeService : Service() {
                     
                     withContext(Dispatchers.Main) {
                         if (success) {
-                            Toast.makeText(
-                                applicationContext,
-                                "Waking $hostName...",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            
-                            // Schedule status update after a delay (e.g. 5 seconds)
-                            // For now, we just keep it as "Waking..." until the app updates it or next poll
+                            // Packet sent successfully.
+                            // Update status to "waking" immediately in config
+                            val widgetId = intent.getIntExtra(WOLWidgetProvider.EXTRA_WIDGET_ID, -1)
+                            if (widgetId != -1) {
+                                val currentConfig = WidgetConfigHelper.getWidgetConfig(applicationContext, widgetId)
+                                if (currentConfig != null) {
+                                    val updatingConfig = currentConfig.copy(status = "waking", lastUpdated = System.currentTimeMillis())
+                                    WidgetConfigHelper.saveWidgetConfig(applicationContext, updatingConfig)
+                                    // Keep spinner running (isLoading=true)
+                                    WOLWidgetProvider.updateWidget(applicationContext, widgetId, isLoading = true)
+                                }
+                                
+                                Toast.makeText(
+                                    applicationContext,
+                                    "Packet sent, waiting for host...",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                
+                                // Start polling (max 60s)
+                                pollHostStatus(intent, widgetId)
+                            }
                         } else {
                             Toast.makeText(
                                 applicationContext,
-                                "Failed to wake $hostName",
+                                "Failed to send packet to $hostName",
                                 Toast.LENGTH_SHORT
                             ).show()
                             
@@ -101,6 +118,150 @@ class WakeService : Service() {
         }
         
         return START_NOT_STICKY
+    }
+
+    private suspend fun pollHostStatus(intent: Intent, widgetId: Int) {
+        val configType = intent.getStringExtra(WOLWidgetProvider.EXTRA_CONFIG_TYPE) ?: "server"
+        var attempts = 0
+        val maxAttempts = 20 // 20 * 3s = 60 seconds (Match RN timeout)
+        
+        while (attempts < maxAttempts) {
+            delay(3000) // Wait 3 seconds between checks
+            attempts++
+            
+            try {
+                var newStatus: String? = null
+                
+                if (configType == "server") {
+                    val serverUrl = intent.getStringExtra(WOLWidgetProvider.EXTRA_SERVER_URL)
+                    val hostId = intent.getIntExtra(WOLWidgetProvider.EXTRA_HOST_ID, -1)
+                    val cookies = intent.getStringExtra(WOLWidgetProvider.EXTRA_COOKIES)
+                    
+                    if (serverUrl != null && hostId != -1 && cookies != null) {
+                        newStatus = checkServerHostStatus(serverUrl, hostId, cookies)
+                    }
+                } else if (configType == "publicHost") {
+                    val publicHostUrl = intent.getStringExtra(WOLWidgetProvider.EXTRA_PUBLIC_HOST_URL)
+                    val serverBaseUrl = intent.getStringExtra(WOLWidgetProvider.EXTRA_SERVER_BASE_URL)
+                    val token = intent.getStringExtra(WOLWidgetProvider.EXTRA_TOKEN)
+                    
+                    if (serverBaseUrl != null && token != null) {
+                        newStatus = checkPublicHostStatus(serverBaseUrl, token)
+                    }
+                }
+                
+                if (newStatus != null) {
+                    // Update config
+                    val currentConfig = WidgetConfigHelper.getWidgetConfig(applicationContext, widgetId)
+                    if (currentConfig != null) {
+                         val updatedConfig = currentConfig.copy(
+                            status = newStatus, 
+                            lastUpdated = System.currentTimeMillis()
+                        )
+                        WidgetConfigHelper.saveWidgetConfig(applicationContext, updatedConfig)
+                        
+                        if (newStatus.equals("online", ignoreCase = true)) {
+                            // HOST IS ONLINE!
+                            withContext(Dispatchers.Main) {
+                                // 1. Show Success Checkmark
+                                WOLWidgetProvider.updateWidget(applicationContext, widgetId, isLoading = false, isSuccess = true)
+                                Toast.makeText(applicationContext, "Host is Online!", Toast.LENGTH_SHORT).show()
+                                
+                                // 2. Wait 3s to let user see checkmark
+                                delay(3000)
+                                
+                                // 3. Revert to normal button (showing Online status)
+                                WOLWidgetProvider.updateWidget(applicationContext, widgetId, isLoading = false, isSuccess = false)
+                            }
+                            // Stop polling
+                            break
+                        } else {
+                            // STILL WAKING / OFFLINE
+                            // Update widget to reflect status change (text), but KEEP SPINNER (isLoading=true)
+                            withContext(Dispatchers.Main) {
+                                WOLWidgetProvider.updateWidget(applicationContext, widgetId, isLoading = true)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            
+            // If last attempt and still not online
+            if (attempts == maxAttempts) {
+                withContext(Dispatchers.Main) {
+                     Toast.makeText(applicationContext, "Wake timeout (host not online yet)", Toast.LENGTH_LONG).show()
+                     // Revert to normal button
+                     WOLWidgetProvider.updateWidget(applicationContext, widgetId, isLoading = false)
+                }
+            }
+        }
+    }
+
+    private suspend fun checkServerHostStatus(
+        serverUrl: String,
+        hostId: Int,
+        cookies: String
+    ): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                // URL: serverUrl/hosts/api/status
+                val baseUrl = if (serverUrl.endsWith("/")) serverUrl.dropLast(1) else serverUrl
+                val url = URL("$baseUrl/hosts/api/status")
+                
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "GET"
+                conn.connectTimeout = 5000
+                conn.readTimeout = 5000
+                conn.setRequestProperty("Cookie", cookies)
+                
+                if (conn.responseCode == 200) {
+                    val json = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
+                    val jsonObj = JSONObject(json)
+                    val statuses = jsonObj.getJSONArray("statuses")
+                    
+                    for (i in 0 until statuses.length()) {
+                        val statusObj = statuses.getJSONObject(i)
+                        if (statusObj.getInt("host_id") == hostId) {
+                            return@withContext statusObj.getString("status")
+                        }
+                    }
+                }
+                null
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+    }
+
+    private suspend fun checkPublicHostStatus(
+        serverBaseUrl: String,
+        token: String
+    ): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                // URL: serverBaseUrl/public/host/{token}/status
+                val baseUrl = if (serverBaseUrl.endsWith("/")) serverBaseUrl.dropLast(1) else serverBaseUrl
+                val url = URL("$baseUrl/public/host/$token/status")
+                
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "GET"
+                conn.connectTimeout = 5000
+                conn.readTimeout = 5000
+                
+                if (conn.responseCode == 200) {
+                    val json = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
+                    val jsonObj = JSONObject(json)
+                    return@withContext jsonObj.getString("status")
+                }
+                null
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
     }
 
     private suspend fun wakeServerHost(

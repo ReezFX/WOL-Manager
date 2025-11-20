@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <gradient
-        android:angle="0"
-        android:startColor="#17a2b8"
-        android:endColor="#5bc0de"
-        android:type="linear" /> <!-- Colors.primary.gradient -->
-    <corners android:radius="12dp" />
-</shape>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#40FFFFFF"> <!-- Semi-transparent white for ripple -->
+    
+    <!-- Mask to constrain ripple to rounded corners -->
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" />
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- Background Content -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="0"
+                android:startColor="#17a2b8"
+                android:endColor="#5bc0de"
+                android:type="linear" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</ripple>

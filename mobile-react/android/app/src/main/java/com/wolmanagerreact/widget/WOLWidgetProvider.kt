@@ -10,13 +10,15 @@ import android.widget.RemoteViews
 import android.graphics.Color
 import com.wolmanagerreact.R
 
+import android.view.View
+
 /**
  * WOL Widget Provider
  * Handles widget updates and click events
  */
 class WOLWidgetProvider : AppWidgetProvider() {
 
-    companion object {
+        companion object {
         const val ACTION_WAKE_HOST = "com.wolmanagerreact.widget.WAKE_HOST"
         const val EXTRA_WIDGET_ID = "extra_widget_id"
         const val EXTRA_HOST_NAME = "extra_host_name"
@@ -51,13 +53,16 @@ class WOLWidgetProvider : AppWidgetProvider() {
         /**
          * Update specific widget
          */
-        fun updateWidget(context: Context, widgetId: Int) {
+        fun updateWidget(context: Context, widgetId: Int, overrideStatus: String? = null, isLoading: Boolean = false, isSuccess: Boolean = false) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            val intent = Intent(context, WOLWidgetProvider::class.java).apply {
-                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(widgetId))
-            }
-            context.sendBroadcast(intent)
+            
+            // DIRECT UPDATE ONLY:
+            // We intentionally DO NOT send a broadcast here because that triggers onUpdate(),
+            // which would perform a standard update (loading=false) and overwrite our specific state immediately.
+            // This caused the "flashing" issue where loading/success states vanished instantly.
+            
+            val provider = WOLWidgetProvider()
+            provider.updateAppWidget(context, appWidgetManager, widgetId, overrideStatus, isLoading, isSuccess)
         }
     }
 
@@ -102,8 +107,9 @@ class WOLWidgetProvider : AppWidgetProvider() {
         val ipAddress = intent.getStringExtra(EXTRA_IP_ADDRESS)
         val configType = intent.getStringExtra(EXTRA_CONFIG_TYPE) ?: "server"
         
-        // Visual feedback: Show "Waking..." status
-        updateAppWidget(context, AppWidgetManager.getInstance(context), widgetId, "waking")
+        // Visual feedback: Show "Waking..." status and loading spinner immediately
+        // Note: We do this BEFORE starting the service to ensure immediate UI feedback
+        updateWidget(context, widgetId, "waking", isLoading = true)
         
         // Start WakeService to send WOL packet
         val serviceIntent = Intent(context, WakeService::class.java).apply {
@@ -128,11 +134,14 @@ class WOLWidgetProvider : AppWidgetProvider() {
         context.startService(serviceIntent)
     }
 
-    private fun updateAppWidget(
+    // Public wrapper for updateAppWidget so WakeService can use it
+    fun updateAppWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         widgetId: Int,
-        overrideStatus: String? = null
+        overrideStatus: String? = null,
+        isLoading: Boolean = false,
+        isSuccess: Boolean = false
     ) {
         val config = WidgetConfigHelper.getWidgetConfig(context, widgetId)
         
@@ -145,6 +154,21 @@ class WOLWidgetProvider : AppWidgetProvider() {
             // Set status
             val statusToShow = overrideStatus ?: config.status
             configureStatusViews(views, statusToShow)
+            
+            // Handle loading/success state
+            if (isLoading) {
+                views.setViewVisibility(R.id.widget_wake_button, View.GONE)
+                views.setViewVisibility(R.id.widget_loading_indicator, View.VISIBLE)
+                views.setViewVisibility(R.id.widget_success_indicator, View.GONE)
+            } else if (isSuccess) {
+                views.setViewVisibility(R.id.widget_wake_button, View.GONE)
+                views.setViewVisibility(R.id.widget_loading_indicator, View.GONE)
+                views.setViewVisibility(R.id.widget_success_indicator, View.VISIBLE)
+            } else {
+                views.setViewVisibility(R.id.widget_wake_button, View.VISIBLE)
+                views.setViewVisibility(R.id.widget_loading_indicator, View.GONE)
+                views.setViewVisibility(R.id.widget_success_indicator, View.GONE)
+            }
             
             // Set wake button click handler
             val wakeIntent = Intent(context, WOLWidgetProvider::class.java).apply {
