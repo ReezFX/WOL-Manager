@@ -8,13 +8,16 @@ import {
   ActivityIndicator,
   RefreshControl,
   Animated,
+  Modal,
+  FlatList,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { RootStackParamList, PublicHost } from '../types';
+import { RootStackParamList, PublicHost, WidgetConfig } from '../types';
 import { apiClient } from '../api/client';
 import {
   Colors,
@@ -22,11 +25,17 @@ import {
   Spacing,
   BorderRadius,
   Shadows,
+  Layout,
 } from '../constants/theme';
 import { useToast } from '../context/ToastContext';
-import { Card, StatusBadge } from '../components/UI';
+import { Card, StatusBadge, Button } from '../components/UI';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { storage } from '../utils/storage';
+import {
+  widgetModule,
+  getConfiguredWidgets,
+  configureWidgetForPublicHost,
+} from '../modules/WidgetModule';
 
 type PublicHostScreenRouteProp = RouteProp<RootStackParamList, 'PublicHost'>;
 type PublicHostScreenNavigationProp = NativeStackNavigationProp<
@@ -51,6 +60,13 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation, onConfigR
   const [error, setError] = useState<string | null>(null);
   const [wakeConfirm, setWakeConfirm] = useState({ visible: false, hostName: '' });
   const [removeConfirm, setRemoveConfirm] = useState(false);
+  
+  // Widget Management State
+  const [showWidgetsModal, setShowWidgetsModal] = useState(false);
+  const [isLoadingWidgets, setIsLoadingWidgets] = useState(false);
+  const [linkedWidgets, setLinkedWidgets] = useState<WidgetConfig[]>([]);
+  const [unconfiguredWidgetIds, setUnconfiguredWidgetIds] = useState<number[]>([]);
+  const [widgetRefreshCount, setWidgetRefreshCount] = useState(0);
   
   // Animation for wake button
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -86,6 +102,184 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation, onConfigR
       setIsRefreshing(false);
     }
   }, [publicHostConfig, toast]);
+
+  // Widget Management Functions
+  const fetchWidgetData = useCallback(async () => {
+    try {
+      setIsLoadingWidgets(true);
+      const { activeWidgets, unconfiguredWidgetIds } = await getConfiguredWidgets();
+      
+      // Filter widgets linked to this public host
+      const currentToken = publicHostConfig.token;
+      const linked = activeWidgets.filter(
+        w => w.configType === 'publicHost' && w.token === currentToken
+      );
+      
+      setLinkedWidgets(linked);
+      setUnconfiguredWidgetIds(unconfiguredWidgetIds);
+    } catch (error) {
+      console.error('Error fetching widget data:', error);
+      toast.showError('Failed to load widget information');
+    } finally {
+      setIsLoadingWidgets(false);
+    }
+  }, [publicHostConfig, toast]);
+
+  // Refresh widgets when modal opens
+  useEffect(() => {
+    if (showWidgetsModal) {
+      fetchWidgetData();
+    }
+  }, [showWidgetsModal, fetchWidgetData, widgetRefreshCount]);
+
+  const handleRequestPinWidget = async () => {
+    try {
+      const success = await widgetModule.requestPinWidget();
+      if (success) {
+        toast.showSuccess('Widget added to home screen');
+        // Reload data after a delay to allow Android to register the widget
+        setTimeout(() => setWidgetRefreshCount(c => c + 1), 1500);
+      }
+    } catch (error: any) {
+      if (error.code === 'UNSUPPORTED') {
+        Alert.alert(
+          'Not Supported',
+          'Widget pinning is not supported on your device. Please add the widget manually from your home screen.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        toast.showError('Failed to add widget');
+      }
+    }
+  };
+
+  const handleLinkWidget = async (widgetId: number) => {
+    if (!host) {
+      toast.showError('Host data not loaded yet');
+      return;
+    }
+
+    try {
+      // For public host, we need to fetch the actual MAC address if we don't have it
+      let macAddress = host.mac_address;
+      if (!macAddress) {
+        try {
+          const details = await apiClient.getPublicHostDetails(
+            publicHostConfig.serverBaseUrl,
+            publicHostConfig.token
+          );
+          macAddress = details.mac_address;
+        } catch (e) {
+          console.log('Could not fetch details, using placeholder MAC', e);
+          macAddress = '00:00:00:00:00:00';
+        }
+      }
+
+      await configureWidgetForPublicHost(widgetId, {
+        hostName: host.name,
+        macAddress: macAddress,
+        publicHostUrl: publicHostConfig.publicHostUrl,
+        token: publicHostConfig.token,
+        serverBaseUrl: publicHostConfig.serverBaseUrl,
+        status: host.status,
+      });
+      
+      toast.showSuccess('Widget configured successfully');
+      setWidgetRefreshCount(c => c + 1);
+    } catch (error: any) {
+      toast.showError(error.message || 'Failed to configure widget');
+    }
+  };
+
+  const handleUnlinkWidget = async (widgetId: number) => {
+    try {
+      await widgetModule.deleteWidget(widgetId);
+      toast.showSuccess('Widget removed');
+      setWidgetRefreshCount(c => c + 1);
+    } catch (error: any) {
+      toast.showError('Failed to remove widget configuration');
+    }
+  };
+
+  const renderWidgetsModal = () => (
+    <Modal
+      visible={showWidgetsModal}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowWidgetsModal(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Widget Management</Text>
+            <TouchableOpacity onPress={() => setShowWidgetsModal(false)}>
+              <Ionicons name="close" size={24} color={Colors.text.primary} />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.modalSubtitle}>
+            Manage widgets for {host?.name || 'this host'}
+          </Text>
+
+          {isLoadingWidgets ? (
+            <ActivityIndicator size="large" color={Colors.primary.main} style={styles.loader} />
+          ) : (
+            <FlatList
+              data={[
+                ...linkedWidgets.map(w => ({ ...w, type: 'linked' })),
+                ...unconfiguredWidgetIds.map(id => ({ widgetId: id, type: 'unconfigured' }))
+              ]}
+              keyExtractor={(item) => item.widgetId.toString()}
+              ListEmptyComponent={
+                <View style={styles.emptyStateContainer}>
+                  <Text style={styles.emptyStateText}>No widgets found</Text>
+                  <Text style={styles.emptyStateSubText}>
+                    Add a widget to your home screen to get started.
+                  </Text>
+                </View>
+              }
+              renderItem={({ item }: { item: any }) => (
+                <View style={styles.widgetItem}>
+                  <View style={styles.widgetItemInfo}>
+                    <Text style={styles.widgetItemTitle}>
+                      {item.type === 'linked' ? 'Linked Widget' : 'New Unconfigured Widget'}
+                    </Text>
+                    <Text style={styles.widgetItemSubtitle}>
+                      ID: {item.widgetId}
+                    </Text>
+                  </View>
+                  
+                  {item.type === 'linked' ? (
+                    <TouchableOpacity
+                      style={[styles.widgetActionButton, styles.removeButton]}
+                      onPress={() => handleUnlinkWidget(item.widgetId)}
+                    >
+                      <Text style={styles.removeButtonText}>Unlink</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.widgetActionButton, styles.linkButton]}
+                      onPress={() => handleLinkWidget(item.widgetId)}
+                    >
+                      <Text style={styles.linkButtonText}>Link</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+              style={styles.widgetList}
+            />
+          )}
+
+          <Button
+            title="Add New Widget to Home Screen"
+            onPress={handleRequestPinWidget}
+            style={styles.addWidgetButton}
+            icon={<Ionicons name="add" size={20} color={Colors.text.inverse} />}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
 
   // Initial load
   useEffect(() => {
@@ -322,6 +516,8 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation, onConfigR
         onCancel={() => setWakeConfirm({ visible: false, hostName: '' })}
       />
       
+      {renderWidgetsModal()}
+
       {/* Remove Configuration Dialog */}
       <ConfirmDialog
         visible={removeConfirm}
@@ -352,13 +548,22 @@ export const PublicHostScreen: React.FC<Props> = ({ route, navigation, onConfigR
               <Text style={styles.headerSubtitle}>Public Access</Text>
               <Text style={styles.headerTitle}>{host?.name || 'Loading...'}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.settingsButton}
-              onPress={handleResetConfig}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="settings-outline" size={24} color={Colors.text.secondary} />
-            </TouchableOpacity>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={() => setShowWidgetsModal(true)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="grid-outline" size={24} color={Colors.text.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={handleResetConfig}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="settings-outline" size={24} color={Colors.text.secondary} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -503,9 +708,122 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     fontFamily: Typography.fontFamily.bold,
   },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: -Spacing.xs,
+  },
+  headerButton: {
+    padding: Spacing.sm,
+  },
   settingsButton: {
     padding: Spacing.sm,
     marginTop: -Spacing.xs,
+  },
+
+  // Widget Modal
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.background.primary,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    height: '70%',
+    ...Shadows.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  modalTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.text.primary,
+    fontFamily: Typography.fontFamily.bold,
+  },
+  modalSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.lg,
+    fontFamily: Typography.fontFamily.regular,
+  },
+  loader: {
+    marginTop: Spacing.xl,
+  },
+  widgetList: {
+    flex: 1,
+    marginBottom: Spacing.lg,
+  },
+  emptyStateContainer: {
+    padding: Spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateText: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.xs,
+  },
+  emptyStateSubText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
+    textAlign: 'center',
+  },
+  widgetItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.md,
+    backgroundColor: Colors.background.secondary,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.md,
+  },
+  widgetItemInfo: {
+    flex: 1,
+  },
+  widgetItemTitle: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.text.primary,
+    marginBottom: 2,
+  },
+  widgetItemSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
+  },
+  widgetActionButton: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  linkButton: {
+    backgroundColor: Colors.primary.main,
+  },
+  linkButtonText: {
+    color: Colors.text.inverse,
+    fontWeight: Typography.fontWeight.medium,
+    fontSize: Typography.fontSize.sm,
+  },
+  removeButton: {
+    backgroundColor: Colors.background.tertiary,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  removeButtonText: {
+    color: Colors.error.main,
+    fontWeight: Typography.fontWeight.medium,
+    fontSize: Typography.fontSize.sm,
+  },
+  addWidgetButton: {
+    marginTop: 'auto',
   },
 
   // Host Card
