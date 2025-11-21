@@ -30,6 +30,15 @@ import { storage } from '../utils/storage';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const linking = {
+  prefixes: ['wolmanager://'],
+  config: {
+    screens: {
+      WidgetManagement: 'widget-config/:widgetId',
+    },
+  },
+};
+
 // Custom Tab Bar Component
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   return (
@@ -211,7 +220,7 @@ export const AppNavigator: React.FC = () => {
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

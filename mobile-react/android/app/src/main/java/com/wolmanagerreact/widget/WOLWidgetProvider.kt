@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.RemoteViews
 import android.graphics.Color
 import com.wolmanagerreact.R
@@ -205,20 +206,20 @@ class WOLWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_status_text, "Tap to Setup")
             views.setTextColor(R.id.widget_status_indicator, Color.parseColor("#adb5bd")) // Colors.status.unknown
             
-            // Create intent to open the app
-            val openAppIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            if (openAppIntent != null) {
-                openAppIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                val pendingIntent = PendingIntent.getActivity(
-                    context,
-                    widgetId,
-                    openAppIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                
-                // Make the entire widget clickable to open the app
-                views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
+            // Create intent to open the app deep linked to widget management
+            val openAppIntent = Intent(Intent.ACTION_VIEW, Uri.parse("wolmanager://widget-config/$widgetId")).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
+            
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                widgetId,
+                openAppIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            // Make the entire widget clickable to open the app
+            views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
         }
         
         appWidgetManager.updateAppWidget(widgetId, views)

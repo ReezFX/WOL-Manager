@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Card, StatusBadge, EmptyState, Button } from '../components/UI';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -49,7 +50,12 @@ interface Host {
   status: 'online' | 'offline' | 'unknown';
 }
 
+type WidgetManagementRouteProp = RouteProp<{
+  WidgetManagement: { widgetId?: string };
+}, 'WidgetManagement'>;
+
 export const WidgetManagementScreen: React.FC = () => {
+  const route = useRoute<WidgetManagementRouteProp>();
   const toast = useToast();
   const { logout } = useAuth();
 
@@ -133,6 +139,20 @@ export const WidgetManagementScreen: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Handle deep link for configuring a specific widget
+  useEffect(() => {
+    if (route.params?.widgetId) {
+      const id = parseInt(route.params.widgetId, 10);
+      if (!isNaN(id)) {
+        console.log('[WidgetManagement] Configuring widget from deep link:', id);
+        // Small delay to ensure data is loading/loaded and UI is ready
+        setTimeout(() => {
+            handleConfigureWidget(id);
+        }, 500);
+      }
+    }
+  }, [route.params?.widgetId]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);

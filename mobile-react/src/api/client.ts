@@ -678,20 +678,66 @@ class ApiClient {
         
         // Extract host details from HTML
         // This is a simplified parser - in production you might want a proper HTML parser
-        const nameMatch = html.match(/<h4[^>]*class="card-title[^>]*>.*?<\/i>([^<]+)<\/h4>/i);
-        const macMatch = html.match(/class="mac-address[^>]*>([^<]+)<\/p>/i);
-        const descMatch = html.match(/Description<\/h6>\s*<p[^>]*>([^<]+)<\/p>/i);
-        const idMatch = html.match(/data-host-id="(\d+)"/i);
         
-        if (!nameMatch || !macMatch || !idMatch) {
+        // Updated regex patterns to be more robust and match the actual HTML structure
+        // The HTML structure might vary slightly depending on the template
+        
+        // 1. Match Name (usually in a h4 or similar header)
+        // Trying: <h4 class="card-title..."><i ...></i> HostName</h4>
+        let name = '';
+        const nameMatch = html.match(/<h4[^>]*class=\"card-title[^>]*>(?:<i[^>]*><\/i>)?\s*([^<]+)\s*<\/h4>/i);
+        if (nameMatch && nameMatch[1]) {
+          name = nameMatch[1].trim();
+        } else {
+          // Fallback: try to find any header with the name
+          // or look for title in head
+          const titleMatch = html.match(/<title>([^<]+)\s*-\s*WOL Manager<\/title>/i);
+          if (titleMatch && titleMatch[1]) {
+            name = titleMatch[1].trim();
+          }
+        }
+
+        // 2. Match MAC Address (usually in a p tag with class or strong tag)
+        // Trying: <strong>MAC Address:</strong> <span ...>XX:XX:XX:XX:XX:XX</span>
+        // Or: <p class="mac-address">XX:XX:XX:XX:XX:XX</p>
+        let macAddress = '';
+        // Look for pattern XX:XX:XX:XX:XX:XX
+        const macPattern = /([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/g;
+        const macMatches = html.match(macPattern);
+        if (macMatches && macMatches.length > 0) {
+          macAddress = macMatches[0];
+        }
+
+        // 3. Match ID (data attribute or hidden input)
+        // Trying: data-host-id="123"
+        let id = 0;
+        const idMatch = html.match(/data-host-id=\"(\d+)\"/i) || 
+                        html.match(/name=\"host_id\"[^>]*value=\"(\d+)\"/i) ||
+                        html.match(/value=\"(\d+)\"[^>]*name=\"host_id\"/i);
+        
+        if (idMatch && idMatch[1]) {
+          id = parseInt(idMatch[1]);
+        }
+
+        // 4. Match Description
+        let description = undefined;
+        // Look for "Description" label followed by content
+        const descMatch = html.match(/Description<\/h6>\s*<p[^>]*>([^<]+)<\/p>/i);
+        if (descMatch && descMatch[1]) {
+          description = descMatch[1].trim();
+        }
+        
+        if (!name || !macAddress || !id) {
+          console.error('[API] Failed to parse host details. Found:', { name, macAddress, id });
+          console.log('[API] HTML Sample:', html.substring(0, 1000)); // Log start of HTML for debugging
           throw new Error('Failed to parse host details from response');
         }
 
         return {
-          id: parseInt(idMatch[1]),
-          name: nameMatch[1].trim(),
-          mac_address: macMatch[1].trim(),
-          description: descMatch ? descMatch[1].trim() : undefined,
+          id,
+          name,
+          mac_address: macAddress,
+          description,
         };
       }
 
