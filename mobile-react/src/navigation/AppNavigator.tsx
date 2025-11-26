@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
-import { BlurView } from '@react-native-community/blur';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { SetupScreen } from '../screens/SetupScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { HostListScreen } from '../screens/HostListScreen';
@@ -39,142 +37,9 @@ const linking = {
   },
 };
 
-// Custom Tab Bar Component
-const CustomTabBar = ({ state, descriptors, navigation }: any) => {
-  return (
-    <SafeAreaView edges={['bottom']} style={styles.tabBarSafeArea}>
-      <View style={styles.tabBarContainer}>
-        <View style={styles.tabBarWrapper}>
-          {/* Blur as background layer with clipping container */}
-          <View style={styles.tabBarBlurContainer}>
-            <BlurView
-              style={styles.tabBarBlurLayer}
-              blurType="dark"
-              blurAmount={Platform.OS === 'ios' ? 5 : 15}
-              blurRadius={Platform.OS === 'android' ? 15 : undefined}
-              overlayColor={Platform.OS === 'android' ? 'rgba(36, 36, 38, 0.80)' : undefined}
-              reducedTransparencyFallbackColor={Colors.glass.background}
-            />
-            <View style={styles.tabBarOverlay} />
-          </View>
-          {/* Navigation content on top */}
-          <View style={styles.tabBar}>
-          {state.routes.map((route: any, index: number) => {
-            const { options } = descriptors[route.key];
-            const isFocused = state.index === index;
-            const isAddButton = route.name === 'Add';
+import { MainScreen } from '../screens/MainScreen';
 
-            const onPress = () => {
-              const event = navigation.emit({
-                type: 'tabPress',
-                target: route.key,
-                canPreventDefault: true,
-              });
-
-              if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name);
-              }
-            };
-
-            // Special render for Add button
-            if (isAddButton) {
-              return (
-                <View key={route.key} style={styles.addButtonWrapper}>
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={onPress}
-                    style={styles.addButtonTouch}
-                  >
-                    <View style={styles.addButton}>
-                      <Ionicons name="add" size={32} color="white" />
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              );
-            }
-
-            const Icon = options.tabBarIcon;
-
-            return (
-              <TouchableOpacity
-                key={route.key}
-                onPress={onPress}
-                style={styles.tabItem}
-              >
-                {Icon && (
-                  <Icon
-                    color={isFocused ? Colors.primary.main : Colors.text.tertiary}
-                    size={28}
-                    focused={isFocused}
-                  />
-                )}
-              </TouchableOpacity>
-            );
-          })}
-          </View>
-        </View>
-      </View>
-    </SafeAreaView>
-  );
-};
-
-// Dummy component for Add button
-const AddScreen = () => null;
-
-// Main Tab Navigator
-const MainTabs = () => {
-  return (
-    <Tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Tab.Screen
-        name="Hosts"
-        component={HostListScreen}
-        options={{
-          tabBarLabel: 'Hosts',
-          tabBarIcon: ({ color, size, focused }: any) => (
-            <Ionicons
-              name={focused ? 'home' : 'home-outline'}
-              size={32}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Add"
-        component={AddScreen}
-        options={{
-          tabBarLabel: '',
-          tabBarIcon: () => null,
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            navigation.navigate('AddHost');
-          },
-        })}
-      />
-      <Tab.Screen
-        name="Admin"
-        component={AdminScreen}
-        options={{
-          tabBarLabel: 'Admin',
-          tabBarIcon: ({ color, size, focused }: any) => (
-            <Ionicons
-              name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'}
-              size={32}
-              color={color}
-            />
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-};
+// Main Tab Navigator removed in favor of MainScreen with custom swipe handling
 
 export const AppNavigator: React.FC = () => {
   const { isAuthenticated, isLoading, serverConfig } = useAuth();
@@ -253,7 +118,7 @@ export const AppNavigator: React.FC = () => {
           </Stack.Screen>
         ) : (
           <>
-            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="Main" component={MainScreen} />
             <Stack.Screen 
               name="AddHost" 
               component={AddHostScreen}
@@ -286,72 +151,4 @@ export const AppNavigator: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  // Tab Bar
-  tabBarSafeArea: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'transparent',
-  },
-  tabBarContainer: {
-    marginHorizontal: 8,
-    marginBottom: 8,
-  },
-  tabBarWrapper: {
-    position: 'relative',
-    borderRadius: 24,
-    overflow: 'visible',
-  },
-  tabBarBlurContainer: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 24,
-    overflow: 'hidden',
-    zIndex: -1,
-  },
-  tabBarBlurLayer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  tabBarOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(36, 36, 38, 0)',
-  },
-  tabBar: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 70,
-    backgroundColor: 'transparent',
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: Colors.glass.border,
-    borderRadius: 24,
-    zIndex: 1,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-  },
-  
-  // Add Button (Center)
-  addButtonWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  addButtonTouch: {
-    marginTop: 0,
-  },
-  addButton: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary.main,
-  },
-});
+const styles = StyleSheet.create({});
