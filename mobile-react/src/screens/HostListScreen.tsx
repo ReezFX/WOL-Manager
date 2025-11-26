@@ -107,16 +107,24 @@ const HostCard = React.memo(({ item, index, isWaking, onWake, onDelete }: HostCa
     }
   }, [isWaking]);
 
-  return (
-    <FadeInView index={index}>
-      <View>
-        <GlassCard style={styles.hostCard}>
-        <LinearGradient
-          colors={[Colors.background.secondary, 'rgba(36, 36, 38, 0.4)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
+    const onlineGradient = item.status === 'online' 
+      ? ['rgba(40, 180, 133, 0.15)', 'rgba(40, 180, 133, 0.05)']
+      : [Colors.background.secondary, 'rgba(36, 36, 38, 0.4)'];
+
+    const borderColor = item.status === 'online' 
+      ? Colors.success.main + '40' 
+      : Colors.border.light + '40';
+
+    return (
+      <FadeInView index={index}>
+        <View>
+          <GlassCard style={[styles.hostCard, { borderColor }]}>
+          <LinearGradient
+            colors={onlineGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
         <View style={styles.cardContent}>
           <View style={styles.hostHeader}>
             <View style={styles.iconBox}>
@@ -204,7 +212,7 @@ const HostCard = React.memo(({ item, index, isWaking, onWake, onDelete }: HostCa
 });
 
 export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
-  const { logout } = useAuth();
+  const { logout, serverConfig } = useAuth();
   const toast = useToast();
   
   // All state declarations
@@ -422,30 +430,63 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
   const DashboardHeader = () => {
     const onlineCount = hosts.filter(h => h.status === 'online').length;
     const totalCount = hosts.length;
+    const username = serverConfig?.username || 'User';
     
     return (
       <View style={styles.headerContainer}>
-        <View>
-          <Text style={styles.headerGreeting}>Dashboard</Text>
-          <Text style={styles.headerSubtitle}>Manage your network devices</Text>
+        <View style={styles.headerTopRow}>
+          <View>
+            <Text style={styles.headerGreeting}>Hello, <Text style={styles.headerUsername}>{username}</Text></Text>
+            <Text style={styles.headerSubtitle}>Manage your network devices</Text>
+          </View>
+          <TouchableOpacity style={styles.profileButton} onPress={() => Alert.alert('Profile', `Logged in as ${username}`)}>
+             <LinearGradient
+                colors={[Colors.primary.main, Colors.primary.dark]}
+                style={styles.profileAvatar}
+             >
+                <Text style={styles.profileInitials}>{username.charAt(0).toUpperCase()}</Text>
+             </LinearGradient>
+          </TouchableOpacity>
         </View>
         
         <View style={styles.statsContainer}>
-          <LinearGradient
-            colors={['rgba(36, 36, 38, 0.6)', 'rgba(36, 36, 38, 0.4)']}
-            style={styles.statsCard}
-          >
-            <View style={styles.statItem}>
-              <View style={[styles.statDot, { backgroundColor: Colors.status.online }]} />
-              <Text style={styles.statValue}>{onlineCount}</Text>
-              <Text style={styles.statLabel}>Online</Text>
+          {/* Online Status Card */}
+          <GlassCard style={[styles.statsCard, styles.statsCardOnline]}>
+             <LinearGradient
+              colors={['rgba(40, 180, 133, 0.2)', 'rgba(40, 180, 133, 0.05)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.statContent}>
+              <View style={[styles.statIconBox, { backgroundColor: 'rgba(40, 180, 133, 0.2)' }]}>
+                <Ionicons name="wifi" size={20} color={Colors.success.main} />
+              </View>
+              <View>
+                <Text style={styles.statValue}>{onlineCount}</Text>
+                <Text style={styles.statLabel}>Online</Text>
+              </View>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{totalCount}</Text>
-              <Text style={styles.statLabel}>Total</Text>
+          </GlassCard>
+
+          {/* Total Hosts Card */}
+          <GlassCard style={[styles.statsCard, styles.statsCardTotal]}>
+             <LinearGradient
+              colors={['rgba(23, 162, 184, 0.2)', 'rgba(23, 162, 184, 0.05)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.statContent}>
+               <View style={[styles.statIconBox, { backgroundColor: 'rgba(23, 162, 184, 0.2)' }]}>
+                <Ionicons name="server-outline" size={20} color={Colors.primary.main} />
+              </View>
+              <View>
+                <Text style={styles.statValue}>{totalCount}</Text>
+                <Text style={styles.statLabel}>Total Hosts</Text>
+              </View>
             </View>
-          </LinearGradient>
+          </GlassCard>
         </View>
       </View>
     );
@@ -553,59 +594,92 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     paddingHorizontal: Spacing.xs,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.lg,
+  },
   headerGreeting: {
-    fontSize: Typography.fontSize['3xl'],
+    fontSize: Typography.fontSize['2xl'], // Slightly smaller but elegant
+    fontWeight: Typography.fontWeight.regular,
+    color: Colors.text.secondary,
+    fontFamily: Typography.fontFamily.regular,
+    marginBottom: 4,
+  },
+  headerUsername: {
     fontWeight: Typography.fontWeight.bold,
     color: Colors.text.primary,
     fontFamily: Typography.fontFamily.bold,
-    marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: Typography.fontSize.base,
-    color: Colors.text.secondary,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
     fontFamily: Typography.fontFamily.regular,
-    marginBottom: Spacing.lg,
+  },
+  profileButton: {
+    ...Shadows.md,
+  },
+  profileAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary.light + '40',
+  },
+  profileInitials: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: '#fff',
   },
   statsContainer: {
     flexDirection: 'row',
+    gap: Spacing.md,
   },
   statsCard: {
+    flex: 1,
+    overflow: 'hidden',
+    borderWidth: 1,
+    height: 80, // Fixed height for consistency
+    justifyContent: 'center',
+  },
+  statsCardOnline: {
+    borderColor: Colors.success.main + '30',
+  },
+  statsCardTotal: {
+    borderColor: Colors.primary.main + '30',
+  },
+  statContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.md,
-    borderRadius: BorderRadius.xl,
-    borderWidth: 1,
-    borderColor: Colors.border.light + '30',
-    minWidth: 160,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.md,
   },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6,
+  statIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.xl,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   statValue: {
     fontSize: Typography.fontSize.xl,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.text.primary,
     fontFamily: Typography.fontFamily.bold,
+    lineHeight: 24,
   },
   statLabel: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.tertiary,
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text.secondary,
     fontFamily: Typography.fontFamily.medium,
   },
-  statDivider: {
-    width: 1,
-    height: 20,
-    backgroundColor: Colors.border.light + '40',
-    marginHorizontal: Spacing.md,
-  },
-  statDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 2,
-  },
+  // Removed old stat styles
+  statItem: { display: 'none' },
+  statDivider: { display: 'none' },
+  statDot: { display: 'none' },
 
   // List
   listContent: {
@@ -618,6 +692,7 @@ const styles = StyleSheet.create({
   hostCard: {
     marginBottom: Spacing.md,
     overflow: 'hidden',
+    borderRadius: BorderRadius.xl,
     borderWidth: 1,
     borderColor: Colors.border.light + '40', // Subtle border
   },
@@ -633,7 +708,7 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 48,
     height: 48,
-    borderRadius: 16,
+    borderRadius: BorderRadius.xl,
     backgroundColor: Colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -667,9 +742,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.background.tertiary,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 12, // Increased padding for pill shape
+    paddingVertical: 8,    // Increased padding
+    borderRadius: BorderRadius.xl,
     borderWidth: 1,
     borderColor: Colors.border.light + '10',
   },
@@ -691,7 +766,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     height: 44,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
   },
   actionButtonGradient: {
@@ -699,7 +774,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
   },
   actionButtonText: {
     fontSize: Typography.fontSize.sm,
@@ -709,7 +784,7 @@ const styles = StyleSheet.create({
   wakeButton: {
     flex: 1,
     height: 44,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
     ...Shadows.sm,
   },
@@ -719,7 +794,7 @@ const styles = StyleSheet.create({
   iconButton: {
     width: 44,
     height: 44,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     backgroundColor: Colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
