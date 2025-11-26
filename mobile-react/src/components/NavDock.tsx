@@ -114,7 +114,7 @@ export const NavDock: React.FC<NavDockProps> = ({
            <BlurView
             style={StyleSheet.absoluteFill}
             blurType="dark"
-            blurAmount={30}
+            blurAmount={10}
             reducedTransparencyFallbackColor={Colors.glass.background}
             overlayColor={Platform.OS === 'android' ? 'rgba(20, 20, 23, 0.6)' : undefined}
           />

@@ -39,6 +39,7 @@ interface HostWithStatus extends HostStatus {
 
 interface HostListScreenProps {
   route?: any;
+  navigation: any;
 }
 
 interface HostCardProps {
@@ -211,7 +212,7 @@ const HostCard = React.memo(({ item, index, isWaking, onWake, onDelete }: HostCa
   );
 });
 
-export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
+export const HostListScreen: React.FC<HostListScreenProps> = ({ route, navigation }) => {
   const { logout, serverConfig } = useAuth();
   const toast = useToast();
   
@@ -439,7 +440,7 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
             <Text style={styles.headerGreeting}>Hello, <Text style={styles.headerUsername}>{username}</Text></Text>
             <Text style={styles.headerSubtitle}>Manage your network devices</Text>
           </View>
-          <TouchableOpacity style={styles.profileButton} onPress={() => Alert.alert('Profile', `Logged in as ${username}`)}>
+          <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
              <LinearGradient
                 colors={[Colors.primary.main, Colors.primary.dark]}
                 style={styles.profileAvatar}
@@ -641,8 +642,9 @@ const styles = StyleSheet.create({
   statsCard: {
     flex: 1,
     overflow: 'hidden',
+    borderRadius: BorderRadius.xl,
     borderWidth: 1,
-    height: 80, // Fixed height for consistency
+    paddingVertical: Spacing.md,
     justifyContent: 'center',
   },
   statsCardOnline: {
@@ -654,12 +656,11 @@ const styles = StyleSheet.create({
   statContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
     gap: Spacing.md,
   },
   statIconBox: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: BorderRadius.xl,
     justifyContent: 'center',
     alignItems: 'center',

@@ -57,7 +57,7 @@ export const MainScreen: React.FC = () => {
     const Component = item.component;
     return (
       <View style={{ width, flex: 1 }}>
-        <Component />
+        <Component navigation={navigation} />
       </View>
     );
   };
