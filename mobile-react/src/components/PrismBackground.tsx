@@ -109,7 +109,9 @@ const PrismBackground: React.FC<PrismProps> = ({
             const HOVSTR = Math.max(0, props.hoverStrength || 1);
             const INERT = Math.max(0, Math.min(1, props.inertia || 0.12));
 
-            const dpr = Math.min(2, window.devicePixelRatio || 1);
+            // Optimize DPR for mobile performance - significantly reduces GPU load
+            const isAndroid = /android/i.test(navigator.userAgent);
+            const dpr = Math.min(isAndroid ? 1.0 : 1.5, window.devicePixelRatio || 1);
             const renderer = new Renderer({
               dpr,
               alpha: props.transparent,
@@ -223,7 +225,7 @@ const PrismBackground: React.FC<PrismProps> = ({
                   wob = mat2(c0, c1, c2, c0);
                 }
 
-                const int STEPS = 100;
+                const int STEPS = 60;
                 for (int i = 0; i < STEPS; i++) {
                   p = vec3(f, z);
                   p.xz = p.xz * wob;
