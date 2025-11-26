@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
   Animated,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import { Card, StatusBadge, EmptyState, Button } from '../components/UI';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { GlassCard, StatusBadge, EmptyState, Button } from '../components/UI';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { apiClient, SessionExpiredError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +40,168 @@ interface HostWithStatus extends HostStatus {
 interface HostListScreenProps {
   route?: any;
 }
+
+interface HostCardProps {
+  item: HostWithStatus;
+  index: number;
+  isWaking: boolean;
+  onWake: (id: number, name?: string) => void;
+  onDelete: (id: number, name?: string) => void;
+}
+
+const FadeInView = ({ index, children }: { index: number; children: React.ReactNode }) => {
+  const anim = React.useRef(new Animated.Value(0)).current;
+  const translateY = React.useRef(new Animated.Value(50)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 500,
+        delay: index * 100, // Stagger effect
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 600,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        opacity: anim,
+        transform: [{ translateY }],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+};
+
+const HostCard = React.memo(({ item, index, isWaking, onWake, onDelete }: HostCardProps) => {
+  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    if (isWaking) {
+      // Start pulse animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isWaking]);
+
+  return (
+    <FadeInView index={index}>
+      <View>
+        <GlassCard style={styles.hostCard}>
+        <LinearGradient
+          colors={[Colors.background.secondary, 'rgba(36, 36, 38, 0.4)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.cardContent}>
+          <View style={styles.hostHeader}>
+            <View style={styles.iconBox}>
+              <Ionicons 
+                name={item.status === 'online' ? 'desktop' : 'desktop-outline'} 
+                size={24} 
+                color={item.status === 'online' ? Colors.primary.main : Colors.text.tertiary} 
+              />
+            </View>
+            <View style={styles.hostInfo}>
+              <Text style={styles.hostName}>{item.name || `Host ${item.host_id}`}</Text>
+              {item.description && (
+                <Text style={styles.hostDescription} numberOfLines={1}>{item.description}</Text>
+              )}
+            </View>
+            <StatusBadge status={item.status} />
+          </View>
+
+          <View style={styles.hostDetails}>
+            {item.mac_address && (
+              <View style={styles.detailBadge}>
+                <Ionicons name="hardware-chip-outline" size={12} color={Colors.text.tertiary} style={styles.detailIcon} />
+                <Text style={styles.detailValue}>{item.mac_address}</Text>
+              </View>
+            )}
+            {item.ip_address && (
+              <View style={styles.detailBadge}>
+                 <Ionicons name="globe-outline" size={12} color={Colors.text.tertiary} style={styles.detailIcon} />
+                <Text style={styles.detailValue}>{item.ip_address}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.hostActions}>
+            <Animated.View style={[{ transform: [{ scale: isWaking ? pulseAnim : 1 }], flex: 1 }]}>
+              <TouchableOpacity
+                style={[
+                  styles.wakeButton,
+                  (item.status === 'online' || isWaking) && styles.disabledButton,
+                ]}
+                onPress={() => onWake(item.host_id, item.name)}
+                disabled={item.status === 'online' || isWaking}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={
+                    item.status === 'online'
+                      ? [Colors.background.tertiary, Colors.background.tertiary]
+                      : isWaking
+                      ? [Colors.warning.main, Colors.warning.light]
+                      : Colors.primary.gradient
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.actionButtonGradient}
+                >
+                  <Ionicons 
+                    name={item.status === 'online' ? 'power' : 'power'} 
+                    size={18} 
+                    color={item.status === 'online' ? Colors.text.disabled : Colors.text.inverse}
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={[
+                    styles.actionButtonText,
+                    item.status === 'online' && { color: Colors.text.disabled }
+                  ]}>
+                    {item.status === 'online' ? 'Running' : isWaking ? 'Waking...' : 'Wake Up'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => onDelete(item.host_id, item.name)}
+            >
+              <Ionicons name="trash-outline" size={20} color={Colors.error.main} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </GlassCard>
+    </View>
+    </FadeInView>
+  );
+});
 
 export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
   const { logout } = useAuth();
@@ -132,13 +296,13 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
     fetchHosts(false);
   };
 
-  const showWakeConfirm = (hostId: number, hostName?: string) => {
+  const showWakeConfirm = useCallback((hostId: number, hostName?: string) => {
     setWakeConfirm({
       visible: true,
       hostId,
       hostName,
     });
-  };
+  }, []);
 
   const handleWakeHost = async () => {
     const { hostId, hostName } = wakeConfirm;
@@ -213,13 +377,13 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
     }
   };
 
-  const handleDeleteHost = (hostId: number, hostName?: string) => {
+  const handleDeleteHost = useCallback((hostId: number, hostName?: string) => {
     setDeleteConfirm({
       visible: true,
       hostId,
       hostName,
     });
-  };
+  }, []);
 
   const confirmDeleteHost = async () => {
     const { hostId, hostName } = deleteConfirm;
@@ -254,103 +418,50 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
     }
   };
 
-  // Component for individual host card with animation
-  const HostCard = React.memo(({ item }: { item: HostWithStatus }) => {
-    const isWaking = wakingHost === item.host_id;
-    const pulseAnim = React.useRef(new Animated.Value(1)).current;
-
-    React.useEffect(() => {
-      if (isWaking) {
-        // Start pulse animation
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(pulseAnim, {
-              toValue: 1.1,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-            Animated.timing(pulseAnim, {
-              toValue: 1,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-          ])
-        ).start();
-      } else {
-        pulseAnim.setValue(1);
-      }
-    }, [isWaking, pulseAnim]);
-
+  // Header Component
+  const DashboardHeader = () => {
+    const onlineCount = hosts.filter(h => h.status === 'online').length;
+    const totalCount = hosts.length;
+    
     return (
-      <Card style={styles.hostCard}>
-        <View style={styles.hostHeader}>
-          <View style={styles.hostInfo}>
-            <Text style={styles.hostName}>{item.name || `Host ${item.host_id}`}</Text>
-            {item.description && (
-              <Text style={styles.hostDescription}>{item.description}</Text>
-            )}
-          </View>
-          <StatusBadge status={item.status} />
+      <View style={styles.headerContainer}>
+        <View>
+          <Text style={styles.headerGreeting}>Dashboard</Text>
+          <Text style={styles.headerSubtitle}>Manage your network devices</Text>
         </View>
-
-        <View style={styles.hostDetails}>
-          {item.mac_address && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>MAC:</Text>
-              <Text style={styles.detailValue}>{item.mac_address}</Text>
-            </View>
-          )}
-          {item.ip_address && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>IP:</Text>
-              <Text style={styles.detailValue}>{item.ip_address}</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.hostActions}>
-          <Animated.View style={[{ transform: [{ scale: isWaking ? pulseAnim : 1 }] }, styles.actionButton]}>
-            <TouchableOpacity
-              style={[
-                styles.wakeButton,
-                (item.status === 'online' || isWaking) && styles.disabledButton,
-              ]}
-              onPress={() => showWakeConfirm(item.host_id, item.name)}
-              disabled={item.status === 'online' || isWaking}
-            >
-              <LinearGradient
-                colors={
-                  item.status === 'online'
-                    ? [Colors.text.disabled, Colors.text.disabled]
-                    : isWaking
-                    ? [Colors.warning.main, Colors.warning.light]
-                    : Colors.primary.gradient
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.actionButtonGradient}
-              >
-                <Text style={styles.actionButtonText}>
-                  {item.status === 'online' ? 'Online' : isWaking ? 'Waking...' : 'Wake'}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => handleDeleteHost(item.host_id, item.name)}
+        
+        <View style={styles.statsContainer}>
+          <LinearGradient
+            colors={['rgba(36, 36, 38, 0.6)', 'rgba(36, 36, 38, 0.4)']}
+            style={styles.statsCard}
           >
-            <Text style={styles.deleteButtonText}>Delete</Text>
-          </TouchableOpacity>
+            <View style={styles.statItem}>
+              <View style={[styles.statDot, { backgroundColor: Colors.status.online }]} />
+              <Text style={styles.statValue}>{onlineCount}</Text>
+              <Text style={styles.statLabel}>Online</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{totalCount}</Text>
+              <Text style={styles.statLabel}>Total</Text>
+            </View>
+          </LinearGradient>
         </View>
-      </Card>
+      </View>
     );
-  });
-
-  const renderHostCard = ({ item }: { item: HostWithStatus }) => {
-    return <HostCard item={item} />;
   };
+
+  const renderHostCard = useCallback(({ item, index }: { item: HostWithStatus; index: number }) => {
+    return (
+      <HostCard
+        item={item}
+        index={index}
+        isWaking={wakingHost === item.host_id}
+        onWake={showWakeConfirm}
+        onDelete={handleDeleteHost}
+      />
+    );
+  }, [wakingHost, showWakeConfirm, handleDeleteHost]);
 
   if (isLoading) {
     return (
@@ -395,30 +506,34 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route }) => {
             style={styles.retryButton}
           />
         </View>
-      ) : hosts.length === 0 ? (
-        <EmptyState
-          title="No Hosts"
-          description="You haven't added any hosts yet. Add a new host to get started."
-          action={{
-            label: 'Add Host',
-            onPress: () => {
-              // TODO: Navigate to add host screen
-              Alert.alert('Info', 'Add host functionality coming soon!');
-            },
-          }}
-        />
       ) : (
         <FlatList
           data={hosts}
           renderItem={renderHostCard}
           keyExtractor={(item) => item.host_id.toString()}
           contentContainerStyle={styles.listContent}
+          ListHeaderComponent={hosts.length > 0 ? <DashboardHeader /> : null}
+          ListEmptyComponent={
+            !isLoading ? (
+              <EmptyState
+                title="No Hosts"
+                description="You haven't added any hosts yet. Add a new host to get started."
+                action={{
+                  label: 'Add Host',
+                  onPress: () => {
+                     Alert.alert('Info', 'Add host functionality coming soon!');
+                  },
+                }}
+              />
+            ) : null
+          }
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
               tintColor={Colors.primary.main}
               colors={[Colors.primary.main]}
+              progressViewOffset={40}
             />
           }
         />
@@ -433,66 +548,145 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.primary,
   },
 
+  // Header
+  headerContainer: {
+    marginBottom: Spacing.lg,
+    paddingHorizontal: Spacing.xs,
+  },
+  headerGreeting: {
+    fontSize: Typography.fontSize['3xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.text.primary,
+    fontFamily: Typography.fontFamily.bold,
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
+    fontFamily: Typography.fontFamily.regular,
+    marginBottom: Spacing.lg,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+  },
+  statsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    borderColor: Colors.border.light + '30',
+    minWidth: 160,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  statValue: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.text.primary,
+    fontFamily: Typography.fontFamily.bold,
+  },
+  statLabel: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
+    fontFamily: Typography.fontFamily.medium,
+  },
+  statDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: Colors.border.light + '40',
+    marginHorizontal: Spacing.md,
+  },
+  statDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 2,
+  },
+
   // List
   listContent: {
     padding: Spacing.lg,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.xl,
     paddingBottom: 120, // Space for FAB + bottom tab
   },
 
   // Host Card
   hostCard: {
     marginBottom: Spacing.md,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border.light + '40', // Subtle border
+  },
+  cardContent: {
+    position: 'relative',
+    zIndex: 1,
   },
   hostHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: Spacing.md,
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: Colors.background.tertiary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border.light + '20',
   },
   hostInfo: {
     flex: 1,
-    marginRight: Spacing.md,
+    marginRight: Spacing.sm,
   },
   hostName: {
     fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.semibold,
+    fontWeight: Typography.fontWeight.bold,
     color: Colors.text.primary,
-    fontFamily: Typography.fontFamily.bold,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
   hostDescription: {
     fontSize: Typography.fontSize.sm,
-    color: Colors.text.secondary,
-    fontFamily: Typography.fontFamily.regular,
+    color: Colors.text.tertiary,
   },
 
   // Details
   hostDetails: {
-    marginBottom: Spacing.md,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
-  detailRow: {
+  detailBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    backgroundColor: Colors.background.tertiary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border.light + '10',
   },
-  detailLabel: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text.tertiary,
-    fontFamily: Typography.fontFamily.medium,
-    width: 60,
+  detailIcon: {
+    marginRight: 6,
   },
   detailValue: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: Typography.fontSize.xs,
     color: Colors.text.secondary,
-    fontFamily: Typography.fontFamily.regular,
-    flex: 1,
+    fontFamily: Typography.fontFamily.medium,
   },
 
   // Actions
   hostActions: {
     flexDirection: 'row',
-    gap: Spacing.sm,
+    alignItems: 'center',
+    gap: Spacing.md,
   },
   actionButton: {
     flex: 1,
@@ -502,35 +696,38 @@ const styles = StyleSheet.create({
   },
   actionButtonGradient: {
     flex: 1,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: BorderRadius.lg,
   },
   actionButtonText: {
-    fontSize: Typography.fontSize.base,
+    fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
     color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.medium,
   },
   wakeButton: {
     flex: 1,
-    height: '100%',
-    ...Shadows.md,
+    height: 44,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadows.sm,
   },
   disabledButton: {
-    opacity: 0.6,
+    opacity: 0.8,
   },
-  deleteButton: {
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.lg,
     backgroundColor: Colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.light + '20',
   },
   deleteButtonText: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.error.main,
-    fontFamily: Typography.fontFamily.medium,
+    display: 'none', // Hidden since we use icon only now
   },
 
   // Center Container
