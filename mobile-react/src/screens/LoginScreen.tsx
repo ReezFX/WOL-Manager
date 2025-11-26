@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button, Input, Card } from '../components/UI';
+import PrismBackground from '../components/PrismBackground';
 import { useAuth } from '../context/AuthContext';
 import {
   Colors,
@@ -83,8 +84,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ serverUrl }) => {
   const serverDisplay = serverUrl.replace(/^https?:\/\//, '');
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
+    <View style={{ flex: 1, backgroundColor: Colors.background.primary }}>
+      <PrismBackground
+        style={StyleSheet.absoluteFillObject}
+        pointerEvents="none"
+        animationType="rotate"
+        timeScale={0.5}
+        height={2.5}
+        baseWidth={4.0}
+        scale={2.5}
+        offset={{ x: 0, y: -180 }}
+        hueShift={0}
+        colorFrequency={1}
+        noise={0.5}
+        glow={0.6}
+        bloom={0.6}
+      />
+      <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
@@ -178,6 +195,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ serverUrl }) => {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+    </View>
   );
 };
 
