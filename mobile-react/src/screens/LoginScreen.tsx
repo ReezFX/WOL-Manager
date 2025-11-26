@@ -96,7 +96,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ serverUrl }) => {
         offset={{ x: 0, y: -180 }}
         hueShift={0}
         colorFrequency={1}
-        noise={0.5}
+        noise={0.015}
         glow={0.6}
         bloom={0.6}
       />
@@ -124,7 +124,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ serverUrl }) => {
               <View style={styles.form}>
                 <Input
                   label="Username"
-                  placeholder="Enter your username"
+                  placeholder="Username"
                   value={username}
                   onChangeText={(text) => {
                     setUsername(text);
@@ -138,7 +138,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ serverUrl }) => {
 
                 <Input
                   label="Password"
-                  placeholder="Enter your password"
+                  placeholder="Password"
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -232,6 +232,15 @@ const styles = StyleSheet.create({
   // Login Card
   loginCard: {
     marginBottom: Spacing.md,
+    backgroundColor: '#1E1E23',
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
   },
 
   // Form

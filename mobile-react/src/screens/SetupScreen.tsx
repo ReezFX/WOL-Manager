@@ -176,7 +176,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete, onPublicHo
         offset={{ x: 0, y: -180 }}
         hueShift={0}
         colorFrequency={1}
-        noise={0.5}
+        noise={0.015}
         glow={0.6}
         bloom={0.6}
       />
@@ -262,7 +262,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete, onPublicHo
                 {setupType === 'server' ? (
                   <Input
                     label="Server URL"
-                    placeholder="e.g., 192.168.1.100:8008"
+                    placeholder="192.168.1.10:8008"
                     value={serverUrl}
                     onChangeText={(text) => {
                       setServerUrl(text);
@@ -278,7 +278,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete, onPublicHo
                 ) : (
                   <Input
                     label="Public Host URL"
-                    placeholder="e.g., http://192.168.1.100:8008/public/host/abc123"
+                    placeholder="Paste Link"
                     value={publicHostUrl}
                     onChangeText={(text) => {
                       setPublicHostUrl(text);
@@ -353,13 +353,22 @@ const styles = StyleSheet.create({
   // Setup Card
   setupCard: {
     marginBottom: Spacing.md,
+    backgroundColor: '#1E1E23',
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
   },
 
   // Toggle
   toggleContainer: {
     flexDirection: 'row',
     backgroundColor: Colors.background.primary,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 28,
     padding: 4,
     marginBottom: Spacing.lg,
     position: 'relative',
@@ -370,14 +379,14 @@ const styles = StyleSheet.create({
     left: 4,
     bottom: 4,
     backgroundColor: Colors.primary.main,
-    borderRadius: BorderRadius.md,
+    borderRadius: 24,
     ...Shadows.sm,
   },
   toggleButton: {
     flex: 1,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.md,
+    borderRadius: 24,
     alignItems: 'center',
     zIndex: 1,
   },
