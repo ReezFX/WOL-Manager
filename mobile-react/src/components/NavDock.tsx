@@ -19,10 +19,10 @@ import {
 
 const { width } = Dimensions.get('window');
 const DOCK_WIDTH = width - 48;
-const TAB_HEIGHT = 64;
+const TAB_HEIGHT = 56;
 
 // Layout constants
-const ADD_BUTTON_WIDTH = 60;
+const ADD_BUTTON_WIDTH = 56;
 const PADDING_H = Spacing.xs;
 const AVAILABLE_WIDTH = DOCK_WIDTH - (PADDING_H * 2);
 const TAB_WIDTH = (AVAILABLE_WIDTH - ADD_BUTTON_WIDTH) / 2;
@@ -116,7 +116,7 @@ export const NavDock: React.FC<NavDockProps> = ({
             blurType="dark"
             blurAmount={30}
             reducedTransparencyFallbackColor={Colors.glass.background}
-            overlayColor={Platform.OS === 'android' ? 'rgba(20, 20, 23, 0.8)' : undefined}
+            overlayColor={Platform.OS === 'android' ? 'rgba(20, 20, 23, 0.6)' : undefined}
           />
           <View style={styles.borderOverlay} />
         </View>
@@ -139,7 +139,7 @@ export const NavDock: React.FC<NavDockProps> = ({
                 end={{ x: 1, y: 1 }}
                 style={styles.addButtonGradient}
               >
-                <Ionicons name="add" size={32} color={Colors.text.inverse} />
+                <Ionicons name="add" size={26} color={Colors.text.inverse} />
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -165,8 +165,8 @@ const styles = StyleSheet.create({
   dockOuterWrapper: {
     width: DOCK_WIDTH,
     height: TAB_HEIGHT,
-    marginBottom: 24,
-    borderRadius: 32,
+    marginBottom: 12,
+    borderRadius: 28,
     ...Shadows.glass,
     shadowColor: '#000',
     shadowOpacity: 0.4,
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 32,
     overflow: 'hidden',
-    backgroundColor: 'rgba(20, 20, 23, 0.6)',
+    backgroundColor: 'rgba(20, 20, 23, 0.4)',
   },
   borderOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -226,9 +226,9 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   addButtonWrapper: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     ...Shadows.lg,
     shadowColor: Colors.primary.main,
     shadowOpacity: 0.5,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   addButtonGradient: {
     flex: 1,
-    borderRadius: 28,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
