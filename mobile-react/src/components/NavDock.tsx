@@ -18,14 +18,11 @@ import {
 } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
-const DOCK_WIDTH = width - 48; 
+const DOCK_WIDTH = width - 48;
 const TAB_HEIGHT = 64;
 
-// Calculate the width of each tab section for the sliding indicator
-// Structure: [Tab1] [AddButton] [Tab2]
-// AddButton is fixed width (~60), remaining space divided by 2
+// Layout constants
 const ADD_BUTTON_WIDTH = 60;
-// Account for paddingHorizontal in tabContainer (Spacing.xs = 4)
 const PADDING_H = Spacing.xs;
 const AVAILABLE_WIDTH = DOCK_WIDTH - (PADDING_H * 2);
 const TAB_WIDTH = (AVAILABLE_WIDTH - ADD_BUTTON_WIDTH) / 2;
@@ -39,35 +36,76 @@ interface NavDockProps {
 
 export const NavDock: React.FC<NavDockProps> = ({
   scrollX,
-  activeIndex,
   onTabPress,
-  screens,
 }) => {
-  // Interpolate position of the sliding pill
-  // Input Range: [0, width * (screens.length - 1)] (Scroll position)
-  // Output Range: [OffsetLeft, OffsetRight] (X Position in Dock)
-  
-  // 0 (Hosts) -> Center of Left Tab
-  // width (Admin) -> Center of Right Tab
-  
-  // We want the pill to be centered in the TAB_WIDTH area.
-  // Left Tab Center: TAB_WIDTH / 2
-  // Right Tab Center: TAB_WIDTH + ADD_BUTTON_WIDTH + (TAB_WIDTH / 2)
-  
-  // Adjust for pill width (e.g. 48px)
-  const PILL_WIDTH = 48;
-  const startX = PADDING_H + (TAB_WIDTH - PILL_WIDTH) / 2;
-  const endX = PADDING_H + TAB_WIDTH + ADD_BUTTON_WIDTH + (TAB_WIDTH - PILL_WIDTH) / 2;
+  // Reusable hook/function for tab animations
+  const getTabAnimations = (index: number) => {
+    const inputRange = [
+      (index - 1) * width,
+      index * width,
+      (index + 1) * width,
+    ];
 
-  const indicatorTranslateX = scrollX.interpolate({
-    inputRange: [0, width],
-    outputRange: [startX, endX],
-    extrapolate: 'clamp',
-  });
+    const scale = scrollX.interpolate({
+      inputRange,
+      outputRange: [1, 1.2, 1],
+      extrapolate: 'clamp',
+    });
 
-  // Opacity/Scale interpolation for the "jump" over the button?
-  // Let's make it just slide through behind the button.
-  
+    const activeOpacity = scrollX.interpolate({
+      inputRange,
+      outputRange: [0, 1, 0],
+      extrapolate: 'clamp',
+    });
+
+    const inactiveOpacity = scrollX.interpolate({
+      inputRange,
+      outputRange: [1, 0, 1],
+      extrapolate: 'clamp',
+    });
+    
+    return { scale, activeOpacity, inactiveOpacity };
+  };
+
+  const AnimatedIcon = Animated.createAnimatedComponent(Ionicons);
+
+  const renderTab = (index: number, routeName: string, iconName: string, activeIconName: string) => {
+    const { scale, activeOpacity, inactiveOpacity } = getTabAnimations(index);
+
+    return (
+      <TouchableOpacity
+        onPress={() => onTabPress(index, routeName)}
+        style={styles.tabItem}
+        activeOpacity={1} // Handle feedback manually via animation
+      >
+        <View style={styles.iconWrapper}>
+          {/* Active State Background Glow */}
+          <Animated.View style={[styles.activeGlow, { opacity: activeOpacity }]} />
+
+          {/* Inactive Icon (Bottom Layer) - Fades Out */}
+          <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: inactiveOpacity }]}>
+            <View style={styles.centered}>
+              <Ionicons
+                name={iconName}
+                size={24}
+                color={Colors.text.tertiary}
+              />
+            </View>
+          </Animated.View>
+
+          {/* Active Icon (Top Layer) - Fades In */}
+          <Animated.View style={[styles.centered, { opacity: activeOpacity, transform: [{ scale }] }]}>
+            <Ionicons
+              name={activeIconName}
+              size={24}
+              color={Colors.primary.main}
+            />
+          </Animated.View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <View style={styles.dockOuterWrapper}>
@@ -83,39 +121,10 @@ export const NavDock: React.FC<NavDockProps> = ({
           <View style={styles.borderOverlay} />
         </View>
 
-        {/* Animated Sliding Pill Indicator */}
-        <Animated.View
-          style={[
-            styles.slidingIndicator,
-            {
-              transform: [{ translateX: indicatorTranslateX }],
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={['rgba(23, 162, 184, 0.2)', 'rgba(23, 162, 184, 0.05)']}
-            style={StyleSheet.absoluteFill}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-          />
-        </Animated.View>
-
         {/* Content Container */}
         <View style={styles.tabContainer}>
           {/* Left Tab (Hosts) */}
-          <TouchableOpacity
-            onPress={() => onTabPress(0, 'Hosts')}
-            style={styles.tabItem}
-            activeOpacity={0.7}
-          >
-             <View style={styles.iconWrapper}>
-                <Ionicons
-                  name={activeIndex === 0 ? 'grid' : 'grid-outline'}
-                  size={24}
-                  color={activeIndex === 0 ? Colors.primary.main : Colors.text.tertiary}
-                />
-             </View>
-          </TouchableOpacity>
+          {renderTab(0, 'Hosts', 'grid-outline', 'grid')}
 
           {/* Center Add Button */}
           <View style={styles.addButtonContainer}>
@@ -136,19 +145,7 @@ export const NavDock: React.FC<NavDockProps> = ({
           </View>
 
           {/* Right Tab (Admin) */}
-          <TouchableOpacity
-            onPress={() => onTabPress(1, 'Admin')}
-            style={styles.tabItem}
-            activeOpacity={0.7}
-          >
-             <View style={styles.iconWrapper}>
-                <Ionicons
-                  name={activeIndex === 1 ? 'settings' : 'settings-outline'}
-                  size={24}
-                  color={activeIndex === 1 ? Colors.primary.main : Colors.text.tertiary}
-                />
-             </View>
-          </TouchableOpacity>
+          {renderTab(1, 'Admin', 'settings-outline', 'settings')}
         </View>
       </View>
     </SafeAreaView>
@@ -189,20 +186,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
-  slidingIndicator: {
-    position: 'absolute',
-    top: (TAB_HEIGHT - 48) / 2, // Center vertically
-    left: 0,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    overflow: 'hidden',
-    // Add a subtle glow to the pill itself
-    shadowColor: Colors.primary.main,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
   tabContainer: {
     flexDirection: 'row',
     height: '100%',
@@ -217,10 +200,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconWrapper: {
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 48,
-    width: 48,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  activeGlow: {
+    position: 'absolute',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(23, 162, 184, 0.15)', // Subtle primary glow
   },
   addButtonContainer: {
     width: ADD_BUTTON_WIDTH,
