@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,13 @@ import {
   Switch,
   ActivityIndicator,
   TextInput,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card } from '../components/UI';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import LinearGradient from 'react-native-linear-gradient';
+import { GlassCard, Button } from '../components/UI';
 import { useToast } from '../context/ToastContext';
 import { apiClient } from '../api/client';
 import {
@@ -35,11 +39,96 @@ interface AppSettings {
   log_profile: string;
 }
 
+// Animation wrapper for sections
+const FadeInView = ({ index, children }: { index: number; children: React.ReactNode }) => {
+  const anim = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 500,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 600,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        opacity: anim,
+        transform: [{ translateY }],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+};
+
+// Reusable Scale Animation Component
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+
+const ScalePressable = ({ 
+  onPress, 
+  children, 
+  style, 
+  activeScale = 0.95,
+  disabled = false 
+}: {
+  onPress: () => void;
+  children: React.ReactNode;
+  style?: any;
+  activeScale?: number;
+  disabled?: boolean;
+}) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scale, {
+      toValue: activeScale,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 10,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 10,
+    }).start();
+  };
+
+  return (
+    <AnimatedTouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+      style={[style, { transform: [{ scale }] }]}
+      disabled={disabled}
+    >
+      {children}
+    </AnimatedTouchableOpacity>
+  );
+};
+
 export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navigation }) => {
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [currentLogProfile, setCurrentLogProfile] = useState('MEDIUM');
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
   
   const [settings, setSettings] = useState<AppSettings>({
     min_password_length: 8,
@@ -62,7 +151,6 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
       
       if (response.success && response.settings) {
         console.log('[ServerSettings] Loaded settings:', response.settings);
-        console.log('[ServerSettings] Current log profile from server:', response.current_log_profile);
         
         // Use the current_log_profile (what's active) if available,
         // otherwise fall back to the form value
@@ -76,11 +164,6 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
         
         // Update current log profile indicator (what's active in the environment)
         setCurrentLogProfile(activeLogProfile);
-        
-        console.log('[ServerSettings] UI updated with:', {
-          settings: { ...response.settings, log_profile: activeLogProfile },
-          currentLogProfile: activeLogProfile,
-        });
       } else {
         throw new Error('Invalid response from server');
       }
@@ -139,227 +222,274 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation?.goBack()}
-          >
-            <Text style={styles.backButtonText}>‹ Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Server Settings</Text>
-        </View>
-
-        {/* Password Policy Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIconContainer}>
-              <Text style={styles.sectionIcon}>🔒</Text>
-            </View>
-            <Text style={styles.sectionTitle}>Password Policy</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <ScalePressable
+              style={styles.backButton}
+              onPress={() => navigation?.goBack()}
+            >
+              <View style={styles.backButtonIcon}>
+                <Ionicons name="chevron-back" size={24} color={Colors.primary.main} />
+              </View>
+            </ScalePressable>
+            <Text style={styles.headerTitle}>Server Settings</Text>
           </View>
 
-          <Card style={styles.card}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Minimum Password Length</Text>
-                <Text style={styles.settingHelp}>
-                  Minimum number of characters required (6-16)
-                </Text>
+          {/* Password Policy Section */}
+          <FadeInView index={0}>
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <LinearGradient
+                  colors={['rgba(23, 162, 184, 0.2)', 'rgba(23, 162, 184, 0.05)']}
+                  style={styles.sectionIconContainer}
+                >
+                  <Ionicons name="shield-checkmark-outline" size={20} color={Colors.primary.main} />
+                </LinearGradient>
+                <Text style={styles.sectionTitle}>Password Policy</Text>
               </View>
-              <TextInput
-                style={styles.numberInput}
-                keyboardType="numeric"
-                value={String(settings.min_password_length)}
-                onChangeText={(text) => {
-                  const value = parseInt(text) || 6;
-                  updateSetting('min_password_length', Math.max(6, Math.min(16, value)));
-                }}
-                placeholderTextColor={Colors.text.tertiary}
-              />
-            </View>
 
-            <View style={styles.divider} />
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Password Expiration (Days)</Text>
-                <Text style={styles.settingHelp}>
-                  Use 0 for no expiration (0-365)
-                </Text>
-              </View>
-              <TextInput
-                style={styles.numberInput}
-                keyboardType="numeric"
-                value={String(settings.password_expiration_days)}
-                onChangeText={(text) => {
-                  const value = parseInt(text) || 0;
-                  updateSetting('password_expiration_days', Math.max(0, Math.min(365, value)));
-                }}
-                placeholderTextColor={Colors.text.tertiary}
-              />
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Require Special Characters</Text>
-                <Text style={styles.settingHelp}>
-                  At least one special character (e.g., @, #, $)
-                </Text>
-              </View>
-              <Switch
-                value={settings.require_special_characters}
-                onValueChange={(value) =>
-                  updateSetting('require_special_characters', value)
-                }
-                trackColor={{ false: Colors.border.light, true: Colors.primary.main }}
-                thumbColor={Colors.text.primary}
-              />
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Require Numbers</Text>
-                <Text style={styles.settingHelp}>
-                  At least one number in passwords
-                </Text>
-              </View>
-              <Switch
-                value={settings.require_numbers}
-                onValueChange={(value) =>
-                  updateSetting('require_numbers', value)
-                }
-                trackColor={{ false: Colors.border.light, true: Colors.primary.main }}
-                thumbColor={Colors.text.primary}
-              />
-            </View>
-          </Card>
-        </View>
-
-        {/* Session Management Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIconContainer}>
-              <Text style={styles.sectionIcon}>⏱️</Text>
-            </View>
-            <Text style={styles.sectionTitle}>Session Management</Text>
-          </View>
-
-          <Card style={styles.card}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Session Timeout (Minutes)</Text>
-                <Text style={styles.settingHelp}>
-                  Minutes until session expires (5-10080)
-                </Text>
-              </View>
-              <TextInput
-                style={styles.numberInput}
-                keyboardType="numeric"
-                value={String(settings.session_timeout_minutes)}
-                onChangeText={(text) => {
-                  const value = parseInt(text) || 5;
-                  updateSetting('session_timeout_minutes', Math.max(5, Math.min(10080, value)));
-                }}
-                placeholderTextColor={Colors.text.tertiary}
-              />
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Max Concurrent Sessions</Text>
-                <Text style={styles.settingHelp}>
-                  Use 0 for unlimited (0-10)
-                </Text>
-              </View>
-              <TextInput
-                style={styles.numberInput}
-                keyboardType="numeric"
-                value={String(settings.max_concurrent_sessions)}
-                onChangeText={(text) => {
-                  const value = parseInt(text) || 0;
-                  updateSetting('max_concurrent_sessions', Math.max(0, Math.min(10, value)));
-                }}
-                placeholderTextColor={Colors.text.tertiary}
-              />
-            </View>
-          </Card>
-        </View>
-
-        {/* Logging Configuration Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIconContainer}>
-              <Text style={styles.sectionIcon}>📊</Text>
-            </View>
-            <Text style={styles.sectionTitle}>Logging Configuration</Text>
-          </View>
-
-          <Card style={styles.card}>
-            <View style={styles.settingColumn}>
-              <Text style={styles.settingLabel}>Log Profile</Text>
-              <Text style={styles.settingHelp}>
-                Sets the verbosity level of application logs
-              </Text>
-              
-              <View style={styles.logProfileSelector}>
-                {['LOW', 'MEDIUM', 'HIGH', 'DEBUG'].map((profile) => (
-                  <TouchableOpacity
-                    key={profile}
-                    style={[
-                      styles.logProfileOption,
-                      settings.log_profile === profile && styles.logProfileOptionActive,
-                    ]}
-                    onPress={() => updateSetting('log_profile', profile)}
-                  >
-                    <Text
-                      style={[
-                        styles.logProfileText,
-                        settings.log_profile === profile && styles.logProfileTextActive,
-                      ]}
-                    >
-                      {profile}
+              <GlassCard style={styles.card}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingLabel}>Minimum Password Length</Text>
+                    <Text style={styles.settingHelp}>
+                      Required characters (6-16)
                     </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                  </View>
+                  <TextInput
+                    style={[
+                      styles.numberInput,
+                      focusedInput === 'min_password_length' && styles.numberInputFocused
+                    ]}
+                    keyboardType="numeric"
+                    value={String(settings.min_password_length)}
+                    onFocus={() => setFocusedInput('min_password_length')}
+                    onBlur={() => setFocusedInput(null)}
+                    onChangeText={(text) => {
+                      const value = parseInt(text) || 6;
+                      updateSetting('min_password_length', Math.max(6, Math.min(16, value)));
+                    }}
+                    placeholderTextColor={Colors.text.tertiary}
+                  />
+                </View>
 
-              <View style={styles.currentProfileIndicator}>
-                <Text style={styles.currentProfileLabel}>
-                  Current active profile from environment
-                </Text>
-                <Text style={styles.currentProfileValue}>{currentLogProfile}</Text>
-              </View>
+                <View style={styles.divider} />
+
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingLabel}>Password Expiration</Text>
+                    <Text style={styles.settingHelp}>
+                      Days until expiry (0 for none)
+                    </Text>
+                  </View>
+                  <TextInput
+                    style={[
+                      styles.numberInput,
+                      focusedInput === 'password_expiration_days' && styles.numberInputFocused
+                    ]}
+                    keyboardType="numeric"
+                    value={String(settings.password_expiration_days)}
+                    onFocus={() => setFocusedInput('password_expiration_days')}
+                    onBlur={() => setFocusedInput(null)}
+                    onChangeText={(text) => {
+                      const value = parseInt(text) || 0;
+                      updateSetting('password_expiration_days', Math.max(0, Math.min(365, value)));
+                    }}
+                    placeholderTextColor={Colors.text.tertiary}
+                  />
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingLabel}>Special Characters</Text>
+                    <Text style={styles.settingHelp}>
+                      Require at least one symbol
+                    </Text>
+                  </View>
+                  <Switch
+                    value={settings.require_special_characters}
+                    onValueChange={(value) =>
+                      updateSetting('require_special_characters', value)
+                    }
+                    trackColor={{ false: 'rgba(255,255,255,0.1)', true: Colors.primary.main + '80' }}
+                    thumbColor={settings.require_special_characters ? Colors.primary.main : Colors.text.tertiary}
+                  />
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingLabel}>Require Numbers</Text>
+                    <Text style={styles.settingHelp}>
+                      Require at least one digit
+                    </Text>
+                  </View>
+                  <Switch
+                    value={settings.require_numbers}
+                    onValueChange={(value) =>
+                      updateSetting('require_numbers', value)
+                    }
+                    trackColor={{ false: 'rgba(255,255,255,0.1)', true: Colors.primary.main + '80' }}
+                    thumbColor={settings.require_numbers ? Colors.primary.main : Colors.text.tertiary}
+                  />
+                </View>
+              </GlassCard>
             </View>
-          </Card>
-        </View>
+          </FadeInView>
 
-        {/* Save Button */}
-        <TouchableOpacity
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-          onPress={saveSettings}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={Colors.text.inverse} />
-          ) : (
-            <>
-              <Text style={styles.saveButtonIcon}>💾</Text>
-              <Text style={styles.saveButtonText}>Save Settings</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          {/* Session Management Section */}
+          <FadeInView index={1}>
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <LinearGradient
+                  colors={['rgba(255, 193, 7, 0.2)', 'rgba(255, 193, 7, 0.05)']}
+                  style={styles.sectionIconContainer}
+                >
+                  <Ionicons name="time-outline" size={20} color={Colors.warning.main} />
+                </LinearGradient>
+                <Text style={styles.sectionTitle}>Session Management</Text>
+              </View>
 
-        {/* Footer Spacing */}
-        <View style={styles.footer} />
-      </ScrollView>
-    </SafeAreaView>
+              <GlassCard style={styles.card}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingLabel}>Session Timeout</Text>
+                    <Text style={styles.settingHelp}>
+                      Minutes until inactive logout
+                    </Text>
+                  </View>
+                  <TextInput
+                    style={[
+                      styles.numberInput,
+                      focusedInput === 'session_timeout_minutes' && styles.numberInputFocused
+                    ]}
+                    keyboardType="numeric"
+                    value={String(settings.session_timeout_minutes)}
+                    onFocus={() => setFocusedInput('session_timeout_minutes')}
+                    onBlur={() => setFocusedInput(null)}
+                    onChangeText={(text) => {
+                      const value = parseInt(text) || 5;
+                      updateSetting('session_timeout_minutes', Math.max(5, Math.min(10080, value)));
+                    }}
+                    placeholderTextColor={Colors.text.tertiary}
+                  />
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <Text style={styles.settingLabel}>Max Concurrent Sessions</Text>
+                    <Text style={styles.settingHelp}>
+                      Limit user sessions (0 for unlimited)
+                    </Text>
+                  </View>
+                  <TextInput
+                    style={[
+                      styles.numberInput,
+                      focusedInput === 'max_concurrent_sessions' && styles.numberInputFocused
+                    ]}
+                    keyboardType="numeric"
+                    value={String(settings.max_concurrent_sessions)}
+                    onFocus={() => setFocusedInput('max_concurrent_sessions')}
+                    onBlur={() => setFocusedInput(null)}
+                    onChangeText={(text) => {
+                      const value = parseInt(text) || 0;
+                      updateSetting('max_concurrent_sessions', Math.max(0, Math.min(10, value)));
+                    }}
+                    placeholderTextColor={Colors.text.tertiary}
+                  />
+                </View>
+              </GlassCard>
+            </View>
+          </FadeInView>
+
+          {/* Logging Configuration Section */}
+          <FadeInView index={2}>
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <LinearGradient
+                  colors={['rgba(40, 167, 69, 0.2)', 'rgba(40, 167, 69, 0.05)']}
+                  style={styles.sectionIconContainer}
+                >
+                  <Ionicons name="stats-chart-outline" size={20} color={Colors.success.main} />
+                </LinearGradient>
+                <Text style={styles.sectionTitle}>Logging Configuration</Text>
+              </View>
+
+              <GlassCard style={styles.card}>
+                <View style={styles.settingColumn}>
+                  <Text style={styles.settingLabel}>Log Profile</Text>
+                  <Text style={styles.settingHelp}>
+                    Sets the verbosity level of application logs
+                  </Text>
+                  
+                  <View style={styles.logProfileGrid}>
+                    {['LOW', 'MEDIUM', 'HIGH', 'DEBUG'].map((profile) => (
+                      <ScalePressable
+                        key={profile}
+                        style={[
+                          styles.logProfileOption,
+                          settings.log_profile === profile && styles.logProfileOptionActive,
+                        ]}
+                        onPress={() => updateSetting('log_profile', profile)}
+                      >
+                         {settings.log_profile === profile && (
+                          <LinearGradient
+                            colors={Colors.primary.gradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={StyleSheet.absoluteFill}
+                          />
+                        )}
+                        <Text
+                          style={[
+                            styles.logProfileText,
+                            settings.log_profile === profile && styles.logProfileTextActive,
+                          ]}
+                        >
+                          {profile}
+                        </Text>
+                      </ScalePressable>
+                    ))}
+                  </View>
+
+                  <View style={styles.currentProfileIndicator}>
+                    <Ionicons name="information-circle-outline" size={18} color={Colors.info.main} style={{ marginRight: 8 }} />
+                    <View>
+                      <Text style={styles.currentProfileLabel}>
+                        Current Active Profile
+                      </Text>
+                      <Text style={styles.currentProfileValue}>{currentLogProfile}</Text>
+                    </View>
+                  </View>
+                </View>
+              </GlassCard>
+            </View>
+          </FadeInView>
+
+          {/* Save Button */}
+          <FadeInView index={3}>
+            <View style={styles.actionContainer}>
+              <Button
+                title="Save Settings"
+                onPress={saveSettings}
+                loading={saving}
+                size="large"
+                fullWidth
+                variant="primary"
+                icon={<Ionicons name="save-outline" size={20} color={Colors.text.inverse} />}
+              />
+            </View>
+          </FadeInView>
+
+          {/* Footer Spacing */}
+          <View style={styles.footer} />
+        </ScrollView>
+      </SafeAreaView>
   );
 };
 
@@ -373,6 +503,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.background.primary,
   },
   loadingText: {
     marginTop: Spacing.md,
@@ -388,15 +519,23 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    marginBottom: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+    marginTop: Spacing.sm,
   },
   backButton: {
-    marginBottom: Spacing.sm,
+    marginRight: Spacing.md,
   },
-  backButtonText: {
-    fontSize: Typography.fontSize.lg,
-    color: Colors.primary.main,
-    fontFamily: Typography.fontFamily.medium,
+  backButtonIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   headerTitle: {
     fontSize: Typography.fontSize['2xl'],
@@ -407,24 +546,23 @@ const styles = StyleSheet.create({
 
   // Section
   section: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.xs,
   },
   sectionIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.primary.main + '20',
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.sm,
-  },
-  sectionIcon: {
-    fontSize: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   sectionTitle: {
     fontSize: Typography.fontSize.lg,
@@ -435,7 +573,7 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    marginBottom: 0,
+    padding: Spacing.md,
   },
 
   // Setting Row
@@ -444,6 +582,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: Spacing.sm,
+    minHeight: 60,
   },
   settingColumn: {
     paddingVertical: Spacing.sm,
@@ -456,7 +595,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.base,
     fontWeight: Typography.fontWeight.medium,
     color: Colors.text.primary,
-    marginBottom: Spacing.xs,
+    marginBottom: 4,
     fontFamily: Typography.fontFamily.medium,
   },
   settingHelp: {
@@ -467,100 +606,88 @@ const styles = StyleSheet.create({
 
   numberInput: {
     width: 80,
-    height: 40,
+    height: 44,
     textAlign: 'center',
-    backgroundColor: Colors.background.secondary,
-    borderRadius: BorderRadius.md,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border.light,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     color: Colors.text.primary,
     fontSize: Typography.fontSize.base,
     fontFamily: Typography.fontFamily.medium,
     paddingHorizontal: Spacing.sm,
   },
+  numberInputFocused: {
+    borderColor: Colors.primary.main,
+    backgroundColor: 'rgba(23, 162, 184, 0.1)',
+  },
 
   divider: {
     height: 1,
-    backgroundColor: Colors.border.light,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     marginVertical: Spacing.sm,
   },
 
-  // Log Profile Selector
-  logProfileSelector: {
+  // Log Profile Grid
+  logProfileGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: Spacing.lg,
     gap: Spacing.sm,
-    marginTop: Spacing.md,
   },
   logProfileOption: {
-    flex: 1,
-    minWidth: '45%',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.background.secondary,
-    borderWidth: 2,
-    borderColor: Colors.border.light,
+    width: '48%', // Ensures 2 items per row with a small gap
+    height: 48,   // Fixed height for consistency
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginBottom: Spacing.xs, // Extra safety if gap isn't fully supported
   },
   logProfileOptionActive: {
-    backgroundColor: Colors.primary.main + '20',
-    borderColor: Colors.primary.main,
+    borderColor: 'transparent',
+    // Background handled by LinearGradient
   },
   logProfileText: {
     fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
+    fontWeight: Typography.fontWeight.bold,
     color: Colors.text.secondary,
     fontFamily: Typography.fontFamily.medium,
+    zIndex: 1,
   },
   logProfileTextActive: {
-    color: Colors.primary.main,
+    color: Colors.text.inverse,
   },
 
   currentProfileIndicator: {
-    marginTop: Spacing.md,
+    marginTop: Spacing.lg,
     padding: Spacing.md,
-    backgroundColor: Colors.background.secondary,
-    borderRadius: BorderRadius.md,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.info.main,
+    backgroundColor: 'rgba(23, 162, 184, 0.1)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(23, 162, 184, 0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   currentProfileLabel: {
     fontSize: Typography.fontSize.xs,
     color: Colors.text.tertiary,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
     fontFamily: Typography.fontFamily.regular,
   },
   currentProfileValue: {
-    fontSize: Typography.fontSize.base,
+    fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.info.main,
     fontFamily: Typography.fontFamily.bold,
   },
 
-  // Save Button
-  saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary.main,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
+  actionContainer: {
     marginTop: Spacing.lg,
-    ...Shadows.md,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonIcon: {
-    fontSize: 20,
-    marginRight: Spacing.sm,
-  },
-  saveButtonText: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.text.inverse,
-    fontFamily: Typography.fontFamily.medium,
   },
 
   footer: {
