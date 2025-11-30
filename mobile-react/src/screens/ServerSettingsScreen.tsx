@@ -10,6 +10,7 @@ import {
   TextInput,
   Animated,
   Dimensions,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -48,14 +49,16 @@ const FadeInView = ({ index, children }: { index: number; children: React.ReactN
     Animated.parallel([
       Animated.timing(anim, {
         toValue: 1,
-        duration: 500,
-        delay: index * 100,
+        duration: 1200,
+        delay: index * 180,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1), // Ease-out cubic bezier
         useNativeDriver: true,
       }),
       Animated.timing(translateY, {
         toValue: 0,
-        duration: 600,
-        delay: index * 100,
+        duration: 1400,
+        delay: index * 180,
+        easing: Easing.bezier(0.16, 1, 0.3, 1), // Ease-out expo bezier (smoother)
         useNativeDriver: true,
       }),
     ]).start();
@@ -67,6 +70,8 @@ const FadeInView = ({ index, children }: { index: number; children: React.ReactN
         opacity: anim,
         transform: [{ translateY }],
       }}
+      renderToHardwareTextureAndroid={true}
+      shouldRasterizeIOS={true}
     >
       {children}
     </Animated.View>
@@ -254,6 +259,19 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
     log_profile: 'MEDIUM',
   });
 
+  // Local state for input fields to allow smooth typing
+  const [inputValues, setInputValues] = useState<{
+    min_password_length: string;
+    password_expiration_days: string;
+    session_timeout_minutes: string;
+    max_concurrent_sessions: string;
+  }>({
+    min_password_length: '8',
+    password_expiration_days: '0',
+    session_timeout_minutes: '30',
+    max_concurrent_sessions: '0',
+  });
+
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
@@ -276,6 +294,14 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
         setSettings({
           ...response.settings,
           log_profile: activeLogProfile,
+        });
+        
+        // Sync input values with loaded settings
+        setInputValues({
+          min_password_length: String(response.settings.min_password_length),
+          password_expiration_days: String(response.settings.password_expiration_days),
+          session_timeout_minutes: String(response.settings.session_timeout_minutes),
+          max_concurrent_sessions: String(response.settings.max_concurrent_sessions),
         });
         
         // Update current log profile indicator (what's active in the environment)
@@ -386,12 +412,20 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
                       focusedInput === 'min_password_length' && styles.numberInputFocused
                     ]}
                     keyboardType="numeric"
-                    value={String(settings.min_password_length)}
+                    value={inputValues.min_password_length}
                     onFocus={() => setFocusedInput('min_password_length')}
-                    onBlur={() => setFocusedInput(null)}
+                    onBlur={() => {
+                      setFocusedInput(null);
+                      const value = parseInt(inputValues.min_password_length) || 6;
+                      const clamped = Math.max(6, Math.min(16, value));
+                      updateSetting('min_password_length', clamped);
+                      setInputValues(prev => ({ ...prev, min_password_length: String(clamped) }));
+                    }}
                     onChangeText={(text) => {
-                      const value = parseInt(text) || 6;
-                      updateSetting('min_password_length', Math.max(6, Math.min(16, value)));
+                      // Allow empty or numeric input only
+                      if (text === '' || /^\d+$/.test(text)) {
+                        setInputValues(prev => ({ ...prev, min_password_length: text }));
+                      }
                     }}
                     placeholderTextColor={Colors.text.tertiary}
                   />
@@ -412,12 +446,19 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
                       focusedInput === 'password_expiration_days' && styles.numberInputFocused
                     ]}
                     keyboardType="numeric"
-                    value={String(settings.password_expiration_days)}
+                    value={inputValues.password_expiration_days}
                     onFocus={() => setFocusedInput('password_expiration_days')}
-                    onBlur={() => setFocusedInput(null)}
+                    onBlur={() => {
+                      setFocusedInput(null);
+                      const value = parseInt(inputValues.password_expiration_days) || 0;
+                      const clamped = Math.max(0, Math.min(365, value));
+                      updateSetting('password_expiration_days', clamped);
+                      setInputValues(prev => ({ ...prev, password_expiration_days: String(clamped) }));
+                    }}
                     onChangeText={(text) => {
-                      const value = parseInt(text) || 0;
-                      updateSetting('password_expiration_days', Math.max(0, Math.min(365, value)));
+                      if (text === '' || /^\d+$/.test(text)) {
+                        setInputValues(prev => ({ ...prev, password_expiration_days: text }));
+                      }
                     }}
                     placeholderTextColor={Colors.text.tertiary}
                   />
@@ -491,12 +532,19 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
                       focusedInput === 'session_timeout_minutes' && styles.numberInputFocused
                     ]}
                     keyboardType="numeric"
-                    value={String(settings.session_timeout_minutes)}
+                    value={inputValues.session_timeout_minutes}
                     onFocus={() => setFocusedInput('session_timeout_minutes')}
-                    onBlur={() => setFocusedInput(null)}
+                    onBlur={() => {
+                      setFocusedInput(null);
+                      const value = parseInt(inputValues.session_timeout_minutes) || 5;
+                      const clamped = Math.max(5, Math.min(10080, value));
+                      updateSetting('session_timeout_minutes', clamped);
+                      setInputValues(prev => ({ ...prev, session_timeout_minutes: String(clamped) }));
+                    }}
                     onChangeText={(text) => {
-                      const value = parseInt(text) || 5;
-                      updateSetting('session_timeout_minutes', Math.max(5, Math.min(10080, value)));
+                      if (text === '' || /^\d+$/.test(text)) {
+                        setInputValues(prev => ({ ...prev, session_timeout_minutes: text }));
+                      }
                     }}
                     placeholderTextColor={Colors.text.tertiary}
                   />
@@ -517,12 +565,19 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
                       focusedInput === 'max_concurrent_sessions' && styles.numberInputFocused
                     ]}
                     keyboardType="numeric"
-                    value={String(settings.max_concurrent_sessions)}
+                    value={inputValues.max_concurrent_sessions}
                     onFocus={() => setFocusedInput('max_concurrent_sessions')}
-                    onBlur={() => setFocusedInput(null)}
+                    onBlur={() => {
+                      setFocusedInput(null);
+                      const value = parseInt(inputValues.max_concurrent_sessions) || 0;
+                      const clamped = Math.max(0, Math.min(10, value));
+                      updateSetting('max_concurrent_sessions', clamped);
+                      setInputValues(prev => ({ ...prev, max_concurrent_sessions: String(clamped) }));
+                    }}
                     onChangeText={(text) => {
-                      const value = parseInt(text) || 0;
-                      updateSetting('max_concurrent_sessions', Math.max(0, Math.min(10, value)));
+                      if (text === '' || /^\d+$/.test(text)) {
+                        setInputValues(prev => ({ ...prev, max_concurrent_sessions: text }));
+                      }
                     }}
                     placeholderTextColor={Colors.text.tertiary}
                   />

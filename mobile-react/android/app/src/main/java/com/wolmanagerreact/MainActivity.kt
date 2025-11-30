@@ -1,5 +1,6 @@
 package com.wolmanagerreact
 
+import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -12,6 +13,15 @@ class MainActivity : ReactActivity() {
    * rendering of the component.
    */
   override fun getMainComponentName(): String = "WOLManagerReact"
+
+  /**
+   * Keep splash screen visible until React Native is ready
+   */
+  override fun onCreate(savedInstanceState: Bundle?) {
+    // Set splash theme before super.onCreate()
+    setTheme(R.style.AppTheme)
+    super.onCreate(savedInstanceState)
+  }
 
   /**
    * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]

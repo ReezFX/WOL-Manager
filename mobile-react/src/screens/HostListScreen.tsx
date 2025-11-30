@@ -9,6 +9,8 @@ import {
   Animated,
   Alert,
   Dimensions,
+  Easing,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -52,20 +54,22 @@ interface HostCardProps {
 
 const FadeInView = ({ index, children }: { index: number; children: React.ReactNode }) => {
   const anim = React.useRef(new Animated.Value(0)).current;
-  const translateY = React.useRef(new Animated.Value(50)).current;
+  const translateY = React.useRef(new Animated.Value(30)).current;
 
   React.useEffect(() => {
     Animated.parallel([
       Animated.timing(anim, {
         toValue: 1,
-        duration: 500,
-        delay: index * 100, // Stagger effect
+        duration: 1200,
+        delay: index * 180,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1), // Ease-out cubic bezier
         useNativeDriver: true,
       }),
       Animated.timing(translateY, {
         toValue: 0,
-        duration: 600,
-        delay: index * 100,
+        duration: 1400,
+        delay: index * 180,
+        easing: Easing.bezier(0.16, 1, 0.3, 1), // Ease-out expo bezier (smoother)
         useNativeDriver: true,
       }),
     ]).start();
@@ -77,6 +81,8 @@ const FadeInView = ({ index, children }: { index: number; children: React.ReactN
         opacity: anim,
         transform: [{ translateY }],
       }}
+      renderToHardwareTextureAndroid={true}
+      shouldRasterizeIOS={true}
     >
       {children}
     </Animated.View>
@@ -236,6 +242,8 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route, navigatio
   
   // All refs
   const statusCheckIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const contentOpacity = React.useRef(new Animated.Value(0.15)).current; // Start slightly visible
+  const loadingOpacity = React.useRef(new Animated.Value(1)).current;
 
   const fetchHosts = useCallback(async (showLoading = true) => {
     try {
@@ -277,10 +285,34 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route, navigatio
       
       setError(error.message || 'Failed to load hosts');
     } finally {
-      setIsLoading(false);
+      if (showLoading) {
+        // Smooth crossfade transition from loading to content
+        Animated.parallel([
+          // Fade out loading slowly
+          Animated.timing(loadingOpacity, {
+            toValue: 0,
+            duration: 1200,
+            delay: 300,
+            easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+            useNativeDriver: true,
+          }),
+          // Fade in content overlapping
+          Animated.timing(contentOpacity, {
+            toValue: 1,
+            duration: 1400,
+            delay: 400,
+            easing: Easing.bezier(0.0, 0.0, 0.2, 1),
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setIsLoading(false);
+        });
+      } else {
+        setIsLoading(false);
+      }
       setIsRefreshing(false);
     }
-  }, [logout]);
+  }, [logout, loadingOpacity, contentOpacity]);
 
   useEffect(() => {
     fetchHosts();
@@ -506,16 +538,21 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route, navigatio
     );
   }, [wakingHost, showWakeConfirm, handleDeleteHost]);
 
-  if (isLoading) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.loadingText}>Loading hosts...</Text>
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Loading Overlay - just dark background for smooth transition */}
+      {isLoading && (
+        <Animated.View 
+          style={[
+            styles.loadingOverlay,
+            { opacity: loadingOpacity }
+          ]}
+          pointerEvents="none"
+        />
+      )}
+
+      {/* Content with fade in */}
+      <Animated.View style={[styles.flex1, { opacity: contentOpacity }]}>
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         visible={deleteConfirm.visible}
@@ -581,6 +618,7 @@ export const HostListScreen: React.FC<HostListScreenProps> = ({ route, navigatio
           }
         />
       )}
+      </Animated.View>
     </SafeAreaView>
   );
 };
@@ -813,10 +851,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.xl,
   },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Colors.background.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  splashLogo: {
+    width: 200,
+    height: 200,
+  },
   loadingText: {
     fontSize: Typography.fontSize.base,
     color: Colors.text.secondary,
     fontFamily: Typography.fontFamily.regular,
+  },
+  flex1: {
+    flex: 1,
   },
   errorText: {
     fontSize: Typography.fontSize.base,
