@@ -39,27 +39,54 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  const scaleAnim = React.useRef(new Animated.Value(0.9)).current;
+  const backdropAnim = React.useRef(new Animated.Value(0)).current;
+  const scaleAnim = React.useRef(new Animated.Value(0.85)).current;
+  const translateYAnim = React.useRef(new Animated.Value(20)).current;
+  const dialogOpacity = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     if (visible) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
+      // Reset values before animating in
+      scaleAnim.setValue(0.85);
+      translateYAnim.setValue(20);
+      dialogOpacity.setValue(0);
+      backdropAnim.setValue(0);
+
+      // Animate in with staggered timing
+      Animated.sequence([
+        // First fade in backdrop
+        Animated.timing(backdropAnim, {
           toValue: 1,
-          duration: 200,
+          duration: 180,
           useNativeDriver: true,
         }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 100,
-          friction: 8,
-          useNativeDriver: true,
-        }),
+        // Then animate dialog with spring
+        Animated.parallel([
+          Animated.timing(dialogOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            damping: 18,
+            stiffness: 200,
+            mass: 0.8,
+            useNativeDriver: true,
+          }),
+          Animated.spring(translateYAnim, {
+            toValue: 0,
+            damping: 20,
+            stiffness: 200,
+            mass: 0.8,
+            useNativeDriver: true,
+          }),
+        ]),
       ]).start();
     } else {
+      // Animate out - faster and smoother
       Animated.parallel([
-        Animated.timing(fadeAnim, {
+        Animated.timing(dialogOpacity, {
           toValue: 0,
           duration: 150,
           useNativeDriver: true,
@@ -67,6 +94,16 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         Animated.timing(scaleAnim, {
           toValue: 0.9,
           duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateYAnim, {
+          toValue: 10,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropAnim, {
+          toValue: 0,
+          duration: 180,
           useNativeDriver: true,
         }),
       ]).start();
@@ -89,7 +126,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           style={[
             styles.overlayBackground,
             {
-              opacity: fadeAnim,
+              opacity: backdropAnim,
             },
           ]}
         />
@@ -97,8 +134,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           style={[
             styles.dialogContainer,
             {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
+              opacity: dialogOpacity,
+              transform: [
+                { scale: scaleAnim },
+                { translateY: translateYAnim },
+              ],
             },
           ]}
         >
