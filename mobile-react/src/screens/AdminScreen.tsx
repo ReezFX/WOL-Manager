@@ -39,7 +39,7 @@ export const AdminScreen: React.FC = () => {
   };
 
   const handleNavigateToSettings = () => {
-    toast.showInfo('Server Settings coming soon!');
+    navigation.navigate('ServerSettings' as never);
   };
 
   const handleNavigateToLogs = () => {
@@ -67,7 +67,7 @@ export const AdminScreen: React.FC = () => {
       icon: 'settings',
       iconColor: Colors.success.main,
       onPress: handleNavigateToSettings,
-      isImplemented: false,
+      isImplemented: true,
     },
     {
       id: 'logs',

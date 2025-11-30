@@ -872,6 +872,278 @@ class ApiClient {
   getCsrfTokenValue(): string | null {
     return this.csrfToken;
   }
+
+  /**
+   * Get application settings
+   * Requires admin authentication
+   */
+  async getSettings(): Promise<{
+    success: boolean;
+    settings?: {
+      min_password_length: number;
+      require_special_characters: boolean;
+      require_numbers: boolean;
+      password_expiration_days: number;
+      session_timeout_minutes: number;
+      max_concurrent_sessions: number;
+      log_profile: string;
+    };
+    current_log_profile?: string;
+    message?: string;
+  }> {
+    if (!this.axiosInstance) {
+      throw new Error('API client not initialized');
+    }
+
+    try {
+      const response = await this.axiosInstance.get('admin/settings');
+
+      // Check for redirect (session expired or not authorized)
+      if (response.status === 302 || response.status === 301) {
+        throw new SessionExpiredError();
+      }
+
+      // Check if we got HTML instead of JSON (not authorized or redirected)
+      const contentType = response.headers['content-type'];
+      if (contentType && contentType.includes('text/html')) {
+        const html = typeof response.data === 'string' ? response.data : '';
+        
+        // Parse settings from HTML form
+        if (response.status === 200 && html.includes('Application Settings')) {
+          console.log('[API] Parsing settings from HTML');
+          
+          // Extract form field values using regex
+          const extractValue = (fieldName: string): string => {
+            const pattern = new RegExp(`name="${fieldName}"[^>]*value="([^"]*)"`, 'i');
+            const match = html.match(pattern);
+            return match ? match[1] : '';
+          };
+
+          const extractChecked = (fieldName: string): boolean => {
+            // Look for the checkbox input and check if it has 'checked' attribute
+            // WTForms BooleanField renders as: <input ... name="fieldName" ... checked ... >
+            // or <input ... name="fieldName" ... > (without checked)
+            const inputPattern = new RegExp(`<input[^>]*name="${fieldName}"[^>]*>`, 'i');
+            const inputMatch = html.match(inputPattern);
+            if (inputMatch && inputMatch[0]) {
+              const inputTag = inputMatch[0];
+              // Check if 'checked' appears in the input tag (as attribute)
+              return /\bchecked\b/i.test(inputTag);
+            }
+            return false;
+          };
+
+          const extractSelectedOption = (fieldName: string): string => {
+            // Look for <select name="fieldName">...</select> and find selected option
+            const selectPattern = new RegExp(`<select[^>]*name="${fieldName}"[^>]*>([\s\S]*?)<\/select>`, 'i');
+            const selectMatch = html.match(selectPattern);
+            if (selectMatch && selectMatch[1]) {
+              const selectContent = selectMatch[1];
+              console.log('[API] Select content for', fieldName, ':', selectContent.substring(0, 500));
+              
+              // Find option with selected attribute - try different patterns
+              // Pattern 1: selected before value
+              let selectedPattern = /<option[^>]*selected[^>]*value="([^"]*)"/i;
+              let selectedMatch = selectContent.match(selectedPattern);
+              
+              if (!selectedMatch) {
+                // Pattern 2: value before selected
+                selectedPattern = /<option[^>]*value="([^"]*)"[^>]*selected/i;
+                selectedMatch = selectContent.match(selectedPattern);
+              }
+              
+              if (!selectedMatch) {
+                // Pattern 3: selected without quotes
+                selectedPattern = /<option[^>]*\bselected\b[^>]*value="([^"]*)"/i;
+                selectedMatch = selectContent.match(selectedPattern);
+              }
+              
+              if (selectedMatch && selectedMatch[1]) {
+                console.log('[API] Found selected option:', selectedMatch[1]);
+                return selectedMatch[1];
+              }
+              
+              console.log('[API] No selected option found, trying alternative method');
+              
+              // Alternative: Check if there's an option that matches current_log_profile text
+              // This works if the select is pre-populated with the current value
+              const allOptionsPattern = /<option[^>]*value="([^"]*)"[^>]*>([^<]*)<\/option>/gi;
+              let optionMatch;
+              while ((optionMatch = allOptionsPattern.exec(selectContent)) !== null) {
+                const [, value, text] = optionMatch;
+                console.log('[API] Found option:', value, 'text:', text.trim());
+              }
+              
+              // Fallback: first option value
+              const firstOptionPattern = /<option[^>]*value="([^"]*)"/i;
+              const firstMatch = selectContent.match(firstOptionPattern);
+              if (firstMatch && firstMatch[1]) {
+                console.log('[API] Using first option as fallback:', firstMatch[1]);
+                return firstMatch[1];
+              }
+            }
+            return '';
+          };
+
+          // Extract current log profile from the indicator
+          const logProfileMatch = html.match(/id="current-log-profile"[^>]*>([^<]+)</i);
+          const currentLogProfile = logProfileMatch ? logProfileMatch[1].trim() : 'MEDIUM';
+
+          const settings = {
+            min_password_length: parseInt(extractValue('min_password_length')) || 8,
+            require_special_characters: extractChecked('require_special_characters'),
+            require_numbers: extractChecked('require_numbers'),
+            password_expiration_days: parseInt(extractValue('password_expiration_days')) || 0,
+            session_timeout_minutes: parseInt(extractValue('session_timeout_minutes')) || 30,
+            max_concurrent_sessions: parseInt(extractValue('max_concurrent_sessions')) || 0,
+            log_profile: extractSelectedOption('log_profile') || 'MEDIUM',
+          };
+
+          console.log('[API] Settings parsed from HTML:', settings);
+          console.log('[API] Checkboxes - require_special_characters:', settings.require_special_characters);
+          console.log('[API] Checkboxes - require_numbers:', settings.require_numbers);
+          console.log('[API] Selected log_profile:', settings.log_profile);
+
+          return {
+            success: true,
+            settings,
+            current_log_profile: currentLogProfile,
+          };
+        }
+        
+        throw new Error('Not authorized to access settings');
+      }
+
+      // If we get here with 200 and no data, something went wrong
+      throw new Error('Failed to get settings');
+    } catch (error: any) {
+      if (error instanceof SessionExpiredError) {
+        throw error;
+      }
+      console.error('[API] Get settings error:', error.message);
+      throw new Error(`Failed to get settings: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update application settings
+   * Requires admin authentication
+   */
+  async updateSettings(settings: {
+    min_password_length: number;
+    require_special_characters: boolean;
+    require_numbers: boolean;
+    password_expiration_days: number;
+    session_timeout_minutes: number;
+    max_concurrent_sessions: number;
+    log_profile: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    current_log_profile?: string;
+    errors?: Record<string, string[]>;
+  }> {
+    if (!this.axiosInstance) {
+      throw new Error('API client not initialized');
+    }
+
+    // Get fresh CSRF token if needed
+    if (!this.csrfToken) {
+      await this.refreshCsrfToken();
+    }
+
+    try {
+      const formData = new URLSearchParams();
+      formData.append('csrf_token', this.csrfToken!);
+      formData.append('min_password_length', String(settings.min_password_length));
+      formData.append('require_special_characters', settings.require_special_characters ? 'y' : '');
+      formData.append('require_numbers', settings.require_numbers ? 'y' : '');
+      formData.append('password_expiration_days', String(settings.password_expiration_days));
+      formData.append('session_timeout_minutes', String(settings.session_timeout_minutes));
+      formData.append('max_concurrent_sessions', String(settings.max_concurrent_sessions));
+      formData.append('log_profile', settings.log_profile);
+
+      console.log('[API] Updating settings with CSRF token:', this.csrfToken?.substring(0, 20) + '...');
+
+      const response = await this.axiosInstance.post(
+        'admin/settings',
+        formData.toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        }
+      );
+
+      // Check for redirect (session expired)
+      if (response.status === 302 || response.status === 301) {
+        throw new SessionExpiredError();
+      }
+
+      // Check content type
+      const contentType = (response.headers['content-type'] || '').toLowerCase();
+
+      if (response.status === 200) {
+        if (contentType.includes('application/json')) {
+          console.log('[API] Update settings response (json):', JSON.stringify(response.data));
+          
+          if (response.data && response.data.success === true) {
+            return {
+              success: true,
+              message: response.data.message || 'Settings saved successfully',
+              current_log_profile: response.data.current_log_profile,
+            };
+          }
+          
+          if (response.data && response.data.success === false) {
+            return {
+              success: false,
+              message: response.data.message || 'Failed to save settings',
+              errors: response.data.errors,
+            };
+          }
+
+          // Unknown JSON response
+          throw new Error('Unexpected response format');
+        }
+
+        if (contentType.includes('text/html')) {
+          // Server returned HTML (likely redirect or success page)
+          const html: string = typeof response.data === 'string' ? response.data : '';
+          
+          // Check for success indicators in HTML
+          if (html.toLowerCase().includes('success') || html.includes('Application Settings')) {
+            console.log('[API] Settings updated successfully (HTML response)');
+            return {
+              success: true,
+              message: 'Settings saved successfully',
+            };
+          }
+          
+          // Check for error indicators
+          if (html.toLowerCase().includes('error') || html.toLowerCase().includes('invalid')) {
+            throw new Error('Failed to save settings - validation error');
+          }
+        }
+
+        // Default: treat 200 as success
+        return {
+          success: true,
+          message: 'Settings saved successfully',
+        };
+      }
+
+      throw new Error(`Failed to update settings: ${response.status}`);
+    } catch (error: any) {
+      if (error instanceof SessionExpiredError) {
+        throw error;
+      }
+      console.error('[API] Update settings error:', error.message);
+      throw new Error(`Failed to update settings: ${error.message}`);
+    }
+  }
 }
 
 // Export singleton instance
