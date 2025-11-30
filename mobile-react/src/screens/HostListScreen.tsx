@@ -201,8 +201,9 @@ const HostCard = React.memo(({ item, index, isWaking, onWake, onDelete }: HostCa
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => onDelete(item.host_id, item.name)}
+              activeOpacity={0.4}
             >
-              <Ionicons name="trash-outline" size={20} color={Colors.error.main} />
+              <Ionicons name="trash-outline" size={18} color={Colors.text.tertiary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -642,7 +643,7 @@ const styles = StyleSheet.create({
   statsCard: {
     flex: 1,
     overflow: 'hidden',
-    borderRadius: BorderRadius.xl,
+    borderRadius: 32,
     borderWidth: 1,
     paddingVertical: Spacing.md,
     justifyContent: 'center',
@@ -661,16 +662,16 @@ const styles = StyleSheet.create({
   statIconBox: {
     width: 44,
     height: 44,
-    borderRadius: BorderRadius.xl,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },
   statValue: {
-    fontSize: Typography.fontSize.xl,
+    fontSize: Typography.fontSize['2xl'],
     fontWeight: Typography.fontWeight.bold,
     color: Colors.text.primary,
     fontFamily: Typography.fontFamily.bold,
-    lineHeight: 24,
+    lineHeight: 28,
   },
   statLabel: {
     fontSize: Typography.fontSize.xs,
@@ -693,7 +694,7 @@ const styles = StyleSheet.create({
   hostCard: {
     marginBottom: Spacing.md,
     overflow: 'hidden',
-    borderRadius: BorderRadius.xl,
+    borderRadius: 32,
     borderWidth: 1,
     borderColor: Colors.border.light + '40', // Subtle border
   },
@@ -709,7 +710,7 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 48,
     height: 48,
-    borderRadius: BorderRadius.xl,
+    borderRadius: 24,
     backgroundColor: Colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -743,9 +744,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.background.tertiary,
-    paddingHorizontal: 12, // Increased padding for pill shape
-    paddingVertical: 8,    // Increased padding
-    borderRadius: BorderRadius.xl,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.border.light + '10',
   },
@@ -767,7 +768,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     height: 44,
-    borderRadius: BorderRadius.xl,
+    borderRadius: 24,
     overflow: 'hidden',
   },
   actionButtonGradient: {
@@ -775,7 +776,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: BorderRadius.xl,
+    borderRadius: 24,
   },
   actionButtonText: {
     fontSize: Typography.fontSize.sm,
@@ -785,7 +786,7 @@ const styles = StyleSheet.create({
   wakeButton: {
     flex: 1,
     height: 44,
-    borderRadius: BorderRadius.xl,
+    borderRadius: 24,
     overflow: 'hidden',
     ...Shadows.sm,
   },
@@ -793,14 +794,13 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.xl,
-    backgroundColor: Colors.background.tertiary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border.light + '20',
+    opacity: 0.6,
   },
   deleteButtonText: {
     display: 'none', // Hidden since we use icon only now
