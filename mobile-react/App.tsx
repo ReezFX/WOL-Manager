@@ -3,9 +3,7 @@ import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
 import { ToastProvider } from './src/context/ToastContext';
-import { MusicProvider } from './src/context/MusicContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
-import { GlobalMusicControl } from './src/components/GlobalMusicControl';
 import { Colors } from './src/constants/theme';
 
 const App: React.FC = () => {
@@ -16,12 +14,9 @@ const App: React.FC = () => {
         backgroundColor={Colors.background.primary}
       />
       <ToastProvider>
-        <MusicProvider>
-          <AuthProvider>
-            <AppNavigator />
-            <GlobalMusicControl />
-          </AuthProvider>
-        </MusicProvider>
+        <AuthProvider>
+          <AppNavigator />
+        </AuthProvider>
       </ToastProvider>
     </SafeAreaProvider>
   );

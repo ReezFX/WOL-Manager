@@ -4,33 +4,8 @@ import { ServerConfig, PublicHostConfig, WidgetConfig } from '../types';
 const SERVER_CONFIG_KEY = '@server_config';
 const PUBLIC_HOST_CONFIG_KEY = '@public_host_config';
 const WIDGET_CONFIGS_KEY = '@widget_configs';
-const MUSIC_MUTE_KEY = '@music_muted';
 
 export const storage = {
-  /**
-   * Save music mute state
-   */
-  async setMusicMuted(muted: boolean): Promise<void> {
-    try {
-      await AsyncStorage.setItem(MUSIC_MUTE_KEY, JSON.stringify(muted));
-    } catch (error) {
-      console.error('[Storage] Failed to save music mute state:', error);
-    }
-  },
-
-  /**
-   * Get music mute state
-   */
-  async getMusicMuted(): Promise<boolean> {
-    try {
-      const value = await AsyncStorage.getItem(MUSIC_MUTE_KEY);
-      return value ? JSON.parse(value) : false; // Default to not muted
-    } catch (error) {
-      console.error('[Storage] Failed to get music mute state:', error);
-      return false;
-    }
-  },
-
   /**
    * Save server configuration
    */

@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   dialogWrapper: {
     position: 'relative',
-    borderRadius: BorderRadius.xl,
+    borderRadius: 32,
     overflow: 'hidden',
     ...Shadows.xl,
     borderWidth: 1,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   dialogBlurContainer: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: BorderRadius.xl,
+    borderRadius: 32,
     overflow: 'hidden',
     zIndex: -1,
   },
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   dialogButton: {
     flex: 1,
     height: 48,
-    borderRadius: BorderRadius.lg,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
