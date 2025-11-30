@@ -123,6 +123,120 @@ const ScalePressable = ({
   );
 };
 
+// Animated Save Button Component
+const AnimatedSaveButton = ({ 
+  onPress, 
+  loading, 
+  success 
+}: { 
+  onPress: () => void; 
+  loading: boolean; 
+  success: boolean;
+}) => {
+  const successAnim = useRef(new Animated.Value(0)).current; // 0 -> 1
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (success) {
+      Animated.sequence([
+        Animated.timing(successAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.sequence([
+             Animated.timing(scaleAnim, { toValue: 1.05, duration: 100, useNativeDriver: true }),
+             Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+        ])
+      ]).start();
+    } else {
+      Animated.timing(successAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [success]);
+
+  const handlePressIn = () => {
+    if (!loading && !success) {
+      Animated.spring(scaleAnim, { toValue: 0.95, useNativeDriver: true, speed: 50, bounciness: 10 }).start();
+    }
+  };
+
+  const handlePressOut = () => {
+    if (!success) {
+      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 10 }).start();
+    }
+  };
+
+  return (
+    <AnimatedTouchableOpacity
+      onPress={onPress}
+      disabled={loading || success}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+      style={[styles.saveButton, { transform: [{ scale: scaleAnim }] }]}
+    >
+      {/* Default Gradient (Primary) */}
+      <LinearGradient
+        colors={Colors.primary.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Success Gradient (Overlay - Green) */}
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: successAnim }]}>
+         <LinearGradient
+            colors={[Colors.success.main, '#2ecc71']} 
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+      </Animated.View>
+
+      {/* Content */}
+      <View style={styles.saveButtonContent}>
+        {loading ? (
+           <ActivityIndicator color={Colors.text.inverse} />
+        ) : (
+           <>
+             {/* Normal Content */}
+             <Animated.View style={[
+               styles.buttonContentRow, 
+               { 
+                 opacity: successAnim.interpolate({ inputRange: [0, 0.5], outputRange: [1, 0] }),
+                 transform: [{ translateY: successAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -20] }) }]
+               }
+             ]}> 
+                <Ionicons name="save-outline" size={20} color={Colors.text.inverse} style={styles.buttonIcon} />
+                <Text style={styles.saveButtonText}>Save Settings</Text>
+             </Animated.View>
+             
+             {/* Success Content */}
+              <Animated.View style={[
+                styles.buttonContentRow, 
+                StyleSheet.absoluteFill, 
+                { 
+                  opacity: successAnim.interpolate({ inputRange: [0.5, 1], outputRange: [0, 1] }),
+                  transform: [
+                    { scale: successAnim.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.5, 1.2, 1] }) },
+                    { translateY: successAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }
+                  ]
+                }
+              ]}> 
+                <Ionicons name="checkmark-circle" size={24} color={Colors.text.inverse} style={styles.buttonIcon} />
+                <Text style={styles.saveButtonText}>Saved!</Text>
+             </Animated.View>
+           </>
+        )}
+      </View>
+    </AnimatedTouchableOpacity>
+  );
+};
+
 export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navigation }) => {
   const toast = useToast();
   const [loading, setLoading] = useState(true);
@@ -139,6 +253,8 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
     max_concurrent_sessions: 0,
     log_profile: 'MEDIUM',
   });
+
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -183,7 +299,15 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
       
       if (response.success) {
         setCurrentLogProfile(response.current_log_profile || settings.log_profile);
+        
+        // Trigger success animation
+        setSaveSuccess(true);
         toast.showSuccess('Settings saved successfully');
+        
+        // Reset after delay
+        setTimeout(() => {
+          setSaveSuccess(false);
+        }, 2000);
       } else {
         throw new Error(response.message || 'Failed to save settings');
       }
@@ -474,14 +598,10 @@ export const ServerSettingsScreen: React.FC<ServerSettingsScreenProps> = ({ navi
           {/* Save Button */}
           <FadeInView index={3}>
             <View style={styles.actionContainer}>
-              <Button
-                title="Save Settings"
+              <AnimatedSaveButton
                 onPress={saveSettings}
                 loading={saving}
-                size="large"
-                fullWidth
-                variant="primary"
-                icon={<Ionicons name="save-outline" size={20} color={Colors.text.inverse} />}
+                success={saveSuccess}
               />
             </View>
           </FadeInView>
@@ -684,6 +804,34 @@ const styles = StyleSheet.create({
     fontWeight: Typography.fontWeight.bold,
     color: Colors.info.main,
     fontFamily: Typography.fontFamily.bold,
+  },
+
+  // Save Button
+  saveButton: {
+    borderRadius: BorderRadius.lg,
+    height: 56, // Fixed height for consistent animation
+    width: '100%',
+    overflow: 'hidden',
+    ...Shadows.md,
+  },
+  saveButtonContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonContentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonIcon: {
+    marginRight: 8,
+  },
+  saveButtonText: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text.inverse,
+    fontFamily: Typography.fontFamily.medium,
   },
 
   actionContainer: {
