@@ -12,8 +12,15 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     rm -rf ~/.cache/pip/*
 
 # Copy application code
-COPY . .
-
+COPY app ./app
+COPY migrations ./migrations
+COPY entrypoint.sh ./entrypoint.sh
+COPY manage.py ./manage.py
+COPY check_admin.py ./check_admin.py
+COPY VERSION ./VERSION
+COPY requirements.txt ./requirements.txt
+COPY wsgi.py ./wsgi.py
+COPY LICENSE ./LICENSE
 # Set environment variables
 ENV FLASK_APP=wsgi.py
 ENV FLASK_DEBUG=1
