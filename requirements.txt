@@ -23,8 +23,8 @@ idna==3.7
 charset-normalizer>=3.0.0
 pytz
 python-dateutil
-requests>=2.31.0
+requests>=2.32.0
 packaging>=21.0
 pyotp==2.9.0
 qrcode==7.4.2
-Pillow==10.3.0
+Pillow>=10.4.0
