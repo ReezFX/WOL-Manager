@@ -1,11 +1,33 @@
-# Updated Dockerfile
-
-FROM python:3.8
+FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY app ./app
-COPY migrations ./migrations
-COPY entrypoint.sh ./entrypoint.sh
+# Install Redis and ping utilities
+RUN apt-get update && apt-get install -y --no-install-recommends redis-server iputils-ping && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Other instructions remain the same
+# Copy requirements first for better caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install gunicorn && \
+    rm -rf ~/.cache/pip/*
+
+# Copy application code
+COPY . .
+
+# Set environment variables
+ENV FLASK_APP=wsgi.py
+ENV FLASK_DEBUG=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONOPTIMIZE=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+
+# Expose the port the app will run on
+EXPOSE 8008
+
+# Command to run the application
+# Make entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
+
+# Use entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]
