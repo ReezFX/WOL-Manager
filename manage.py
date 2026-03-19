@@ -10,11 +10,11 @@ from logging.handlers import RotatingFileHandler
 from flask_migrate import Migrate
 from sqlalchemy import text
 from app import create_app, db_session
-from app.models import User, Role, Permission, Base
+from app.models import User, Role, Permission, Base, AppSettings
 from app.auth import hash_password
 from app.logging_config import LOG_DIR, APP_LOG, ERROR_LOG, ACCESS_LOG, LOG_PROFILES, ensure_log_directory
 
-app = create_app(os.getenv('FLASK_ENV') or 'development')
+app = create_app(os.getenv('FLASK_ENV') or 'development', start_background_services=False)
 
 
 @app.shell_context_processor
@@ -502,12 +502,21 @@ def logs_set_level(profile):
         
         # Set the environment variable for future processes
         os.environ['LOG_PROFILE'] = profile
+
+        # Persist profile for application restarts
+        try:
+            settings = AppSettings.get_settings(db_session)
+            settings.log_profile = profile
+            db_session.commit()
+        except Exception as db_error:
+            db_session.rollback()
+            click.echo(f"Warning: Failed to persist logging profile in database: {str(db_error)}", err=True)
         
         click.echo(f"Logging level changed to {profile} profile.")
         
         # Log the level change
         app_logger = logging.getLogger('app')
-        app_logger.info(f"Logging level changed to {profile} profile via CLI command.")
+        app_logger.warning(f"Logging level changed to {profile} profile via CLI command.")
         
     except Exception as e:
         click.echo(f"Error changing logging level: {str(e)}", err=True)

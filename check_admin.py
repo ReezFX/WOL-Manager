@@ -10,7 +10,7 @@ def check_admin_exists():
     Returns 0 if admin exists, 1 if not.
     """
     try:
-        app = create_app()
+        app = create_app(start_background_services=False)
         with app.app_context():
             # Query the database for admin user
             admin_user = db_session.query(User).filter_by(username='admin').first()

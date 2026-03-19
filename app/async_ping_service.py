@@ -6,7 +6,6 @@ from app import db_session
 from app.ping_service import set_host_status
 from app.logging_config import get_logger
 import subprocess
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 logger = get_logger('app.async_ping')
@@ -44,7 +43,7 @@ async def ping_host(ip_address, timeout=2):
         logger.debug(f"Ping failed for {ip_address}: {str(e)}")
         return False
     except Exception as e:
-        logger.error(f"Error pinging {ip_address}: {str(e)}")
+        logger.error(f"Error pinging {ip_address}: {str(e)}", exc_info=True)
         return False
 
 async def check_hosts():
@@ -59,6 +58,8 @@ async def check_hosts():
             if host.ip:
                 task = asyncio.create_task(ping_host(host.ip))
                 ping_tasks.append((host, task))
+
+        logger.debug("Checking host connectivity for %s hosts", len(ping_tasks))
         
         # Wait for all pings to complete
         for host, task in ping_tasks:
@@ -68,11 +69,11 @@ async def check_hosts():
                 set_host_status(host.id, status)
                 logger.debug(f"Host {host.name} ({host.ip}) status: {status}")
             except Exception as e:
-                logger.error(f"Error checking host {host.name}: {str(e)}")
+                logger.error(f"Error checking host {host.name}: {str(e)}", exc_info=True)
                 set_host_status(host.id, "unknown")
         
     except Exception as e:
-        logger.error(f"Error in check_hosts: {str(e)}")
+        logger.error(f"Error in check_hosts: {str(e)}", exc_info=True)
 
 async def ping_service():
     """Main ping service loop"""
@@ -82,7 +83,7 @@ async def ping_service():
             await check_hosts()
             await asyncio.sleep(30)  # Wait 30 seconds before next check
         except Exception as e:
-            logger.error(f"Error in ping service loop: {str(e)}")
+            logger.error(f"Error in ping service loop: {str(e)}", exc_info=True)
             await asyncio.sleep(5)  # Wait 5 seconds on error before retry
 
 def start_ping_service():

@@ -54,7 +54,7 @@ from app import create_app
 from app.models import Base
 from sqlalchemy import inspect, create_engine
 
-app = create_app()
+app = create_app(start_background_services=False)
 with app.app_context():
     # Get database URI from app config
     db_uri = app.config['SQLALCHEMY_DATABASE_URI']
@@ -152,4 +152,3 @@ exec gunicorn \
     --error-logfile - \
     --log-level info \
     "wsgi:app"
-

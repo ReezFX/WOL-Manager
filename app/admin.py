@@ -155,8 +155,19 @@ def list_users():
     """Admin page to list all users"""
 
     request_id = request.headers.get('X-Request-ID', 'N/A')
+    logger.debug(
+        "User list requested: admin_id=%s request_id=%s",
+        current_user.id,
+        request_id
+    )
     access_logger.info("Admin accessing user list page: admin_id=%s, request_id=%s", current_user.id, request_id)
     users = db_session.query(User).all()
+    logger.debug(
+        "User list loaded: admin_id=%s total_users=%s request_id=%s",
+        current_user.id,
+        len(users),
+        request_id
+    )
     form = UserForm()
     # Create a CSRF form for the promote/demote/delete actions
     csrf_form = CSRFForm()
@@ -168,6 +179,13 @@ def list_users():
 def add_user():
     """Add a new user from admin interface"""
     form = UserForm()
+    request_id = request.headers.get('X-Request-ID', 'N/A')
+    logger.debug(
+        "Add user requested: admin_id=%s method=%s request_id=%s",
+        current_user.id,
+        request.method,
+        request_id
+    )
     
     if form.validate_on_submit():
         username = form.username.data
@@ -177,9 +195,8 @@ def add_user():
         existing_user = db_session.query(User).filter_by(username=username).first()
         if existing_user:
 
-            request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.warning("Duplicate user creation attempt: username=%s, admin=%s, request_id=%s", 
-                          username, current_user.username, request_id)
+            access_logger.warning("Duplicate user creation attempt: username=%s, admin=%s, request_id=%s", 
+                                 username, current_user.username, request_id)
             flash(f'Username {username} is already taken.', 'danger')
         else:
             try:
@@ -198,12 +215,10 @@ def add_user():
                     new_user.roles.append(user_role)
                     db_session.commit()
 
-                    request_id = request.headers.get('X-Request-ID', 'N/A')
                     access_logger.info("New user successfully created: username=%s, created_by=%s, request_id=%s", 
                               username, current_user.username, request_id)
                 else:
 
-                    request_id = request.headers.get('X-Request-ID', 'N/A')
                     logger.warning("Role assignment failed: role='user' not found for new user, username=%s, request_id=%s", 
                                   username, request_id)
                     flash(f'Warning: Could not assign role \"user\" - role not found.', 'warning')
@@ -213,17 +228,21 @@ def add_user():
             except SQLAlchemyError as e:
                 db_session.rollback()
 
-                request_id = request.headers.get('X-Request-ID', 'N/A')
                 logger.error("Database error creating user: username=%s, error=%s, request_id=%s", 
                            username, str(e), request_id, exc_info=True)
                 flash(f'Error creating user: {str(e)}', 'danger')
             except ValueError as e:
 
-                request_id = request.headers.get('X-Request-ID', 'N/A')
                 logger.error("Value error creating user: username=%s, error=%s, request_id=%s", 
                            username, str(e), request_id, exc_info=True)
                 flash(str(e), 'danger')
     else:
+        logger.warning(
+            "Add user form validation failed: admin_id=%s errors=%s request_id=%s",
+            current_user.id,
+            dict(form.errors),
+            request_id
+        )
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f'{getattr(form, field).label.text}: {error}', 'danger')
@@ -237,19 +256,24 @@ def promote_user(user_id):
     """Promote a user to admin"""
     # Validate CSRF token
     form = CSRFForm()
+    request_id = request.headers.get('X-Request-ID', 'N/A')
+    logger.debug(
+        "Promote user requested: target_user_id=%s admin_id=%s request_id=%s",
+        user_id,
+        current_user.id,
+        request_id
+    )
     if form.validate_on_submit():
         user = db_session.query(User).get(user_id)
         if user is None:
 
-            request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.warning("Promotion attempt failed: non-existent user, user_id=%s, admin=%s, request_id=%s", 
-                          user_id, current_user.username, request_id)
+            access_logger.warning("Promotion attempt failed: non-existent user, user_id=%s, admin=%s, request_id=%s", 
+                                 user_id, current_user.username, request_id)
             flash(f'User with ID {user_id} not found.', 'danger')
         elif user.id == current_user.id:
 
-            request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.warning("Self-promotion attempt blocked: admin=%s, admin_id=%s, request_id=%s", 
-                          current_user.username, current_user.id, request_id)
+            access_logger.warning("Self-promotion attempt blocked: admin=%s, admin_id=%s, request_id=%s", 
+                                 current_user.username, current_user.id, request_id)
             flash('You cannot change your own role.', 'danger')
         else:
             # Update legacy role column
@@ -262,11 +286,17 @@ def promote_user(user_id):
             
             db_session.commit()
 
-            request_id = request.headers.get('X-Request-ID', 'N/A')
             access_logger.info("User promoted to admin: username=%s, user_id=%s, promoted_by=%s, request_id=%s", 
                       user.username, user_id, current_user.username, request_id)
             flash(f'User {user.username} promoted to admin.', 'success')
     else:
+        access_logger.warning(
+            "Promote user CSRF validation failed: target_user_id=%s admin_id=%s errors=%s request_id=%s",
+            user_id,
+            current_user.id,
+            dict(form.errors),
+            request_id
+        )
         flash('CSRF token validation failed. Please try again.', 'danger')
     return redirect(url_for('admin.list_users'))
 
@@ -277,19 +307,24 @@ def demote_user(user_id):
     """Demote an admin to regular user"""
     # Validate CSRF token
     form = CSRFForm()
+    request_id = request.headers.get('X-Request-ID', 'N/A')
+    logger.debug(
+        "Demote user requested: target_user_id=%s admin_id=%s request_id=%s",
+        user_id,
+        current_user.id,
+        request_id
+    )
     if form.validate_on_submit():
         user = db_session.query(User).get(user_id)
         if user is None:
 
-            request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.warning("Demotion attempt failed: non-existent user, user_id=%s, admin=%s, request_id=%s", 
-                          user_id, current_user.username, request_id)
+            access_logger.warning("Demotion attempt failed: non-existent user, user_id=%s, admin=%s, request_id=%s", 
+                                 user_id, current_user.username, request_id)
             flash(f'User with ID {user_id} not found.', 'danger')
         elif user.id == current_user.id:
 
-            request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.warning("Self-demotion attempt blocked: admin=%s, admin_id=%s, request_id=%s", 
-                          current_user.username, current_user.id, request_id)
+            access_logger.warning("Self-demotion attempt blocked: admin=%s, admin_id=%s, request_id=%s", 
+                                 current_user.username, current_user.id, request_id)
             flash('You cannot change your own role.', 'danger')
         else:
             # Update legacy role column
@@ -307,11 +342,17 @@ def demote_user(user_id):
                 
             db_session.commit()
 
-            request_id = request.headers.get('X-Request-ID', 'N/A')
             access_logger.info("User demoted to regular user: username=%s, user_id=%s, demoted_by=%s, request_id=%s", 
                       user.username, user_id, current_user.username, request_id)
             flash(f'User {user.username} demoted to regular user.', 'success')
     else:
+        access_logger.warning(
+            "Demote user CSRF validation failed: target_user_id=%s admin_id=%s errors=%s request_id=%s",
+            user_id,
+            current_user.id,
+            dict(form.errors),
+            request_id
+        )
         flash('CSRF token validation failed. Please try again.', 'danger')
     return redirect(url_for('admin.list_users'))
 
@@ -322,22 +363,27 @@ def delete_user(user_id):
     """Delete a user from the system"""
     # Validate CSRF token
     form = CSRFForm()
+    request_id = request.headers.get('X-Request-ID', 'N/A')
+    logger.debug(
+        "Delete user requested: target_user_id=%s admin_id=%s request_id=%s",
+        user_id,
+        current_user.id,
+        request_id
+    )
     if form.validate_on_submit():
         # Prevent self-deletion
         if user_id == current_user.id:
 
-            request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.warning("Self-deletion attempt blocked: admin=%s, admin_id=%s, request_id=%s", 
-                          current_user.username, current_user.id, request_id)
+            access_logger.warning("Self-deletion attempt blocked: admin=%s, admin_id=%s, request_id=%s", 
+                                 current_user.username, current_user.id, request_id)
             flash('You cannot delete your own account.', 'danger')
             return redirect(url_for('admin.list_users'))
         
         user = db_session.query(User).get(user_id)
         if user is None:
 
-            request_id = request.headers.get('X-Request-ID', 'N/A')
-            logger.warning("Deletion attempt failed: non-existent user, user_id=%s, admin=%s, request_id=%s", 
-                          user_id, current_user.username, request_id)
+            access_logger.warning("Deletion attempt failed: non-existent user, user_id=%s, admin=%s, request_id=%s", 
+                                 user_id, current_user.username, request_id)
             flash(f'User with ID {user_id} not found.', 'danger')
         else:
             try:
@@ -363,11 +409,17 @@ def delete_user(user_id):
             except SQLAlchemyError as e:
                 db_session.rollback()
 
-                request_id = request.headers.get('X-Request-ID', 'N/A')
                 logger.error("Database error deleting user: user_id=%s, error=%s, request_id=%s", 
                            user_id, str(e), request_id, exc_info=True)
                 flash(f'Error deleting user: {str(e)}', 'danger')
     else:
+        access_logger.warning(
+            "Delete user CSRF validation failed: target_user_id=%s admin_id=%s errors=%s request_id=%s",
+            user_id,
+            current_user.id,
+            dict(form.errors),
+            request_id
+        )
         flash('CSRF token validation failed. Please try again.', 'danger')
     
     return redirect(url_for('admin.list_users'))
@@ -378,15 +430,28 @@ def delete_user(user_id):
 def edit_permissions(user_id):
     """Edit granular permissions for a user"""
     request_id = request.headers.get('X-Request-ID', 'N/A')
+    access_logger.info(
+        "Permission editor accessed: target_user_id=%s admin_id=%s method=%s request_id=%s",
+        user_id,
+        current_user.id,
+        request.method,
+        request_id
+    )
     user = db_session.query(User).get(user_id)
     if user is None:
-        logger.warning("Attempted to edit permissions for non-existent user ID: %s by admin: %s, request_id=%s", 
-                     user_id, current_user.username, request_id)
+        access_logger.warning("Attempted to edit permissions for non-existent user ID: %s by admin: %s, request_id=%s", 
+                             user_id, current_user.username, request_id)
         flash(f'User with ID {user_id} not found.', 'danger')
         return redirect(url_for('admin.list_users'))
     
     # Get all available permissions from the database
     all_permissions = db_session.query(Permission).order_by(Permission.category, Permission.name).all()
+    logger.debug(
+        "Permission editor data loaded: target_user_id=%s permission_count=%s request_id=%s",
+        user_id,
+        len(all_permissions),
+        request_id
+    )
     
     # Group permissions by category for better UX
     categorized_permissions = {}
@@ -403,9 +468,13 @@ def edit_permissions(user_id):
     
     if form.validate_on_submit():
         try:
-            request_id = request.headers.get('X-Request-ID', 'N/A')
-            access_logger.info("Updating permissions for user %s (ID: %s) by admin %s", 
-                      user.username, user_id, current_user.username)
+            access_logger.info(
+                "Updating permissions for user %s (ID: %s) by admin %s, request_id=%s",
+                user.username,
+                user_id,
+                current_user.username,
+                request_id
+            )
             # Create a permissions dictionary based on the form data
             updated_permissions = {}
             
@@ -419,8 +488,13 @@ def edit_permissions(user_id):
             # Update the user's permissions
             user.permissions = updated_permissions
             db_session.commit()
-            access_logger.info("Permissions updated successfully for user %s (ID: %s) by admin %s", 
-                      user.username, user_id, current_user.username)
+            access_logger.info(
+                "Permissions updated successfully for user %s (ID: %s) by admin %s, request_id=%s",
+                user.username,
+                user_id,
+                current_user.username,
+                request_id
+            )
             flash(f'Permissions for {user.username} have been updated successfully.', 'success')
             return redirect(url_for('admin.list_users'))
         except SQLAlchemyError as e:
@@ -429,6 +503,14 @@ def edit_permissions(user_id):
             logger.error("Database error updating permissions: user_id=%s, error=%s, request_id=%s", 
                        user_id, str(e), request_id, exc_info=True)
             flash(f'Error updating permissions: {str(e)}', 'danger')
+    elif request.method == 'POST':
+        access_logger.warning(
+            "Edit permissions form validation failed: target_user_id=%s admin_id=%s errors=%s request_id=%s",
+            user_id,
+            current_user.id,
+            dict(form.errors),
+            request_id
+        )
     
     return render_template(
         'admin/edit_permissions.html', 
@@ -445,6 +527,7 @@ def settings():
     """Admin page to manage application settings"""
 
     request_id = request.headers.get('X-Request-ID', 'N/A')
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     access_logger.info("Admin accessing application settings: admin=%s, admin_id=%s, request_id=%s", 
               current_user.username, current_user.id, request_id)
     form = AppSettingsForm()
@@ -454,6 +537,14 @@ def settings():
     
     # Get current LOG_PROFILE from environment
     current_log_profile = os.environ.get('LOG_PROFILE', 'MEDIUM')
+    logger.debug(
+        "Settings page loaded: admin_id=%s method=%s runtime_profile=%s persisted_profile=%s request_id=%s",
+        current_user.id,
+        request.method,
+        current_log_profile,
+        current_settings.log_profile if hasattr(current_settings, 'log_profile') else 'MEDIUM',
+        request_id
+    )
     
     if request.method == 'GET':
         # Populate form with current settings
@@ -467,29 +558,62 @@ def settings():
     
     if form.validate_on_submit():
         try:
-            access_logger.info("Admin %s updating application settings", current_user.username)
+            requested_profile = (form.log_profile.data or 'MEDIUM').upper()
+            current_runtime_profile = os.environ.get(
+                'LOG_PROFILE',
+                (current_settings.log_profile if hasattr(current_settings, 'log_profile') else 'MEDIUM')
+            ).upper()
+            profile_changed = requested_profile != current_runtime_profile
+
+            access_logger.info(
+                "Admin %s updating application settings, request_id=%s",
+                current_user.username,
+                request_id
+            )
             current_settings.min_password_length = form.min_password_length.data
             current_settings.require_special_characters = form.require_special_characters.data
             current_settings.require_numbers = form.require_numbers.data
             current_settings.password_expiration_days = form.password_expiration_days.data
             current_settings.session_timeout_minutes = form.session_timeout_minutes.data
             current_settings.max_concurrent_sessions = form.max_concurrent_sessions.data
-            current_settings.log_profile = form.log_profile.data
-            
-            # Update the environment variable
-            os.environ['LOG_PROFILE'] = form.log_profile.data
-            
-            # Reload the logging configuration to apply changes immediately
-            configure_logging()
-            
+            current_settings.log_profile = requested_profile
+
             db_session.commit()
+
+            # Update runtime logging profile and apply changes immediately.
+            os.environ['LOG_PROFILE'] = requested_profile
+            configure_logging(emit_profile_change_log=False)
+
+            if profile_changed:
+                logging.getLogger('app').warning(
+                    "Logging profile changed: %s -> %s via admin settings by %s (id: %s)",
+                    current_runtime_profile,
+                    requested_profile,
+                    current_user.username,
+                    current_user.id
+                )
+            else:
+                logger.debug(
+                    "Logging profile unchanged during settings update: profile=%s admin_id=%s request_id=%s",
+                    requested_profile,
+                    current_user.id,
+                    request_id
+                )
+
+            access_logger.info(
+                "Application settings updated successfully: admin_id=%s profile=%s profile_changed=%s request_id=%s",
+                current_user.id,
+                requested_profile,
+                profile_changed,
+                request_id
+            )
             
             # Check if request is AJAX
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if is_ajax:
                 return jsonify({
                     'success': True, 
                     'message': 'Application settings have been updated successfully.',
-                    'current_log_profile': form.log_profile.data
+                    'current_log_profile': requested_profile
                 })
             
             # For regular requests, continue with flash message and redirect
@@ -498,9 +622,16 @@ def settings():
             return redirect(url_for('admin.settings', success=1))
         except SQLAlchemyError as e:
             db_session.rollback()
+            logger.error(
+                "Database error updating settings: admin_id=%s request_id=%s error=%s",
+                current_user.id,
+                request_id,
+                str(e),
+                exc_info=True
+            )
             
             # Check if request is AJAX
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if is_ajax:
                 return jsonify({'success': False, 'message': f'Error updating settings: {str(e)}'})
             
             # For regular requests, continue with flash message
@@ -514,12 +645,18 @@ def settings():
             errors[field_label] = field_errors
             
             # Add flash messages for regular requests
-            if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+            if not is_ajax:
                 for error in field_errors:
                     flash(f'{field_label}: {error}', 'danger')
+        logger.warning(
+            "Settings form validation failed: admin_id=%s errors=%s request_id=%s",
+            current_user.id,
+            errors,
+            request_id
+        )
         
         # Return JSON response for AJAX requests
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if is_ajax:
             return jsonify({'success': False, 'errors': errors})
     
     return render_template('admin/settings.html', form=form, current_log_profile=current_log_profile)
@@ -530,6 +667,12 @@ def settings():
 @admin_required
 def api_check_update():
     """API endpoint for manually triggering update checks"""
+    request_id = request.headers.get('X-Request-ID', 'N/A')
+    logger.info(
+        "Manual update check requested: admin_id=%s request_id=%s",
+        current_user.id,
+        request_id
+    )
     try:
         import requests
         from packaging import version
@@ -543,6 +686,11 @@ def api_check_update():
         if os.path.exists(version_file):
             with open(version_file, 'r', encoding='utf-8') as f:
                 local_version = f.read().strip()
+        logger.debug(
+            "Manual update check local version loaded: local_version=%s request_id=%s",
+            local_version,
+            request_id
+        )
         
         # Fetch remote version
         remote_version = None
@@ -557,8 +705,19 @@ def api_check_update():
                 remote_version = response.text.strip()
             else:
                 check_error = f"Failed to fetch remote version (HTTP {response.status_code})"
+                logger.warning(
+                    "Manual update check remote fetch returned non-200: status=%s request_id=%s",
+                    response.status_code,
+                    request_id
+                )
         except Exception as e:
             check_error = f"Network error: {str(e)}"
+            logger.warning(
+                "Manual update check network failure: error=%s request_id=%s",
+                str(e),
+                request_id,
+                exc_info=True
+            )
         
         # Compare versions
         update_available = False
@@ -567,6 +726,13 @@ def api_check_update():
                 update_available = version.parse(remote_version) > version.parse(local_version)
             except Exception as e:
                 check_error = f"Version comparison error: {str(e)}"
+                logger.warning(
+                    "Manual update check version comparison failed: local=%s remote=%s request_id=%s",
+                    local_version,
+                    remote_version,
+                    request_id,
+                    exc_info=True
+                )
         
         # Store results in database
         try:
@@ -577,11 +743,27 @@ def api_check_update():
             settings.last_update_check = datetime.utcnow()
             settings.check_error = check_error
             db_session.commit()
+            logger.debug(
+                "Manual update check results persisted: update_available=%s request_id=%s",
+                update_available,
+                request_id
+            )
         except Exception as e:
-            logger.error(f"Error storing update check results: {str(e)}", exc_info=True)
+            logger.error(
+                "Error storing manual update check results: request_id=%s error=%s",
+                request_id,
+                str(e),
+                exc_info=True
+            )
             db_session.rollback()
         
-        access_logger.info(f"Manual update check triggered by admin {current_user.username}")
+        access_logger.info(
+            "Manual update check completed: admin=%s admin_id=%s request_id=%s update_available=%s",
+            current_user.username,
+            current_user.id,
+            request_id,
+            update_available
+        )
         
         return jsonify({
             'success': True,
@@ -597,7 +779,13 @@ def api_check_update():
         })
     
     except Exception as e:
-        logger.error(f"Error during manual update check: {str(e)}", exc_info=True)
+        logger.error(
+            "Error during manual update check: admin_id=%s request_id=%s error=%s",
+            current_user.id,
+            request_id,
+            str(e),
+            exc_info=True
+        )
         return jsonify({
             'success': False,
             'message': f'Error checking for updates: {str(e)}'
@@ -609,12 +797,24 @@ def api_check_update():
 @admin_required
 def api_version_info():
     """API endpoint for getting current version information"""
+    request_id = request.headers.get('X-Request-ID', 'N/A')
+    logger.debug(
+        "Version info requested: admin_id=%s request_id=%s",
+        current_user.id,
+        request_id
+    )
     try:
         from app.update_checker import get_update_checker
         update_checker = get_update_checker()
         
         # Get current status without forcing a new check
         status = update_checker.get_status()
+        logger.debug(
+            "Version info resolved: admin_id=%s request_id=%s update_available=%s",
+            current_user.id,
+            request_id,
+            status.get('update_available')
+        )
         
         return jsonify({
             'success': True,
@@ -629,7 +829,13 @@ def api_version_info():
         })
     
     except Exception as e:
-        logger.error(f"Error getting version info: {str(e)}", exc_info=True)
+        logger.error(
+            "Error getting version info: admin_id=%s request_id=%s error=%s",
+            current_user.id,
+            request_id,
+            str(e),
+            exc_info=True
+        )
         return jsonify({
             'success': False,
             'message': f'Error getting version information: {str(e)}'
@@ -654,6 +860,8 @@ def read_log_file(filename, log_level='all', start_date=None, end_date=None, sea
     """
     request_id = request.headers.get('X-Request-ID', 'N/A')
     user_id = current_user.id if current_user and hasattr(current_user, 'id') else 'anonymous'
+    processing_started_at = datetime.now()
+    filters_active = bool(search_text or log_level != 'all' or start_date or end_date)
     
     # Use structured logging format with consistent fields
     logger.debug("Reading log file started", extra={
@@ -661,6 +869,7 @@ def read_log_file(filename, log_level='all', start_date=None, end_date=None, sea
         'user_id': user_id,
         'log_filename': filename,
         'log_level': log_level,
+        'filters_active': filters_active,
         'page': page,
         'per_page': per_page,
         'chunk_size': chunk_size
@@ -886,9 +1095,10 @@ def read_log_file(filename, log_level='all', start_date=None, end_date=None, sea
                 'log_filename': filename,
                 'total_entries': total_entries,
                 'filtered_entries': len(filtered_logs),
+                'returned_entries': len(paginated_logs),
                 'page': page,
                 'per_page': per_page,
-                'processing_time_ms': int((datetime.now() - datetime.now()).total_seconds() * 1000)  # This would need a start time captured at beginning
+                'processing_time_ms': int((datetime.now() - processing_started_at).total_seconds() * 1000)
             }
         )
         
@@ -969,6 +1179,7 @@ def read_log_file(filename, log_level='all', start_date=None, end_date=None, sea
 def view_logs():
     """Admin page to view system logs with filtering and pagination"""
     request_id = request.headers.get('X-Request-ID', 'N/A')
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     start_time = datetime.now()
     log_context = {
         'request_id': request_id,
@@ -985,22 +1196,34 @@ def view_logs():
     form = LogFilterForm()
     
     # Handle form submission
-    if form.validate_on_submit():
-        # Redirect to GET with filter parameters to make the page bookmarkable
-        params = {
-            'file': form.log_type.data,
-            'level': form.log_level.data,
-            'page': form.page.data or 1
-        }
-        
-        if form.start_date.data:
-            params['start_date'] = form.start_date.data.strftime('%Y-%m-%d')
-        if form.end_date.data:
-            params['end_date'] = form.end_date.data.strftime('%Y-%m-%d')
-        if form.search_text.data:
-            params['search_text'] = form.search_text.data
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            # Redirect to GET with filter parameters to make the page bookmarkable
+            params = {
+                'file': form.log_type.data,
+                'level': form.log_level.data,
+                'page': form.page.data or 1
+            }
             
-        return redirect(url_for('admin.view_logs', **params))
+            if form.start_date.data:
+                params['start_date'] = form.start_date.data.strftime('%Y-%m-%d')
+            if form.end_date.data:
+                params['end_date'] = form.end_date.data.strftime('%Y-%m-%d')
+            if form.search_text.data:
+                params['search_text'] = form.search_text.data
+            logger.debug(
+                "Log view filters submitted: admin_id=%s params=%s request_id=%s",
+                current_user.id,
+                params,
+                request_id
+            )
+            return redirect(url_for('admin.view_logs', **params))
+        logger.warning(
+            "Log view form validation failed: admin_id=%s errors=%s request_id=%s",
+            current_user.id,
+            dict(form.errors),
+            request_id
+        )
     
     # Process GET parameters (including after redirect from POST)
     selected_file = request.args.get('file', 'app.log')
@@ -1018,8 +1241,28 @@ def view_logs():
         selected_file = file_mapping[selected_file]
         
     log_level = request.args.get('level', 'all')
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 100))  # Default 100 lines per page
+    raw_page = request.args.get('page', 1)
+    raw_per_page = request.args.get('per_page', 100)
+    try:
+        page = max(1, int(raw_page))
+    except (TypeError, ValueError):
+        logger.warning(
+            "Invalid page parameter for log view: value=%s admin_id=%s request_id=%s",
+            raw_page,
+            current_user.id,
+            request_id
+        )
+        page = 1
+    try:
+        per_page = max(1, min(int(raw_per_page), 1000))
+    except (TypeError, ValueError):
+        logger.warning(
+            "Invalid per_page parameter for log view: value=%s admin_id=%s request_id=%s",
+            raw_per_page,
+            current_user.id,
+            request_id
+        )
+        per_page = 100
     search_text = request.args.get('search_text', '')
     
     # Parse date parameters
@@ -1031,10 +1274,22 @@ def view_logs():
         if 'end_date' in request.args and request.args.get('end_date').strip():
             end_date = datetime.strptime(request.args.get('end_date'), '%Y-%m-%d').date()
     except ValueError:
+        logger.warning(
+            "Invalid date format in log view filters: start_date=%s end_date=%s request_id=%s",
+            request.args.get('start_date'),
+            request.args.get('end_date'),
+            request_id
+        )
         flash('Invalid date format. Use YYYY-MM-DD.', 'danger')
     
     # Validate file name for security
     if selected_file != 'all' and selected_file not in ALLOWED_LOG_FILES:
+        access_logger.warning(
+            "Invalid log file selection blocked: selected_file=%s admin_id=%s request_id=%s",
+            selected_file,
+            current_user.id,
+            request_id
+        )
         abort(400)
     
     # Populate form with current filter values for display
@@ -1055,6 +1310,7 @@ def view_logs():
         'start_date': start_date.isoformat() if start_date else None,
         'end_date': end_date.isoformat() if end_date else None
     })
+    logger.debug("Log view filters resolved", extra=log_context)
     
     # Initialize common variables for template rendering
     all_log_content = []
@@ -1180,7 +1436,7 @@ def view_logs():
             download_url = url_for('admin.download_log', file=selected_file)
             
             # Check if this is an AJAX request and return JSON response if it is
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if is_ajax:
                 # Ensure log content is properly escaped for HTML
                 escaped_log_content = html.escape(log_content)
                 
@@ -1229,33 +1485,33 @@ def view_logs():
                 end_date=end_date.strftime('%Y-%m-%d') if end_date else None
             )
         else:
-            log_content = "No log files found"
-            logger.info("No log files found for combined view", extra=log_context)
-            
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("Processing single log file request", extra=log_context)
-            
-            log_content, total_entries, total_pages, current_page = read_log_file(
-                selected_file,
-                log_level=log_level,
-                start_date=start_date,
-                end_date=end_date,
-                search_text=search_text,
-                page=page,
-                per_page=per_page,
-                request=request
-            )
-            
-            # Update pagination with results
-            pagination = {
-                'current_page': current_page,
-                'total_pages': total_pages,
-                'total_entries': total_entries,
-                'has_prev': current_page > 1,
-                'has_next': current_page < total_pages,
-                'prev_page': current_page - 1 if current_page > 1 else None,
-                'next_page': current_page + 1 if current_page < total_pages else None
-            }
+            if selected_file == 'all':
+                log_content = "No log files found"
+                logger.info("No log files found for combined view", extra=log_context)
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("Processing single log file request", extra=log_context)
+                log_content, total_entries, total_pages, current_page = read_log_file(
+                    selected_file,
+                    log_level=log_level,
+                    start_date=start_date,
+                    end_date=end_date,
+                    search_text=search_text,
+                    page=page,
+                    per_page=per_page,
+                    request=request
+                )
+                
+                # Update pagination with results
+                pagination = {
+                    'current_page': current_page,
+                    'total_pages': total_pages,
+                    'total_entries': total_entries,
+                    'has_prev': current_page > 1,
+                    'has_next': current_page < total_pages,
+                    'prev_page': current_page - 1 if current_page > 1 else None,
+                    'next_page': current_page + 1 if current_page < total_pages else None
+                }
             
             # Create parameter sets for pagination links
             pagination_params = {}
@@ -1299,19 +1555,20 @@ def view_logs():
     # Download URL is already generated above in the try block, no need to regenerate
     
     # Check if this is an AJAX request
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    if is_ajax:
         # Improve performance by consolidating debug logs and checking if debug is enabled
         if logger.isEnabledFor(logging.DEBUG):
-            request_id = request.headers.get('X-Request-ID', 'N/A')
             debug_info = {
                 'request_url': request.url,
                 'method': request.method,
-                'headers': dict(request.headers),
+                'request_id': request_id,
+                'remote_addr': request.remote_addr,
+                'user_agent': request.user_agent.string,
+                'requested_with': request.headers.get('X-Requested-With'),
                 'args': dict(request.args),
                 'selected_file': selected_file,
                 'log_level': log_level,
-                'search_text': search_text,
-                'request_id': request_id
+                'search_text': search_text
             }
             logger.debug("Processing AJAX request: %s", json.dumps(debug_info))
         # Ensure log content is properly escaped for HTML
@@ -1341,7 +1598,6 @@ def view_logs():
             json_response = json.dumps(response_data, ensure_ascii=False)
             # Only log if debug is enabled to improve performance
             if logger.isEnabledFor(logging.DEBUG):
-                request_id = request.headers.get('X-Request-ID', 'N/A')
                 logger.debug("Sending JSON response (truncated): response=%s, request_id=%s", 
                            json_response[:200] + "..." if len(json_response) > 200 else json_response,
                            request_id)
@@ -1351,7 +1607,6 @@ def view_logs():
                 mimetype='application/json'
             )
         except Exception as e:
-            request_id = request.headers.get('X-Request-ID', 'N/A')
             logger.error("Error creating JSON response: error=%s, request_id=%s", 
                        str(e), request_id, exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
@@ -1413,6 +1668,7 @@ def download_log():
             'search_text': search_text,
             'log_level': log_level
         })
+        logger.debug("Log download parameters resolved", extra=log_context)
         
         # Parse date parameters
         start_date = None
@@ -1426,7 +1682,7 @@ def download_log():
                 log_context['end_date'] = end_date.isoformat()
         except ValueError as e:
             error_msg = "Invalid date format in download request"
-            logger.error(error_msg, extra={**log_context, 'error': str(e), 'error_type': 'ValueError'}, exc_info=True)
+            logger.warning(error_msg, extra={**log_context, 'error': str(e), 'error_type': 'ValueError'})
             flash('Invalid date format. Use YYYY-MM-DD.', 'danger')
             return redirect(url_for('admin.view_logs'))
         
@@ -1438,7 +1694,7 @@ def download_log():
             logger.info("Download of 'all' logs requested (defaulting to app.log)", extra=log_context)
         elif file_name not in ALLOWED_LOG_FILES:
             error_msg = f"Invalid log file download attempt: {file_name}"
-            logger.warning(error_msg, extra=log_context)
+            access_logger.warning(error_msg, extra=log_context)
             flash(f'Invalid log file: {file_name}', 'danger')
             return redirect(url_for('admin.view_logs'))
         

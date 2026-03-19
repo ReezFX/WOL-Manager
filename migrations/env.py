@@ -92,7 +92,7 @@ except Exception as e:
     # Handle missing formatters section in config file
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
     logger = logging.getLogger('alembic.env')
-    logger.warning("Error loading config file for logging configuration: %s", e)
+    logger.info("Using fallback migration logging configuration (%s)", e)
 
 logger = logging.getLogger('alembic.env')
 

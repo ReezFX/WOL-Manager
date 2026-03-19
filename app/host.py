@@ -26,7 +26,7 @@ MAC_PATTERN = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
 def list_hosts():
     """List all hosts with pagination"""
     # Log access to host list
-    access_logger.info(f"Host list accessed by user: {current_user.username} (id: {current_user.id})")
+    logger.debug("Host list endpoint accessed by user_id=%s", current_user.id)
     try:
         page = request.args.get('page', 1, type=int)
         per_page = current_app.config.get('HOSTS_PER_PAGE', 10)
@@ -79,7 +79,7 @@ def list_hosts():
                     # If no visible hosts found, just filter by created_by
                     query = query.filter(created_by_filter)
             except Exception as e:
-                logger.error(f"Error filtering hosts by visible_to_roles: {str(e)}")
+                logger.error(f"Error filtering hosts by visible_to_roles: {str(e)}", exc_info=True)
                 # Fallback to just showing hosts created by the user
                 query = query.filter(created_by_filter)
                 flash(f"Limited visibility due to an error: {str(e)}", "warning")
@@ -94,7 +94,7 @@ def list_hosts():
             hosts = query.all()
             logger.debug(f"Found {total} hosts for user {current_user.id}, showing page {page}")
         except Exception as e:
-            logger.error(f"Error applying pagination: {str(e)}")
+            logger.error(f"Error applying pagination: {str(e)}", exc_info=True)
             total = 0
             hosts = []
             flash(f"An error occurred while retrieving hosts: {str(e)}", "danger")
@@ -177,7 +177,7 @@ def list_hosts():
         
         return render_template('host/host_list.html', hosts=hosts, pagination=pagination, csrf_form=csrf_form)
     except Exception as e:
-        logger.error(f"Unexpected error in list_hosts: {str(e)}")
+        logger.error(f"Unexpected error in list_hosts: {str(e)}", exc_info=True)
         flash(f"An unexpected error occurred: {str(e)}", "danger")
         csrf_form = CSRFForm()
         # No hosts to fetch statuses for in the error case
@@ -187,6 +187,7 @@ def list_hosts():
 @login_required
 def add_host():
     """Add a new host"""
+    logger.debug("Add host route called: user=%s user_id=%s method=%s", current_user.username, current_user.id, request.method)
     # Check if user has permission to add hosts
     if not current_user.has_permission('create_host'):
         access_logger.warning(f"Permission denied: User {current_user.username} (id: {current_user.id}) attempted to add a host without permission")
@@ -220,6 +221,13 @@ def add_host():
         # Check if a host with the same MAC address already exists
         existing_host = db_session.query(Host).filter_by(mac_address=form.mac_address.data).first()
         if existing_host:
+            access_logger.warning(
+                "Duplicate host creation blocked: mac_address=%s user=%s user_id=%s existing_host_id=%s",
+                form.mac_address.data,
+                current_user.username,
+                current_user.id,
+                existing_host.id
+            )
             flash(f'A host with MAC address {form.mac_address.data} already exists', 'danger')
             return render_template('host/host_form.html', form=form, title='Add Host', roles=roles)
         
@@ -232,7 +240,7 @@ def add_host():
         if form.public_access.data:
             from app.utils import generate_unique_token
             public_access_token = generate_unique_token(db_session)
-            access_logger.info(f"Public access enabled for new host '{form.name.data}' by user: {current_user.username}")
+            logger.info("Public access enabled for new host '%s' by user_id=%s", form.name.data, current_user.id)
 
         new_host = Host(
             name=form.name.data,
@@ -247,12 +255,29 @@ def add_host():
         try:
             db_session.add(new_host)
             db_session.commit()
-            access_logger.info(f"Host '{form.name.data}' (MAC: {form.mac_address.data}) created by user: {current_user.username} (id: {current_user.id})")
+            logger.info(
+                "Host created: host_name=%s mac=%s user=%s user_id=%s",
+                form.name.data,
+                form.mac_address.data,
+                current_user.username,
+                current_user.id
+            )
             flash(f'Host {form.name.data} added successfully', 'success')
             return redirect(url_for('host.list_hosts'))
         except Exception as e:
             db_session.rollback()
+            logger.error(
+                "Error adding host: name=%s mac=%s user=%s user_id=%s error=%s",
+                form.name.data,
+                form.mac_address.data,
+                current_user.username,
+                current_user.id,
+                str(e),
+                exc_info=True
+            )
             flash(f'Error adding host: {str(e)}', 'danger')
+    elif request.method == 'POST':
+        logger.debug("Add host form validation failed for user_id=%s", current_user.id)
     
     return render_template('host/host_form.html', form=form, title='Add Host', roles=roles)
 
@@ -260,9 +285,11 @@ def add_host():
 @login_required
 def edit_host(host_id):
     """Edit an existing host"""
+    logger.debug("Edit host route called: host_id=%s user_id=%s method=%s", host_id, current_user.id, request.method)
     host = db_session.query(Host).get(host_id)
     
     if not host:
+        access_logger.warning("Edit host requested for non-existent host: host_id=%s user_id=%s", host_id, current_user.id)
         flash('Host not found', 'danger')
         return redirect(url_for('host.list_hosts'))
     
@@ -316,19 +343,45 @@ def edit_host(host_id):
                     host.public_access = True
                     host.public_access_token = generate_unique_token(db_session)
                     db_session.commit()  # Commit immediately after token generation
-                    access_logger.info(f"Public access enabled for host {host.id} '{host.name}' by user: {current_user.username}")
+                    logger.info(
+                        "Public access enabled for host_id=%s host_name=%s by user_id=%s",
+                        host.id,
+                        host.name,
+                        current_user.id
+                    )
                 elif not form.public_access.data and host.public_access:
                     host.public_access = False
                     host.public_access_token = None
-                    access_logger.info(f"Public access disabled for host {host.id} '{host.name}' by user: {current_user.username}")
+                    logger.info(
+                        "Public access disabled for host_id=%s host_name=%s by user_id=%s",
+                        host.id,
+                        host.name,
+                        current_user.id
+                    )
             
             db_session.commit()
-            access_logger.info(f"Host {host.id} '{host.name}' updated by user: {current_user.username} (id: {current_user.id})")
+            logger.info(
+                "Host updated: host_id=%s host_name=%s user=%s user_id=%s",
+                host.id,
+                host.name,
+                current_user.username,
+                current_user.id
+            )
             flash(f'Host {host.name} updated successfully', 'success')
             return redirect(url_for('host.list_hosts'))
         except Exception as e:
             db_session.rollback()
+            logger.error(
+                "Error updating host: host_id=%s user=%s user_id=%s error=%s",
+                host_id,
+                current_user.username,
+                current_user.id,
+                str(e),
+                exc_info=True
+            )
             flash(f'Error updating host: {str(e)}', 'danger')
+    elif request.method == 'POST':
+        logger.debug("Edit host form validation failed: host_id=%s user_id=%s", host_id, current_user.id)
     
     return render_template('host/host_form.html', form=form, title='Edit Host', roles=roles)
 
@@ -336,6 +389,7 @@ def edit_host(host_id):
 @login_required
 def delete_host(host_id):
     """Delete a host"""
+    logger.debug("Delete host route called: host_id=%s user_id=%s ajax=%s", host_id, current_user.id, request.headers.get('X-Requested-With') == 'XMLHttpRequest')
     # Get host name before deletion for logging
     host_name = None
     
@@ -347,6 +401,7 @@ def delete_host(host_id):
         host = db_session.query(Host).filter_by(id=host_id).first()
         
         if not host:
+            access_logger.warning("Delete host requested for non-existent host: host_id=%s user_id=%s", host_id, current_user.id)
             if is_ajax:
                 return {'error': 'Host not found'}, 404
             flash('Host not found', 'danger')
@@ -389,13 +444,20 @@ def delete_host(host_id):
         if verification:
             # If host still exists, there's a serious issue
             db_session.rollback()
-            access_logger.error(f"Failed to delete host {host_id} '{host_name}' - still exists after commit")
+            logger.error("Failed to delete host %s '%s' - still exists after commit", host_id, host_name)
             if is_ajax:
                 return {'error': 'Database operation failed'}, 500
             flash(f'Error deleting host: Database operation failed', 'danger')
             return redirect(url_for('host.list_hosts'))
         
-        access_logger.info(f"Host {host_id} '{host_name}' deleted by user: {current_user.username} (id: {current_user.id})")
+        logger.info(
+            "Host deleted: host_id=%s host_name=%s user=%s user_id=%s",
+            host_id,
+            host_name,
+            current_user.username,
+            current_user.id
+        )
+        logger.debug("Delete host successful: host_id=%s associated_logs_deleted=%s", host_id, len(wol_logs))
         
         # Return success response for AJAX
         if is_ajax:
@@ -404,7 +466,7 @@ def delete_host(host_id):
         flash(f'Host {host_name} deleted successfully', 'success')
     except Exception as e:
         db_session.rollback()
-        access_logger.error(f"Exception while deleting host {host_id}: {str(e)}")
+        logger.error(f"Exception while deleting host {host_id}: {str(e)}", exc_info=True)
         if is_ajax:
             return {'error': f'Error deleting host: {str(e)}'}, 500
         flash(f'Error deleting host: {str(e)}', 'danger')
@@ -433,6 +495,12 @@ def view_host(host_id):
     host = db_session.query(Host).get(host_id)
     
     if not host:
+        access_logger.warning(
+            "Host detail view requested for non-existent host: host_id=%s user=%s user_id=%s",
+            host_id,
+            current_user.username,
+            current_user.id
+        )
         flash('Host not found', 'danger')
         return redirect(url_for('host.list_hosts'))
     
@@ -441,7 +509,7 @@ def view_host(host_id):
         flash('You do not have permission to view this host', 'danger')
         return redirect(url_for('host.list_hosts'))
     
-    access_logger.info(f"Host {host.id} '{host.name}' viewed by user: {current_user.username} (id: {current_user.id})")
+    logger.info("Host viewed: host_id=%s host_name=%s user_id=%s", host.id, host.name, current_user.id)
     
     # Generate public access URL if enabled
     public_access_url = None
@@ -474,7 +542,7 @@ def get_role_names(role_ids):
         roles = db_session.query(Role).filter(Role.id.in_(int_role_ids)).all()
         return [role.name for role in roles]
     except Exception as e:
-        logger.error(f"Error resolving role names: {str(e)}")
+        logger.error(f"Error resolving role names: {str(e)}", exc_info=True)
         return []
         
 @host.context_processor
@@ -525,9 +593,10 @@ def get_host_statuses():
                 for host in hosts
             ]
         }
+        logger.debug("Host status API response prepared: user_id=%s host_count=%s", current_user.id, len(response_data["statuses"]))
         
         return jsonify(response_data)
         
     except Exception as e:
-        logger.error(f"Error getting host statuses: {str(e)}")
+        logger.error(f"Error getting host statuses: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500

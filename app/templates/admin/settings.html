@@ -265,19 +265,27 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault(); // Prevent default form submission
             
             const submitButton = this.querySelector('button[type="submit"]');
-            const saveContainer = document.getElementById('save-animation-container');
-            
-            // Add loading class to button
-            submitButton.classList.add('loading');
-            const originalIcon = submitButton.querySelector('i').className;
-            submitButton.querySelector('i').className = 'ph ph-spinner';
-            
+            const iconEl = submitButton ? submitButton.querySelector('i') : null;
+            const originalIcon = iconEl ? iconEl.className : null;
+
+            const setLoadingState = (isLoading) => {
+                if (!submitButton) return;
+
+                if (typeof window.setButtonLoading === 'function') {
+                    window.setButtonLoading(submitButton, isLoading);
+                } else {
+                    submitButton.disabled = isLoading;
+                }
+
+                submitButton.classList.toggle('loading', isLoading);
+
+                if (iconEl && originalIcon) {
+                    iconEl.className = isLoading ? 'ph ph-spinner' : originalIcon;
+                }
+            };
+
             // Show loading state
-            if (typeof window.setButtonLoading === 'function') {
-                window.setButtonLoading(submitButton, true);
-            } else {
-                submitButton.disabled = true;
-            }
+            setLoadingState(true);
             
             // Create FormData object
             const formData = new FormData(this);
@@ -299,34 +307,9 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 // Remove loading state
-                submitButton.classList.remove('loading');
-                submitButton.querySelector('i').className = originalIcon;
+                setLoadingState(false);
                 
                 if (data.success) {
-                    // Show success animation
-                    const successHTML = `
-                        <div class="settings-save-animation">
-                            <i class="ph ph-check-circle"></i>
-                            <span>Settings saved successfully!</span>
-                        </div>
-                    `;
-                    
-                    // Temporarily replace button with success message
-                    const originalHTML = saveContainer.innerHTML;
-                    saveContainer.innerHTML = successHTML;
-                    
-                    // Restore button after animation
-                    setTimeout(() => {
-                        saveContainer.innerHTML = originalHTML;
-                        // Re-bind submit handler since we replaced the HTML
-                        const newButton = saveContainer.querySelector('button');
-                        if (newButton) {
-                            newButton.addEventListener('click', function(e) {
-                                settingsForm.dispatchEvent(new Event('submit'));
-                            });
-                        }
-                    }, 3000);
-                    
                     // Show success toast
                     if (typeof window.showToast === 'function') {
                         window.showToast('success', 'Success', 'Settings saved successfully');
@@ -341,8 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } else {
                     // Remove loading state for errors
-                    submitButton.classList.remove('loading');
-                    submitButton.querySelector('i').className = originalIcon;
+                    setLoadingState(false);
                     
                     // Show error messages
                     if (data.errors) {
@@ -364,9 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error:', error);
                 
                 // Reset button state
-                submitButton.classList.remove('loading');
-                submitButton.querySelector('i').className = originalIcon;
-                submitButton.disabled = false;
+                setLoadingState(false);
                 
                 // Show error toast
                 if (typeof window.showToast === 'function') {

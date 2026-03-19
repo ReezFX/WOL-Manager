@@ -62,13 +62,13 @@ def send_magic_packet(mac_address, broadcast_ip='255.255.255.255', port=9):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             sock.sendto(packet, (broadcast_ip, port))
             
-            access_logger.info(f"Wake-on-LAN packet sent successfully to MAC: {mac_address}, broadcast IP: {broadcast_ip}")
+            logger.info("Wake-on-LAN packet sent: mac=%s broadcast_ip=%s", mac_address, broadcast_ip)
         return True
     except ValueError as e:
         logger.warning(f"Invalid MAC address format: {mac_address}, error: {str(e)}")
         return False
     except Exception as e:
-        logger.error(f"Failed to send Wake-on-LAN packet to {mac_address}: {str(e)}")
+        logger.error(f"Failed to send Wake-on-LAN packet to {mac_address}: {str(e)}", exc_info=True)
         return False
 def check_rate_limit(user_id):
     """
@@ -151,6 +151,7 @@ def wake_host(host_id):
         Redirect to the host list or dashboard
     """
     # Check if the user has exceeded the rate limit
+    logger.debug("Wake host requested: host_id=%s user_id=%s", host_id, current_user.id)
     if check_rate_limit(current_user.id):
         access_logger.warning(f"Rate limit exceeded for user {current_user.id} when attempting to wake host {host_id}")
         flash('You have exceeded the rate limit for wake attempts. Please try again later.', 'danger')
@@ -169,7 +170,7 @@ def wake_host(host_id):
         flash('You do not have permission to wake this host.', 'danger')
         return redirect(url_for('host.list_hosts'))
     # Attempt to wake the host
-    access_logger.info(f"Attempting to wake host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
+    logger.info("Wake attempt started: host_id=%s host_name=%s user_id=%s", host_id, host.name, current_user.id)
     
     # Record start time for response time calculation
     start_time = datetime.now()
@@ -178,6 +179,7 @@ def wake_host(host_id):
     
     # Calculate response time in milliseconds
     response_time = int((end_time - start_time).total_seconds() * 1000)
+    logger.debug("Wake host execution completed: host_id=%s user_id=%s success=%s duration_ms=%s", host_id, current_user.id, success, response_time)
     
     # Log the WoL attempt to the database for statistics
     try:
@@ -194,25 +196,25 @@ def wake_host(host_id):
         if success:
             # Update the last_wake_time field
             host.last_wake_time = start_time
-            access_logger.info(f"Successfully sent WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
+            logger.info("Wake attempt succeeded: host_id=%s host_name=%s user_id=%s", host_id, host.name, current_user.id)
             flash(f'Wake-on-LAN packet sent to {host.name} ({host.mac_address}).', 'success')
         else:
-            access_logger.error(f"Failed to send WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
+            logger.error("Wake attempt failed: host_id=%s host_name=%s user_id=%s", host_id, host.name, current_user.id)
             flash(f'Failed to send Wake-on-LAN packet to {host.name}.', 'danger')
         
         # Commit all changes
         db_session.commit()
         
     except Exception as e:
-        logger.error(f"Failed to log WoL attempt for host {host_id}: {str(e)}")
+        logger.error(f"Failed to log WoL attempt for host {host_id}: {str(e)}", exc_info=True)
         db_session.rollback()
         
         # Still show user feedback even if logging fails
         if success:
-            access_logger.info(f"Successfully sent WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
+            logger.info("Wake attempt succeeded (without DB log persistence): host_id=%s host_name=%s user_id=%s", host_id, host.name, current_user.id)
             flash(f'Wake-on-LAN packet sent to {host.name} ({host.mac_address}).', 'success')
         else:
-            access_logger.error(f"Failed to send WOL packet to host {host_id} ({host.name}, {host.mac_address}) by user {current_user.id}")
+            logger.error("Wake attempt failed (without DB log persistence): host_id=%s host_name=%s user_id=%s", host_id, host.name, current_user.id)
             flash(f'Failed to send Wake-on-LAN packet to {host.name}.', 'danger')
     
     # Redirect to the host list
@@ -233,6 +235,7 @@ def wol_send(host_id):
     """
     # Create a CSRF form instance for protection
     csrf_form = CSRFForm()
+    logger.debug("Wake confirmation requested: host_id=%s user_id=%s", host_id, current_user.id)
     
     host = db_session.query(Host).get(host_id)
     if not host:
@@ -270,7 +273,7 @@ def wol_send(host_id):
         flash('You do not have permission to wake this host.', 'danger')
         return redirect(url_for('host.list_hosts'))
     
-    access_logger.info(f"User {current_user.id} accessed wake confirmation page for host {host_id} ({host.name})")
+    logger.debug("Wake confirmation page accessed: host_id=%s user_id=%s", host_id, current_user.id)
     return render_template('wol/wol_send.html', host=host, csrf_form=csrf_form)
 
 
@@ -285,6 +288,7 @@ def view_logs():
     """
     # Logs functionality has been removed
     message = "The logging functionality has been removed from the application."
+    logger.debug("WoL logs page accessed by user_id=%s", current_user.id)
     return render_template('wol/logs.html', message=message, title="Wake-on-LAN Logs")
 
 
@@ -304,7 +308,7 @@ def test_wol():
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    access_logger.info(f"Admin user {current_user.id} accessed WOL test page")
+    logger.debug("WOL test page accessed by admin user_id=%s", current_user.id)
     
     # Create a CSRF form instance for protection
     form = CSRFForm()
@@ -315,6 +319,7 @@ def test_wol():
     if request.method == 'POST':
         mac_address = request.form.get('mac_address', '')
         broadcast = request.form.get('broadcast', '255.255.255.255')
+        logger.debug("WoL test POST received: user_id=%s mac_provided=%s broadcast=%s", current_user.id, bool(mac_address), broadcast)
         
         # Validate MAC address format
         if not is_valid_mac(mac_address):
@@ -331,15 +336,15 @@ def test_wol():
             return render_template('wol/test.html', mac_error=mac_error, ip_error=ip_error, mac_address=mac_address, form=form)
         
         # Attempt to wake the host
-        access_logger.info(f"Admin user {current_user.id} attempting to send test WOL packet to MAC: {mac_address}, broadcast: {broadcast}")
+        logger.info("WOL test attempt started: user_id=%s mac=%s broadcast=%s", current_user.id, mac_address, broadcast)
         success = send_magic_packet(mac_address, broadcast_ip=broadcast)
         
         # Show a success or error message
         if success:
-            access_logger.info(f"Successfully sent test WOL packet to MAC: {mac_address}, broadcast: {broadcast} by admin user {current_user.id}")
+            logger.info("WOL test attempt succeeded: user_id=%s mac=%s broadcast=%s", current_user.id, mac_address, broadcast)
             flash(f'Wake-on-LAN packet sent to {mac_address} using broadcast address {broadcast}.', 'success')
         else:
-            access_logger.error(f"Failed to send test WOL packet to MAC: {mac_address}, broadcast: {broadcast} by admin user {current_user.id}")
+            logger.error("WOL test attempt failed: user_id=%s mac=%s broadcast=%s", current_user.id, mac_address, broadcast)
             flash(f'Failed to send Wake-on-LAN packet to {mac_address}.', 'danger')
     
     return render_template('wol/test.html', mac_error=mac_error, ip_error=ip_error, title="Test Wake-on-LAN", form=form)

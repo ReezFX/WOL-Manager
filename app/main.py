@@ -74,7 +74,7 @@ def dashboard():
         # Use Flask-Login's current_user
         user = current_user
     
-    access_logger.info(f'Dashboard accessed by user: {user.username} (id: {user.id})')
+    logger.info("Dashboard rendered for user: username=%s user_id=%s", user.username, user.id)
     # Get hosts based on user role
     if user.is_admin:
         hosts = db_session.query(Host).all()
@@ -120,7 +120,7 @@ def dashboard():
             # Fallback to just showing hosts created by the user
             hosts = db_session.query(Host).filter(created_by_filter).all()
             error_msg = f"Error in host retrieval for dashboard: {str(e)}"
-            logger.error(error_msg)
+            logger.error(error_msg, exc_info=True)
             flash(f"Limited dashboard visibility due to an error: {str(e)}", "warning")
     
     # Logs functionality has been removed
@@ -133,6 +133,13 @@ def dashboard():
     
     # Create CSRF form
     csrf_form = CSRFForm()
+
+    logger.debug(
+        "Dashboard data prepared: user_id=%s is_admin=%s host_count=%s",
+        user.id,
+        user.is_admin,
+        host_count
+    )
     
     return render_template(
         'main/dashboard.html',
@@ -162,7 +169,7 @@ def page_not_found(e):
 @main.errorhandler(500)
 def internal_server_error(e):
     """Custom 500 page."""
-    logger.error(f'500 error: {str(e)} - URL: {request.path}')
+    logger.error(f'500 error: {str(e)} - URL: {request.path}', exc_info=True)
     return render_template('500.html'), 500
 
 
@@ -175,6 +182,7 @@ from time import time
 def api_device_status():
     """API endpoint for device status statistics (pie chart data)."""
     if not current_user.is_authenticated and not session.get('authenticated'):
+        access_logger.warning("Unauthorized access to API endpoint: /api/device_status")
         return jsonify({'error': 'Unauthorized'}), 401
     
     try:
@@ -195,6 +203,13 @@ def api_device_status():
             hosts = db_session.query(Host).all()
         else:
             hosts = db_session.query(Host).filter(Host.created_by == user.id).all()
+        
+        logger.debug(
+            "Device status API query context: user_id=%s is_admin=%s host_count=%s",
+            user.id,
+            user.is_admin,
+            len(hosts)
+        )
         
         # Count hosts by status using the ping service
         online_count = 0
@@ -236,7 +251,7 @@ def api_device_status():
         })
     
     except Exception as e:
-        logger.error(f'Error fetching device status: {str(e)}')
+        logger.error(f'Error fetching device status: {str(e)}', exc_info=True)
         return jsonify({'error': 'Internal server error'}), 500
 
 
@@ -244,10 +259,14 @@ def api_device_status():
 def api_wol_success_rate():
     """API endpoint for WoL success rate over time (line chart data)."""
     if not current_user.is_authenticated and not session.get('authenticated'):
+        access_logger.warning("Unauthorized access to API endpoint: /api/wol_success_rate")
         return jsonify({'error': 'Unauthorized'}), 401
     
     try:
         days = request.args.get('days', default=7, type=int)
+        if days <= 0:
+            logger.warning("Invalid days parameter for wol_success_rate: %s", days)
+            return jsonify({'error': 'Invalid days parameter'}), 400
         
         # Get user context
         if current_user.is_authenticated:
@@ -312,6 +331,14 @@ def api_wol_success_rate():
                 success_rate = 0  # No attempts = 0% success rate
             
             success_rates.append(round(success_rate, 1))
+
+        logger.debug(
+            "WoL success rate API computed: user_id=%s is_admin=%s days=%s total_logs=%s",
+            user.id,
+            user.is_admin,
+            days,
+            len(logs)
+        )
         
         return jsonify({
             'labels': labels,
@@ -319,7 +346,7 @@ def api_wol_success_rate():
         })
     
     except Exception as e:
-        logger.error(f'Error fetching WoL success rate: {str(e)}')
+        logger.error(f'Error fetching WoL success rate: {str(e)}', exc_info=True)
         return jsonify({'error': 'Internal server error'}), 500
 
 
@@ -327,6 +354,7 @@ def api_wol_success_rate():
 def api_device_usage():
     """API endpoint for device usage frequency (bar chart data)."""
     if not current_user.is_authenticated and not session.get('authenticated'):
+        access_logger.warning("Unauthorized access to API endpoint: /api/device_usage")
         return jsonify({'error': 'Unauthorized'}), 401
     
     try:
@@ -368,6 +396,13 @@ def api_device_usage():
         for name, count in usage_data:
             device_names.append(name)
             wake_counts.append(count if count else 0)
+
+        logger.debug(
+            "Device usage API computed: user_id=%s is_admin=%s devices=%s",
+            user.id,
+            user.is_admin,
+            len(device_names)
+        )
         
         return jsonify({
             'labels': device_names,
@@ -375,7 +410,7 @@ def api_device_usage():
         })
     
     except Exception as e:
-        logger.error(f'Error fetching device usage: {str(e)}')
+        logger.error(f'Error fetching device usage: {str(e)}', exc_info=True)
         return jsonify({'error': 'Internal server error'}), 500
 
 

@@ -1,6 +1,8 @@
 import os
 import logging
 import logging.config
+import threading
+import time
 from logging.handlers import RotatingFileHandler
 from flask import has_request_context, request, g
 import pathlib
@@ -33,6 +35,7 @@ BACKUP_COUNT = 5
 APP_LOG = 'app.log'
 ERROR_LOG = 'error.log'
 ACCESS_LOG = 'access.log'
+PROFILE_STATE_FILE = '.active_log_profile'
 
 
 class RequestFormatter(logging.Formatter):
@@ -50,7 +53,7 @@ class RequestFormatter(logging.Formatter):
     this formatter will use a simplified format that doesn't include request fields.
     """
     # Define all fields that can be used in format strings
-    REQUIRED_FIELDS = ['url', 'remote_addr', 'method']
+    REQUIRED_FIELDS = ['url', 'remote_addr', 'method', 'request_id']
     
     def __init__(self, fmt=None, basic_fmt=None, datefmt=None, style='%', validate=True):
         """Initialize with custom handling to ensure fields exist before formatting."""
@@ -68,6 +71,7 @@ class RequestFormatter(logging.Formatter):
             'url': '-',
             'remote_addr': '-',
             'method': '-',
+            'request_id': '-',
             'user': 'Anonymous'
         }
         
@@ -81,6 +85,7 @@ class RequestFormatter(logging.Formatter):
             record.url = request.url
             record.remote_addr = request.remote_addr
             record.method = request.method
+            record.request_id = getattr(g, 'request_id', request.headers.get('X-Request-ID', '-'))
             # Add user info if available
             if hasattr(g, 'user'):
                 record.user = g.user.username if g.user else 'Anonymous'
@@ -111,17 +116,19 @@ class RequestFormatter(logging.Formatter):
         if not has_request_context():
             # Temporarily switch to basic format
             original_fmt = self._fmt
-            self._fmt = self._basic_fmt
+            original_style_fmt = self._style._fmt
             try:
-                result = super().format(record)
-                # Restore the original format
-                self._fmt = original_fmt
-                return result
+                self._fmt = self._basic_fmt
+                self._style._fmt = self._basic_fmt
+                self._ensure_fields_exist(record)
+                return super().format(record)
             except Exception as e:
-                # Restore format even on error
-                self._fmt = original_fmt
                 # Return a basic error message
                 return f"[ERROR FORMATTING LOG] {record.getMessage()} (Error: {str(e)})"
+            finally:
+                # Restore format even on error
+                self._fmt = original_fmt
+                self._style._fmt = original_style_fmt
         
         # For request context, use the detailed format with request fields
         try:
@@ -237,7 +244,7 @@ LOG_PROFILES = {
             },
             'detailed': {
                 '()': 'app.logging_config.RequestFormatter',
-                'fmt': '[%(asctime)s] %(levelname)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s',
+                'fmt': '[%(asctime)s] %(levelname)s - ReqID:%(request_id)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s',
                 'basic_fmt': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
             },
             'error': {
@@ -268,7 +275,7 @@ LOG_PROFILES = {
                 'maxBytes': MAX_BYTES,
                 'backupCount': BACKUP_COUNT,
                 'formatter': 'detailed',
-                'level': 'INFO',
+                'level': 'WARNING',
             },
         },
         # Loggers define the behavior for specific logger names
@@ -285,7 +292,7 @@ LOG_PROFILES = {
             },
             'app.access': {
                 'handlers': ['access_file'],
-                'level': 'INFO',
+                'level': 'WARNING',
                 'propagate': False,
             },
         },
@@ -306,7 +313,7 @@ LOG_PROFILES = {
             },
             'detailed': {
                 '()': 'app.logging_config.RequestFormatter',
-                'fmt': '[%(asctime)s] %(levelname)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s',
+                'fmt': '[%(asctime)s] %(levelname)s - ReqID:%(request_id)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s',
                 'basic_fmt': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
             },
             'error': {
@@ -372,7 +379,7 @@ LOG_PROFILES = {
             },
             'detailed': {
                 '()': 'app.logging_config.RequestFormatter',
-                'fmt': '[%(asctime)s] %(levelname)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s',
+                'fmt': '[%(asctime)s] %(levelname)s - ReqID:%(request_id)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s - %(message)s',
                 'basic_fmt': '[%(asctime)s] %(levelname)s - %(module)s - %(message)s',
             },
             'error': {
@@ -424,7 +431,7 @@ LOG_PROFILES = {
         },
         'root': {
             'handlers': ['app_file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
     },
     
@@ -438,7 +445,7 @@ LOG_PROFILES = {
             },
             'detailed': {
                 '()': 'app.logging_config.RequestFormatter',
-                'fmt': '[%(asctime)s] %(levelname)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',
+                'fmt': '[%(asctime)s] %(levelname)s - ReqID:%(request_id)s - IP:%(remote_addr)s - URL:%(url)s - Method:%(method)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',
                 'basic_fmt': '[%(asctime)s] %(levelname)s - %(module)s:%(lineno)d - %(funcName)s - %(message)s',
             },
             'error': {
@@ -495,7 +502,7 @@ LOG_PROFILES = {
         },
         'root': {
             'handlers': ['app_file', 'console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
     },
 }
@@ -528,9 +535,48 @@ def get_logging_profile():
     if profile_name not in LOG_PROFILES:
         print(f"Warning: Invalid LOG_PROFILE value '{profile_name}'. Falling back to MEDIUM.")
         profile_name = 'MEDIUM'
-    
-    print(f"Using logging profile: {profile_name}")
+
     return LOG_PROFILES[profile_name]
+
+
+def _get_profile_state_path():
+    """Return the full path of the persisted logging profile state file."""
+    return os.path.join(LOG_DIR, PROFILE_STATE_FILE)
+
+
+def _read_last_profile_name():
+    """Read the last persisted profile name, if available."""
+    state_path = _get_profile_state_path()
+    if not os.path.exists(state_path):
+        return None
+
+    try:
+        with open(state_path, 'r', encoding='utf-8') as state_file:
+            value = state_file.read().strip().upper()
+            return value or None
+    except OSError:
+        return None
+
+
+def _persist_current_profile_name(profile_name):
+    """Persist the currently active profile name for future comparisons."""
+    state_path = _get_profile_state_path()
+    try:
+        with open(state_path, 'w', encoding='utf-8') as state_file:
+            state_file.write(profile_name.upper())
+        os.chmod(state_path, 0o640)
+    except OSError:
+        # Failing to persist this state should not break app startup.
+        pass
+
+
+def _resolve_profile_name():
+    """Resolve and validate the configured logging profile name."""
+    profile_name = os.environ.get('LOG_PROFILE', 'MEDIUM').upper()
+    if profile_name not in LOG_PROFILES:
+        print(f"Warning: Invalid LOG_PROFILE value '{profile_name}'. Falling back to MEDIUM.")
+        return 'MEDIUM'
+    return profile_name
 
 
 def sanitize_log_message(message):
@@ -602,7 +648,70 @@ class SensitiveDataFilter(logging.Filter):
         return True
 
 
-def configure_logging():
+class DuplicateAccessFilter(logging.Filter):
+    """
+    Filter that suppresses immediate duplicate access log records.
+
+    This prevents duplicate writes of identical access events caused by
+    repeated emission paths within a very short time window.
+    """
+    def __init__(self, window_seconds=0.25):
+        super().__init__()
+        self.window_seconds = window_seconds
+        self._lock = threading.Lock()
+        self._last_seen = {}
+
+    def _record_key(self, record):
+        request_id = self._resolve_request_id(record)
+        if not request_id or request_id == '-':
+            # Only deduplicate request-scoped records to preserve high-frequency
+            # traffic visibility (e.g., DDoS analysis) across distinct requests.
+            return None
+
+        return (
+            request_id,
+            record.levelno,
+            record.getMessage(),
+            getattr(record, 'url', '-'),
+            getattr(record, 'method', '-'),
+            getattr(record, 'remote_addr', '-'),
+        )
+
+    @staticmethod
+    def _resolve_request_id(record):
+        request_id = getattr(record, 'request_id', None)
+        if request_id:
+            return request_id
+        if has_request_context():
+            return getattr(g, 'request_id', request.headers.get('X-Request-ID', None))
+        return None
+
+    def filter(self, record):
+        now = time.monotonic()
+        key = self._record_key(record)
+        if key is None:
+            return True
+
+        with self._lock:
+            last_seen = self._last_seen.get(key)
+
+            # Keep only recent keys to avoid unbounded growth.
+            if len(self._last_seen) > 2000:
+                cutoff = now - self.window_seconds
+                self._last_seen = {
+                    existing_key: timestamp
+                    for existing_key, timestamp in self._last_seen.items()
+                    if timestamp >= cutoff
+                }
+
+            self._last_seen[key] = now
+            if last_seen is not None and (now - last_seen) <= self.window_seconds:
+                return False
+
+        return True
+
+
+def configure_logging(emit_profile_change_log=True, persist_profile_state=True):
     """
     Configure logging based on the selected profile.
     Creates all necessary directories and sets up handlers.
@@ -629,16 +738,25 @@ def configure_logging():
     # Ensure log directory exists with proper permissions
     ensure_log_directory()
     
-    # Get the configuration profile
-    config = get_logging_profile()
+    # Resolve profile name and get configuration.
+    profile_name = _resolve_profile_name()
+    config = LOG_PROFILES[profile_name]
     
     # Configure logging from dictionary
     logging.config.dictConfig(config)
     
     # Add sensitive data filter to all handlers
-    for logger in [logging.getLogger(), logging.getLogger('app')]:
+    for logger in [logging.getLogger(), logging.getLogger('app'), logging.getLogger('app.access')]:
         for handler in logger.handlers:
             handler.addFilter(SensitiveDataFilter())
+
+    # Suppress immediate duplicate access log records.
+    access_logger = logging.getLogger('app.access')
+    dedup_window_ms = int(os.environ.get('ACCESS_LOG_DEDUP_WINDOW_MS', '250'))
+    dedup_window_seconds = max(0.0, dedup_window_ms / 1000.0)
+    for handler in access_logger.handlers:
+        if not any(isinstance(filter_obj, DuplicateAccessFilter) for filter_obj in handler.filters):
+            handler.addFilter(DuplicateAccessFilter(window_seconds=dedup_window_seconds))
     
     # Set file permissions for all log files
     for handler_config in config.get('handlers', {}).values():
@@ -646,6 +764,18 @@ def configure_logging():
             filename = handler_config['filename']
             if os.path.exists(filename):
                 os.chmod(filename, 0o640)
+
+    # Log the profile only when first persisted or changed.
+    if emit_profile_change_log:
+        previous_profile = _read_last_profile_name()
+        app_logger = logging.getLogger('app')
+        if previous_profile is None:
+            app_logger.warning("Using logging profile: %s", profile_name)
+        elif previous_profile != profile_name:
+            app_logger.warning("Logging profile changed: %s -> %s", previous_profile, profile_name)
+
+    if persist_profile_state:
+        _persist_current_profile_name(profile_name)
 
 
 def get_logger(module_name):

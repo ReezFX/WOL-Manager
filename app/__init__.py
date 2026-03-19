@@ -1,6 +1,7 @@
 import os
 import redis
 import threading
+from uuid import uuid4
 from redis import ConnectionPool
 
 # Initialize Redis connection pool
@@ -17,8 +18,9 @@ redis_client = redis.Redis(connection_pool=redis_pool)
 import pathlib
 import logging
 import logging.config
+import time
 from datetime import timedelta
-from flask import Flask, request, flash, redirect, url_for
+from flask import Flask, request, flash, redirect, url_for, g
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask_login import LoginManager
@@ -27,8 +29,8 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_session import Session
 
 from app.config import config
-from app.models import Base, User, db_session
-from app.logging_config import configure_logging, LOG_DIR
+from app.models import Base, User, db_session, AppSettings
+from app.logging_config import configure_logging, LOG_DIR, LOG_PROFILES
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -43,7 +45,7 @@ def load_user(user_id):
     return db_session.query(User).get(int(user_id))
 
 
-def create_app(config_name=None):
+def create_app(config_name=None, start_background_services=True):
     """Application factory for creating a Flask app instance."""
     
     # Determine config based on environment variable or default to 'development'
@@ -54,8 +56,9 @@ def create_app(config_name=None):
     logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'logs')
     os.makedirs(logs_dir, mode=0o755, exist_ok=True)
     
-    # Configure logging before app creation
-    configure_logging()
+    # Bootstrap logging before app creation without emitting transient
+    # profile-change events or persisting bootstrap state.
+    configure_logging(emit_profile_change_log=False, persist_profile_state=False)
     
     # For non-request logging during startup
     simple_formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(module)s - %(message)s')
@@ -119,6 +122,35 @@ def create_app(config_name=None):
     # Initialize the database engine and bind it to the session
     engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
     db_session.configure(bind=engine)
+
+    # Ensure the database is created (backward compatibility fallback when
+    # migrations were not applied yet).
+    Base.metadata.create_all(bind=engine)
+
+    # Re-apply persisted logging profile from database after DB is available.
+    # Initial configure_logging() above uses environment/defaults only.
+    try:
+        persisted_settings = AppSettings.get_settings(db_session)
+        persisted_profile = (persisted_settings.log_profile or 'MEDIUM').upper()
+        if persisted_profile not in LOG_PROFILES:
+            persisted_profile = 'MEDIUM'
+
+        previous_profile = os.environ.get('LOG_PROFILE', 'MEDIUM').upper()
+        os.environ['LOG_PROFILE'] = persisted_profile
+        configure_logging(emit_profile_change_log=False, persist_profile_state=True)
+
+        if start_background_services and persisted_profile != previous_profile:
+            logging.getLogger('app').warning(
+                "Loaded persisted logging profile at startup: %s (previous runtime profile: %s)",
+                persisted_profile,
+                previous_profile
+            )
+    except Exception as e:
+        logging.getLogger('app').warning(
+            "Could not load persisted logging profile from database; using runtime profile %s (%s)",
+            os.environ.get('LOG_PROFILE', 'MEDIUM').upper(),
+            str(e)
+        )
     
     # Set up the teardown context for the database session
     @app.teardown_appcontext
@@ -169,12 +201,53 @@ def create_app(config_name=None):
     # Dynamic scheme detection middleware
     @app.before_request
     def detect_scheme():
+        # Ensure every request has a stable correlation id for log analysis.
+        g.request_id = request.headers.get('X-Request-ID') or uuid4().hex
+        g.request_started_at = time.monotonic()
         if request.headers.get('X-Forwarded-Proto') == 'https':
             request.environ['wsgi.url_scheme'] = 'https'
     
     # Implement strict transport security
     @app.after_request
     def add_security_headers(response):
+        access_logger = logging.getLogger('app.access')
+        path = request.path or '-'
+
+        # Log all non-static request outcomes centrally for consistent audit trails.
+        if not path.startswith('/static/'):
+            duration_ms = None
+            started_at = getattr(g, 'request_started_at', None)
+            if started_at is not None:
+                duration_ms = int((time.monotonic() - started_at) * 1000)
+
+            user_id = 'anonymous'
+            try:
+                from flask_login import current_user
+                if getattr(current_user, 'is_authenticated', False):
+                    user_id = current_user.id
+            except Exception:
+                pass
+
+            message = (
+                "HTTP request completed: method=%s path=%s endpoint=%s status=%s "
+                "duration_ms=%s user_id=%s"
+            )
+            args = (
+                request.method,
+                path,
+                request.endpoint or '-',
+                response.status_code,
+                duration_ms if duration_ms is not None else '-',
+                user_id
+            )
+
+            if response.status_code >= 500:
+                access_logger.error(message, *args)
+            elif response.status_code >= 400:
+                access_logger.warning(message, *args)
+            else:
+                access_logger.info(message, *args)
+
         if request.is_secure:
             response.headers['Strict-Transport-Security'] = 'max-age=31536000'
         return response
@@ -286,36 +359,31 @@ def create_app(config_name=None):
     if not app.debug and not app.testing and config_name == 'production':
         config[config_name].init_app(app)
     
-    # Ensure the database is created
-    # Note: When using Flask-Migrate, you should use migrations
-    # instead of creating tables directly.
-    # However, keeping this for backward compatibility
-    Base.metadata.create_all(bind=engine)
-    
     # Initialize logger for app init
     from app.logging_config import get_logger
     logger = get_logger('app.init')
     
-    # Start ping service in a background thread
-    try:
-        from app.async_ping_service import start_ping_service
-        ping_thread = threading.Thread(target=start_ping_service, daemon=True)
-        ping_thread.start()
-        logger.info("Ping service started successfully")
-    except Exception as e:
-        logger.error(f"Failed to start ping service: {str(e)}")
+    if start_background_services:
+        # Start ping service in a background thread
+        try:
+            from app.async_ping_service import start_ping_service
+            ping_thread = threading.Thread(target=start_ping_service, daemon=True)
+            ping_thread.start()
+            logger.info("Ping service started successfully")
+        except Exception as e:
+            logger.error(f"Failed to start ping service: {str(e)}")
 
-    # Update ping_service.py to use connection pool
-    from app.ping_service import update_redis_pool
-    update_redis_pool(redis_pool)
-    
-    # Initialize update checker service
-    try:
-        from app.update_checker import init_update_checker
-        update_checker = init_update_checker()
-        logger.info("Update checker service started successfully")
-    except Exception as e:
-        logger.error(f"Failed to start update checker service: {str(e)}")
+        # Update ping_service.py to use connection pool
+        from app.ping_service import update_redis_pool
+        update_redis_pool(redis_pool)
+        
+        # Initialize update checker service
+        try:
+            from app.update_checker import init_update_checker
+            update_checker = init_update_checker()
+            logger.info("Update checker service started successfully")
+        except Exception as e:
+            logger.error(f"Failed to start update checker service: {str(e)}")
     
     return app
 

@@ -38,6 +38,12 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_admin:
+            access_logger.warning(
+                "Admin route access denied: user_authenticated=%s user_id=%s path=%s",
+                bool(getattr(current_user, 'is_authenticated', False)),
+                getattr(current_user, 'id', 'anonymous'),
+                request.path
+            )
             flash('You need admin privileges to access this page.', 'danger')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
@@ -96,14 +102,14 @@ class ChangePasswordForm(FlaskForm):
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    logger.debug("==== LOGIN ROUTE STARTED ====")
-    
-    # Debug request details
-    logger.debug(f"Request method: {request.method}")
-    logger.debug(f"Request headers: {dict(request.headers)}")
-    logger.debug(f"Request cookies: {request.cookies}")
-    logger.debug(f"Request form data: {request.form}")
-    logger.debug(f"Request args: {request.args}")
+    logger.debug(
+        "Login route called: method=%s path=%s remote_addr=%s has_form=%s has_query=%s",
+        request.method,
+        request.path,
+        request.remote_addr,
+        bool(request.form),
+        bool(request.args)
+    )
     
     # If user is already logged in, redirect to index page
     if current_user.is_authenticated:
@@ -112,14 +118,20 @@ def login():
     
     # Create login form
     form = LoginForm()
-    logger.debug(f"Created login form, CSRF enabled: {current_app.config.get('WTF_CSRF_ENABLED', True)}")
+    logger.debug(
+        "Login form initialized: csrf_enabled=%s",
+        current_app.config.get('WTF_CSRF_ENABLED', True)
+    )
     
     # Debug session info
-    logger.debug(f"Session cookie name: {current_app.config.get('SESSION_COOKIE_NAME')}")
-    logger.debug(f"Session cookie domain: {current_app.config.get('SESSION_COOKIE_DOMAIN')}")
-    logger.debug(f"Session cookie path: {current_app.config.get('SESSION_COOKIE_PATH')}")
-    logger.debug(f"Session cookie secure: {current_app.config.get('SESSION_COOKIE_SECURE')}")
-    logger.debug(f"Session cookie samesite: {current_app.config.get('SESSION_COOKIE_SAMESITE')}")
+    logger.debug(
+        "Session cookie config: name=%s domain=%s path=%s secure=%s samesite=%s",
+        current_app.config.get('SESSION_COOKIE_NAME'),
+        current_app.config.get('SESSION_COOKIE_DOMAIN'),
+        current_app.config.get('SESSION_COOKIE_PATH'),
+        current_app.config.get('SESSION_COOKIE_SECURE'),
+        current_app.config.get('SESSION_COOKIE_SAMESITE')
+    )
     
     # Handle POST request
     if request.method == 'POST':
@@ -137,7 +149,12 @@ def login():
             password = request.form.get('password')
             remember = request.form.get('remember', False, type=bool)
             
-            logger.debug(f"Form data extracted - Username: {username}, Remember: {remember}, Password: {'*****' if password else 'None'}")
+            logger.debug(
+                "Login form parsed: username_present=%s remember=%s password_present=%s",
+                bool(username),
+                bool(remember),
+                bool(password)
+            )
             
             # Basic validation that required fields are present
             if not username or not password:
@@ -247,6 +264,13 @@ def change_password():
                 return redirect(url_for('auth.profile'))
             except SQLAlchemyError as e:
                 db_session.rollback()
+                logger.error(
+                    "Password change database error: user=%s user_id=%s error=%s",
+                    current_user.username,
+                    current_user.id,
+                    str(e),
+                    exc_info=True
+                )
                 flash(f'Error changing password: {str(e)}', 'danger')
     
     return render_template('auth/change_password.html', form=form)
@@ -316,6 +340,7 @@ def generate_device_token():
 def verify_device_token(user, token):
     """Verify if a device token is valid and not expired."""
     if not user.twofa_trusted_devices:
+        logger.debug("No trusted devices stored for user_id=%s", user.id)
         return False
     
     current_time = datetime.utcnow()
@@ -324,11 +349,13 @@ def verify_device_token(user, token):
             # Check if token is expired (30 days)
             expiry = datetime.fromisoformat(device['expiry'])
             if current_time < expiry:
+                logger.debug("Trusted device token verified for user_id=%s", user.id)
                 return True
             else:
                 # Remove expired token
                 user.twofa_trusted_devices.remove(device)
                 db_session.commit()
+                logger.info("Expired trusted device token removed for user_id=%s", user.id)
     return False
 
 
@@ -355,6 +382,12 @@ def add_trusted_device(user, token, device_info=None):
     
     user.twofa_trusted_devices.append(device)
     db_session.commit()
+    logger.info(
+        "Trusted device added: user_id=%s ip=%s user_agent=%s",
+        user.id,
+        request.remote_addr,
+        user_agent
+    )
 
 
 def generate_qr_code(user, secret):
@@ -392,10 +425,12 @@ def verify_2fa():
     """Verify 2FA code after successful password authentication."""
     # Check if user has 2FA enabled
     if not current_user.twofa_enabled:
+        access_logger.warning("2FA verify requested but 2FA disabled: user=%s", current_user.username)
         return redirect(url_for('main.index'))
     
     # Check if already verified in this session
     if session.get('2fa_verified'):
+        logger.debug("2FA verify skipped; already verified in session for user_id=%s", current_user.id)
         return redirect(url_for('main.index'))
     
     form = TwoFactorForm()
@@ -435,6 +470,8 @@ def verify_2fa():
         else:
             access_logger.warning(f"Failed 2FA verification for user '{current_user.username}'")
             flash('Invalid verification code. Please try again.', 'danger')
+    elif request.method == 'POST':
+        logger.debug("2FA verify form validation failed for user_id=%s", current_user.id)
     
     return render_template('auth/two_factor.html', form=form)
 
@@ -444,6 +481,7 @@ def verify_2fa():
 def verify_backup_code():
     """Verify backup code as alternative to OTP."""
     if not current_user.twofa_enabled:
+        access_logger.warning("Backup code verify requested but 2FA disabled: user=%s", current_user.username)
         return redirect(url_for('main.index'))
     
     form = BackupCodeForm()
@@ -467,6 +505,8 @@ def verify_backup_code():
         else:
             access_logger.warning(f"Invalid backup code attempt for user '{current_user.username}'")
             flash('Invalid backup code.', 'danger')
+    else:
+        logger.debug("Backup code form validation failed for user_id=%s", current_user.id)
     
     return redirect(url_for('auth.verify_2fa'))
 
@@ -476,6 +516,7 @@ def verify_backup_code():
 def setup_2fa():
     """Setup 2FA for user account."""
     if current_user.twofa_enabled:
+        access_logger.info("2FA setup skipped; already enabled for user=%s", current_user.username)
         flash('Two-factor authentication is already enabled.', 'info')
         return redirect(url_for('auth.profile'))
     
@@ -484,6 +525,7 @@ def setup_2fa():
     # Generate or retrieve secret from session
     if 'temp_2fa_secret' not in session:
         session['temp_2fa_secret'] = pyotp.random_base32()
+        logger.debug("Temporary 2FA secret created for user_id=%s", current_user.id)
     
     secret = session['temp_2fa_secret']
     
@@ -508,6 +550,7 @@ def setup_2fa():
                 backup_codes=current_user.twofa_backup_codes
             )
         else:
+            access_logger.warning("Invalid 2FA setup verification code for user=%s", current_user.username)
             flash('Invalid verification code. Please try again.', 'danger')
     
     # Generate QR code
@@ -526,6 +569,7 @@ def setup_2fa():
 def disable_2fa():
     """Disable 2FA for user account."""
     if not current_user.twofa_enabled:
+        access_logger.info("2FA disable skipped; already disabled for user=%s", current_user.username)
         flash('Two-factor authentication is not enabled.', 'info')
         return redirect(url_for('auth.profile'))
     
@@ -548,6 +592,7 @@ def disable_2fa():
             flash('Two-factor authentication has been disabled.', 'success')
             return redirect(url_for('auth.profile'))
         else:
+            access_logger.warning("Failed 2FA disable due to invalid password for user=%s", current_user.username)
             flash('Incorrect password.', 'danger')
     
     return render_template('auth/2fa_disable.html', form=form)
@@ -558,6 +603,7 @@ def disable_2fa():
 def regenerate_backup_codes():
     """Regenerate backup codes for 2FA."""
     if not current_user.twofa_enabled:
+        access_logger.warning("Backup code regeneration blocked; 2FA disabled for user=%s", current_user.username)
         flash('Two-factor authentication is not enabled.', 'danger')
         return redirect(url_for('auth.profile'))
     
@@ -566,6 +612,7 @@ def regenerate_backup_codes():
     db_session.commit()
     
     access_logger.info(f"User '{current_user.username}' regenerated backup codes")
+    logger.debug("Generated %s new backup codes for user_id=%s", len(current_user.twofa_backup_codes), current_user.id)
     
     return render_template(
         'auth/2fa_backup_codes.html',

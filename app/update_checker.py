@@ -52,7 +52,7 @@ class UpdateChecker:
                 logger.warning("VERSION file not found")
                 self.local_version = "unknown"
         except Exception as e:
-            logger.error(f"Failed to load local version: {str(e)}")
+            logger.error(f"Failed to load local version: {str(e)}", exc_info=True)
             self.local_version = "unknown"
     
     def _fetch_remote_version(self) -> Optional[str]:
@@ -64,23 +64,23 @@ class UpdateChecker:
         """
         try:
             version_url = "https://raw.githubusercontent.com/ReezFX/WOL-Manager/refs/heads/main/VERSION"
-            logger.info(f"Fetching remote version from: {version_url}")
+            logger.debug(f"Fetching remote version from: {version_url}")
             
             response = requests.get(version_url, timeout=10)
             
             if response.status_code == 200:
                 remote_version = response.text.strip()
-                logger.info(f"Successfully fetched remote version: {remote_version}")
+                logger.debug(f"Successfully fetched remote version: {remote_version}")
                 return remote_version
             else:
                 logger.warning(f"Failed to fetch VERSION file. Status code: {response.status_code}")
                 return None
             
         except requests.RequestException as e:
-            logger.error(f"Network error while fetching remote version: {str(e)}")
+            logger.warning(f"Network error while fetching remote version: {str(e)}")
             return None
         except Exception as e:
-            logger.error(f"Error fetching remote version: {str(e)}")
+            logger.error(f"Error fetching remote version: {str(e)}", exc_info=True)
             return None
     
     def _compare_versions(self, local_ver: str, remote_ver: str) -> bool:
@@ -99,11 +99,11 @@ class UpdateChecker:
             remote_version_obj = version.parse(remote_ver)
             
             is_newer = remote_version_obj > local_version_obj
-            logger.info(f"Version comparison: {local_ver} vs {remote_ver} - Update available: {is_newer}")
+            logger.debug(f"Version comparison: {local_ver} vs {remote_ver} - Update available: {is_newer}")
             return is_newer
             
         except Exception as e:
-            logger.error(f"Error comparing versions {local_ver} vs {remote_ver}: {str(e)}")
+            logger.error(f"Error comparing versions {local_ver} vs {remote_ver}: {str(e)}", exc_info=True)
             return False
     
     def _save_to_database(self) -> None:
@@ -123,7 +123,7 @@ class UpdateChecker:
             db_session.commit()
             logger.info("Update check results saved to database")
         except Exception as e:
-            logger.error(f"Failed to save update check results to database: {str(e)}")
+            logger.error(f"Failed to save update check results to database: {str(e)}", exc_info=True)
             # Don't re-raise - we don't want database issues to break the checker
     
     def check_for_updates(self, save_to_db: bool = True) -> Dict[str, any]:
@@ -141,6 +141,11 @@ class UpdateChecker:
             
             # Skip check if recently checked (unless forced)
             if current_time - self.last_check < self.check_interval:
+                logger.debug(
+                    "Skipping update check due to interval: elapsed=%ss required=%ss",
+                    int(current_time - self.last_check),
+                    self.check_interval
+                )
                 return self.get_status()
             
             logger.info("Checking for updates...")
@@ -174,7 +179,7 @@ class UpdateChecker:
                     
             except Exception as e:
                 self.check_error = str(e)
-                logger.error(f"Update check failed: {str(e)}")
+                logger.error(f"Update check failed: {str(e)}", exc_info=True)
             
             return self.get_status()
     
@@ -234,7 +239,7 @@ class UpdateChecker:
                     
             except Exception as e:
                 self.check_error = str(e)
-                logger.error(f"Force update check failed: {str(e)}")
+                logger.error(f"Force update check failed: {str(e)}", exc_info=True)
             
             return self.get_status()
     
@@ -248,7 +253,7 @@ class UpdateChecker:
             logger.info("Performing initial background update check...")
             self.check_for_updates(save_to_db=True)
         except Exception as e:
-            logger.error(f"Error in initial background update check: {str(e)}")
+            logger.error(f"Error in initial background update check: {str(e)}", exc_info=True)
         
         # Then continue with periodic checks
         while True:
@@ -257,7 +262,7 @@ class UpdateChecker:
                 logger.info("Performing scheduled background update check...")
                 self.check_for_updates(save_to_db=True)
             except Exception as e:
-                logger.error(f"Error in background update checker: {str(e)}")
+                logger.error(f"Error in background update checker: {str(e)}", exc_info=True)
                 # Wait a bit before retrying to avoid spinning
                 time.sleep(60)
     
@@ -268,7 +273,7 @@ class UpdateChecker:
             check_thread.start()
             logger.info("Background update checker started")
         except Exception as e:
-            logger.error(f"Failed to start background update checker: {str(e)}")
+            logger.error(f"Failed to start background update checker: {str(e)}", exc_info=True)
 
 
 # Global update checker instance
